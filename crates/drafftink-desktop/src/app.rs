@@ -36,8 +36,8 @@ use crate::tools::{
     angle_of, closest_point_on_line, dist_to_segment, draw_active_tool, find_nearest_edge,
     line_draw_result, protractor_to_unified, set_square_centroid, set_square_edges,
     snap_angle, snap_angle_grid15, snap_dir_grid45, unified_to_protractor, ActiveTool,
-    CompassMode, CompassTool, FunctionPlotTool, NumberLineTool, PolygonTool, ProtractorMode,
-    ProtractorTool, RulerTool, SetSquareKind, SetSquareTool, WhichEnd,
+    CompassMode, CompassTool, CountdownTool, FunctionPlotTool, NumberLineTool, PolygonTool,
+    ProtractorMode, ProtractorTool, RulerTool, SetSquareKind, SetSquareTool, WhichEnd,
 };
 use crate::undo::{UndoCmd, UndoHistory};
 use crate::video_player::VideoPlayer;
@@ -3066,6 +3066,43 @@ impl IntegratedApp {
         ctx.request_repaint();
     }
 
+    /// 激活倒计时器：画布中央，等待输入时间。
+    fn activate_countdown(&mut self, ctx: &egui::Context) {
+        let c = self.canvas_screen_center();
+        let t = CountdownTool {
+            position: c - egui::vec2(100.0, 40.0), // 居中（200×80 的左上角）
+            ..CountdownTool::default()
+        };
+        self.active_tool = ActiveTool::Countdown(t);
+        self.selected_element_id = None;
+        ctx.request_repaint();
+    }
+
+    /// 授课工具面板（左上角）：倒计时 / 直尺 / 三角尺 / 量角器等授课工具入口。
+    fn teach_tools_panel(&mut self, ctx: &egui::Context) {
+        egui::Window::new("授课工具")
+            .id(egui::Id::new("teach_tools_panel"))
+            .default_pos(egui::pos2(12.0, 12.0))
+            .collapsible(true)
+            .resizable(false)
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    if ui.button("⏱ 倒计时").clicked() {
+                        self.activate_countdown(ctx);
+                    }
+                    if ui.button("📏 直尺").clicked() {
+                        self.activate_ruler(ctx);
+                    }
+                    if ui.button("📐 三角尺").clicked() {
+                        self.activate_set_square(SetSquareKind::Triangle30_60_90, ctx);
+                    }
+                    if ui.button("📐 量角器").clicked() {
+                        self.activate_protractor(ProtractorMode::Measure, ctx);
+                    }
+                });
+            });
+    }
+
     /// 函数曲线提交：采样点 → SVG polyline path → 文档层 `Element::SvgShape`（可 Undo、可序列化）。
     fn commit_function_plot(
         &mut self,
@@ -3567,6 +3604,114 @@ impl IntegratedApp {
                     t.dragging = false;
                 }
                 self.active_tool = ActiveTool::NumberLine(t);
+            }
+            ActiveTool::Countdown(mut t) => {
+                if t.total_seconds == 0 && !t.is_running && !t.is_finished {
+                    // ── 输入阶段：弹窗输入时间（M:SS 或纯秒）→ 确认开始。 ──
+                    let mut confirm = false;
+                    egui::Window::new("⏱ 倒计时设置")
+                        .id(egui::Id::new("countdown_setup_win"))
+                        .default_pos(t.position)
+                        .collapsible(false)
+                        .resizable(false)
+                        .show(ctx, |ui| {
+                            ui.label("时间（如 5:30 或 330 秒）：");
+                            let resp = ui.text_edit_singleline(&mut t.input_text);
+                            let enter = ctx.input(|i| i.key_pressed(egui::Key::Enter));
+                            if ui.button("开始").clicked() || (resp.lost_focus() && enter) {
+                                confirm = true;
+                            }
+                            ui.small("Enter 确认 · Esc 取消");
+                        });
+                    if confirm {
+                        match t.parse_input() {
+                            Ok(()) => {
+                                t.is_running = true;
+                                ctx.request_repaint_after(std::time::Duration::from_millis(200));
+                            }
+                            Err(e) => {
+                                log::warn!("[countdown] 输入无效: {e}");
+                                // 输入失败：保持设置窗口（输入框已有内容可改）。
+                            }
+                        }
+                    }
+                    self.active_tool = ActiveTool::Countdown(t);
+                } else {
+                    // ── 显示阶段：点击数字开始/暂停、拖拽移动、点击 ✕ 关闭、每秒递减。 ──
+                    let rect = t.rect();
+                    let close_rect = egui::Rect::from_min_size(
+                        rect.right_top() + egui::vec2(-20.0, 4.0),
+                        egui::vec2(16.0, 16.0),
+                    );
+                    let mut close = false;
+
+                    if pressed {
+                        if let Some(p) = pointer {
+                            if rect.contains(p) {
+                                t.pending_press = Some(p);
+                            } else if close_rect.contains(p) {
+                                close = true;
+                            }
+                        }
+                    }
+                    if let Some(pp) = t.pending_press {
+                        if down {
+                            if let Some(p) = pointer {
+                                if p.distance(pp) > 4.0 {
+                                    t.dragging = true;
+                                    t.last_mouse = p;
+                                }
+                            }
+                        }
+                        if released {
+                            if !t.dragging {
+                                // 点击数字：开始 / 暂停；到时后点击 = 重置重开。
+                                if t.is_finished {
+                                    t.remaining_seconds = t.total_seconds;
+                                    t.is_finished = false;
+                                    t.is_running = true;
+                                } else if t.total_seconds > 0 {
+                                    t.is_running = !t.is_running;
+                                }
+                                t.last_tick = None;
+                            }
+                            t.pending_press = None;
+                            t.dragging = false;
+                        }
+                    }
+                    // 拖拽移动计时器。
+                    if t.dragging && down {
+                        if let Some(p) = pointer {
+                            let delta = p - t.last_mouse;
+                            t.position += delta;
+                            t.last_mouse = p;
+                        }
+                    }
+                    // 每秒递减（由 Instant 驱动，避免帧率不均）。
+                    if t.is_running && !t.is_finished {
+                        let now = std::time::Instant::now();
+                        if let Some(last) = t.last_tick {
+                            if now.duration_since(last) >= std::time::Duration::from_secs(1) {
+                                t.tick();
+                                t.last_tick = Some(now);
+                            }
+                        } else {
+                            t.last_tick = Some(now);
+                        }
+                    }
+                    // 刷新率：运行中 200ms（秒递减平滑）、到 0 后 500ms（闪烁）、否则不主动。
+                    if t.is_running || t.is_finished {
+                        let ms = if t.is_finished { 500 } else { 200 };
+                        ctx.request_repaint_after(std::time::Duration::from_millis(ms));
+                    }
+
+                    if close {
+                        self.active_tool = ActiveTool::None;
+                        self.last_tool_click = None;
+                    } else {
+                        self.active_tool = ActiveTool::Countdown(t);
+                    }
+                }
             }
             ActiveTool::None => {}
         }
@@ -4328,6 +4473,10 @@ impl App for IntegratedApp {
                         self.exit_teach(ctx);
                     }
                 }
+                // 授课模式教具交互（倒计时器 / 直尺 / 圆规等均可交互，不只读）。
+                self.update_active_tool(ctx);
+                // 左上角授课工具面板。
+                self.teach_tools_panel(ctx);
             }
         }
 
@@ -4433,7 +4582,8 @@ impl App for IntegratedApp {
                 egui::Order::Foreground,
                 egui::Id::new("active_tool_overlay"),
             ));
-            draw_active_tool(&painter, &self.active_tool);
+            let time = ctx.input(|i| i.time);
+            draw_active_tool(&painter, &self.active_tool, time);
         }
 
         // 监控面板置于最上层，两种模式下都可用。

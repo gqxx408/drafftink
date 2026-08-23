@@ -177,6 +177,145 @@ pub struct NumberLineTool {
     pub label_interval: i32,
 }
 
+/// 倒计时器：授课模式计时工具（纯 UI 覆盖层，不序列化）。
+///
+/// 交互：激活后画布出现半透明圆角矩形（宽 200×高 80），未设置时间时弹输入框
+/// （M:SS 或纯秒）→ 点击数字开始/暂停 → 拖拽移动 → 到 0 红白闪烁 → ✕ 或 Esc 关闭。
+#[derive(Debug, Clone)]
+pub struct CountdownTool {
+    /// 设定的总秒数（解析输入后固定）。
+    pub total_seconds: u32,
+    /// 剩余秒数（倒计时递减）。
+    pub remaining_seconds: u32,
+    pub is_running: bool,
+    /// 到时后置 true（触发红白闪烁）。
+    pub is_finished: bool,
+    /// 计时器左上角位置（画布屏幕坐标，可拖拽）。
+    pub position: Pos2,
+    /// 输入框文本（如 `"05:30"` / `"330"`）。
+    pub input_text: String,
+    /// 上次 tick 时刻（驱动每秒递减）。
+    pub last_tick: Option<std::time::Instant>,
+    /// 按下数字区时记录起点（区分点击 vs 拖拽）。
+    pub pending_press: Option<Pos2>,
+    /// 是否正在拖拽移动计时器。
+    pub dragging: bool,
+    /// 拖拽中上一帧鼠标位置。
+    pub last_mouse: Pos2,
+}
+
+impl Default for CountdownTool {
+    fn default() -> Self {
+        Self {
+            total_seconds: 0,
+            remaining_seconds: 0,
+            is_running: false,
+            is_finished: false,
+            position: Pos2::ZERO,
+            input_text: String::new(),
+            last_tick: None,
+            pending_press: None,
+            dragging: false,
+            last_mouse: Pos2::ZERO,
+        }
+    }
+}
+
+/// `秒` → `MM:SS` 文本（纯函数，可单测）。
+pub fn format_mmss(secs: u32) -> String {
+    format!("{:02}:{:02}", secs / 60, secs % 60)
+}
+
+impl CountdownTool {
+    /// 解析输入文本（M:SS / MM:SS / 纯秒），成功则设置 total 与 remaining。
+    /// 失败返回 `Err(描述)`（不 panic，输入框内红字提示）。
+    pub fn parse_input(&mut self) -> Result<(), String> {
+        let s = self.input_text.trim();
+        let secs = if let Ok(v) = s.parse::<u32>() {
+            v
+        } else if let Some((m, sec)) = s.split_once(':') {
+            let m = m.trim().parse::<u32>().map_err(|_| format!("无效分钟 '{m}'"))?;
+            let sec = sec.trim().parse::<u32>().map_err(|_| format!("无效秒 '{sec}'"))?;
+            if sec >= 60 {
+                return Err(format!("秒数不能 ≥ 60（'{sec}'）"));
+            }
+            m.saturating_mul(60).saturating_add(sec)
+        } else {
+            return Err(format!("无法解析 '{s}'（用 M:SS 或纯秒）"));
+        };
+        if secs == 0 {
+            return Err("时间不能为 0".to_string());
+        }
+        self.total_seconds = secs.min(5999); // 上限 99:59
+        self.remaining_seconds = self.total_seconds;
+        self.is_running = true;
+        self.is_finished = false;
+        self.last_tick = None;
+        Ok(())
+    }
+
+    /// 每秒递减一次（由 `update_active_tool` 按 `Instant` 驱动）。
+    pub fn tick(&mut self) {
+        if self.is_running && !self.is_finished && self.remaining_seconds > 0 {
+            self.remaining_seconds -= 1;
+            if self.remaining_seconds == 0 {
+                self.is_finished = true;
+                self.is_running = false;
+            }
+        }
+    }
+
+    /// 数字颜色：到 0 后按 `time` 每 500ms 红/白闪烁；最后 10 秒红色；否则白色。
+    pub fn flash_color(&self, time: f64) -> Color32 {
+        if self.is_finished {
+            if (time * 2.0) as i32 % 2 == 0 {
+                Color32::RED
+            } else {
+                Color32::WHITE
+            }
+        } else if self.remaining_seconds <= 10 && self.remaining_seconds > 0 {
+            Color32::RED
+        } else {
+            Color32::WHITE
+        }
+    }
+
+    /// 计时器矩形（200×80，position 为左上角）。
+    pub fn rect(&self) -> egui::Rect {
+        egui::Rect::from_min_size(self.position, egui::vec2(200.0, 80.0))
+    }
+}
+
+/// 倒计时器画布绘制：半透明黑圆角背景 + 白边框 + 大号数字 + 右上角 ✕。
+///
+/// `time` 为 `ctx.input(|i| i.time)`，驱动到 0 后的红白闪烁。
+pub fn draw_countdown(painter: &Painter, tool: &CountdownTool, time: f64) {
+    let rect = tool.rect();
+    painter.rect_filled(rect, 8.0, Color32::from_black_alpha(180));
+    painter.rect_stroke(rect, 8.0, Stroke::new(2.0, Color32::WHITE));
+    let text = format_mmss(tool.remaining_seconds);
+    let color = tool.flash_color(time);
+    painter.text(
+        rect.center(),
+        Align2::CENTER_CENTER,
+        text,
+        FontId::monospace(36.0),
+        color,
+    );
+    // 右上角 ✕ 关闭按钮。
+    let close_rect = egui::Rect::from_min_size(
+        rect.right_top() + Vec2::new(-20.0, 4.0),
+        Vec2::new(16.0, 16.0),
+    );
+    painter.text(
+        close_rect.center(),
+        Align2::CENTER_CENTER,
+        "✕",
+        FontId::proportional(14.0),
+        Color32::GRAY,
+    );
+}
+
 /// 当前激活的教具。
 #[derive(Debug, Clone, Default)]
 pub enum ActiveTool {
@@ -189,6 +328,7 @@ pub enum ActiveTool {
     Polygon(PolygonTool),
     FunctionPlot(FunctionPlotTool),
     NumberLine(NumberLineTool),
+    Countdown(CountdownTool),
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -756,7 +896,9 @@ pub fn draw_number_line_tool(painter: &Painter, t: &NumberLineTool) {
 }
 
 /// 绘制当前激活教具（覆盖在最上层）。
-pub fn draw_active_tool(painter: &Painter, tool: &ActiveTool) {
+///
+/// `time` 为 `ctx.input(|i| i.time)`，仅倒计时器用（驱动到 0 后闪烁），其余忽略。
+pub fn draw_active_tool(painter: &Painter, tool: &ActiveTool, time: f64) {
     match tool {
         ActiveTool::None => {}
         ActiveTool::Compass(c) => draw_compass(painter, c),
@@ -766,6 +908,7 @@ pub fn draw_active_tool(painter: &Painter, tool: &ActiveTool) {
         ActiveTool::Polygon(p) => draw_polygon(painter, p),
         ActiveTool::FunctionPlot(f) => draw_function_plot(painter, f),
         ActiveTool::NumberLine(n) => draw_number_line_tool(painter, n),
+        ActiveTool::Countdown(c) => draw_countdown(painter, c, time),
     }
 }
 
@@ -1025,5 +1168,74 @@ mod tests {
         let v = snap_dir_grid45(Vec2::new(1.0, 100.0));
         assert!(v.x.abs() < 1e-3, "竖直吸附失败: {v:?}");
         assert!((v.y - 100.0).abs() < 1.0, "长度误差: {v:?}");
+    }
+
+    /// 倒计时器：`MM:SS` 格式化（纯函数）。
+    #[test]
+    fn countdown_format_minutes_seconds() {
+        assert_eq!(format_mmss(0), "00:00");
+        assert_eq!(format_mmss(59), "00:59");
+        assert_eq!(format_mmss(330), "05:30");
+        assert_eq!(format_mmss(5999), "99:59");
+    }
+
+    /// 倒计时器：tick 递减到 0 → finished；到 0 后按 time 红/白闪烁；
+    /// 最后 10 秒红色；输入解析（M:SS / 纯秒 / 非法）。
+    #[test]
+    fn countdown_finish_flashes() {
+        let mut t = CountdownTool {
+            total_seconds: 5,
+            remaining_seconds: 5,
+            is_running: true,
+            is_finished: false,
+            position: Pos2::ZERO,
+            input_text: "5".to_string(),
+            last_tick: None,
+            pending_press: None,
+            dragging: false,
+            last_mouse: Pos2::ZERO,
+        };
+        // 每秒递减 → 到 0 置 finished。
+        for _ in 0..5 {
+            t.tick();
+        }
+        assert!(t.is_finished, "递减到 0 后应 finished");
+        assert_eq!(t.remaining_seconds, 0);
+        assert!(!t.is_running);
+        // 闪烁：time*2 取整奇偶切换红/白。
+        assert_eq!(t.flash_color(0.0), Color32::RED);
+        assert_eq!(t.flash_color(0.3), Color32::RED);
+        assert_eq!(t.flash_color(0.5), Color32::WHITE);
+        // 最后 10 秒（未到 0）红色。
+        let mut u = t.clone();
+        u.is_finished = false;
+        u.is_running = true;
+        u.remaining_seconds = 3;
+        assert_eq!(u.flash_color(0.0), Color32::RED);
+        // 输入解析：M:SS / 纯秒 / 非法。
+        let mut v = CountdownTool {
+            input_text: "5:30".to_string(),
+            ..CountdownTool::default()
+        };
+        assert!(v.parse_input().is_ok());
+        assert_eq!(v.total_seconds, 330);
+        assert_eq!(v.remaining_seconds, 330);
+        assert!(v.is_running, "确认后应自动开始");
+        let mut w = CountdownTool {
+            input_text: "90".to_string(),
+            ..CountdownTool::default()
+        };
+        assert!(w.parse_input().is_ok());
+        assert_eq!(w.total_seconds, 90);
+        let mut x = CountdownTool {
+            input_text: "abc".to_string(),
+            ..CountdownTool::default()
+        };
+        assert!(x.parse_input().is_err(), "非法输入应返回 Err");
+        let mut y = CountdownTool {
+            input_text: "0".to_string(),
+            ..CountdownTool::default()
+        };
+        assert!(y.parse_input().is_err(), "0 秒应返回 Err");
     }
 }
