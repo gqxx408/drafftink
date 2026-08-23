@@ -52,6 +52,38 @@ enum AppMode {
     Teach,
 }
 
+/// 放大镜（Magnifier）授课工具：**纯 UI 覆盖层**，不序列化、不进任何文档数据模型。
+///
+/// - `center`：放大镜圆心（屏幕坐标，跟随鼠标 `hover_pos`）。
+/// - `radius`：圆圈半径（px，默认 120）。
+/// - `zoom_factor`：放大倍数（默认 2.0，鼠标滚轮可在 1.0 ~ 4.0 之间调节）。
+/// - `active`：是否激活（点「🔍 放大镜」按钮或 Esc 切换）。
+///
+/// 与其它虚拟教具（需提交为 `ShapeInstance` 才可持久化）不同，放大镜仅作实时预览，
+/// 不产生持久元素、不进 Undo 栈，因此无需任何序列化字段。
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct MagnifierTool {
+    /// 放大镜中心（屏幕坐标，跟随鼠标）。
+    pub center: egui::Pos2,
+    /// 放大镜半径（px）。
+    pub radius: f32,
+    /// 放大倍数（1.0 ~ 4.0）。
+    pub zoom_factor: f32,
+    /// 是否激活。
+    pub active: bool,
+}
+
+impl Default for MagnifierTool {
+    fn default() -> Self {
+        Self {
+            center: egui::Pos2::new(200.0, 200.0),
+            radius: 120.0,
+            zoom_factor: 2.0,
+            active: false,
+        }
+    }
+}
+
 /// 备授一体宿主：在同一 eframe 窗口内切换备课 / 授课。
 pub struct IntegratedApp {
     mode: AppMode,
@@ -110,6 +142,8 @@ pub struct IntegratedApp {
     /// 按下左键 → `Some`，拖动实时更新 `current_screen`，松开时提交为 `ShapeInstance`
     /// 并清除；`None` 表示当前没有正在拖拽绘制的矩形。
     shape_draw: Option<ShapeDrawState>,
+    /// 放大镜工具状态（纯 UI 覆盖层：跟随鼠标、滚轮调倍数，不序列化、不进文档数据模型）。
+    magnifier: MagnifierTool,
     /// 当前选中的画布元素（形状 / 视频 / 图片之一，仅备课模式有效）。
     /// `None` 表示无选中——元素以「固定背景元素」呈现（无边框 / 抓手），
     /// 老师主动单击该元素才选中进入微调（「先隐身后选中」范式）。
@@ -291,6 +325,69 @@ fn default_overlay_rect(screen: egui::Rect) -> egui::Rect {
 fn function_default_rect(screen: egui::Rect, scale: f32) -> egui::Rect {
     let half = 10.0 * scale;
     egui::Rect::from_center_size(screen.center(), egui::vec2(half * 2.0, half * 2.0))
+}
+
+/// 放大镜坐标变换：把「原屏幕坐标点」映射为放大后的屏幕坐标。
+///
+/// 数学推导：先把屏幕坐标经 `canvas_offset` / `canvas_zoom` 映射到画布（世界）坐标，
+/// 再在画布空间中围绕放大镜圆心放大 `zoom_factor` 倍，最后映射回屏幕坐标。
+/// 由于缩放围绕圆心居中，`canvas_offset` 与 `canvas_zoom` 会在两步折算中互相抵消，
+/// 最终**等价于**以放大镜圆心为基准的纯屏幕缩放：
+///
+/// ```text
+/// result = center + (screen - center) * zoom_factor
+/// ```
+///
+/// 这是放大镜在圈内「以其圆心为中心放大重绘」内容的核心变换；独立成纯函数便于单测。
+pub(crate) fn magnifier_transform(
+    screen: egui::Pos2,
+    center: egui::Pos2,
+    canvas_offset: egui::Vec2,
+    canvas_zoom: f32,
+    zoom_factor: f32,
+) -> egui::Pos2 {
+    // 屏幕 → 画布坐标（用 Vec2 做偏移/缩放运算，Pos2 仅到最后再转回）。
+    let scr = screen.to_vec2();
+    let cen = center.to_vec2();
+    let w = (scr - canvas_offset) / canvas_zoom;
+    // 放大镜圆心对应的画布坐标。
+    let cw = (cen - canvas_offset) / canvas_zoom;
+    // 画布空间中围绕圆心放大。
+    let mw = cw + (w - cw) * zoom_factor;
+    // 画布 → 屏幕。
+    (canvas_offset + mw * canvas_zoom).to_pos2()
+}
+
+/// 构造一个「带洞圆环」三角形网格（外圆 - 内圆），用于把放大镜圆外区域压暗的同时
+/// 保持圆内内容可见（egui 0.29 不支持圆形 clip / PathShape 的 even-odd，故用 Mesh 手拼环）。
+fn annulus_mesh(center: egui::Pos2, r_in: f32, r_out: f32, color: egui::Color32) -> egui::Mesh {
+    use egui::epaint::Vertex;
+    let mut mesh = egui::Mesh::default();
+    let n = 96usize;
+    // 内、外两圈顶点；每圈首尾闭合，作为带状三角形带。
+    let ring = |mesh: &mut egui::Mesh, r: f32| -> u32 {
+        let start = mesh.vertices.len() as u32;
+        for k in 0..n {
+            let a = std::f32::consts::TAU * k as f32 / n as f32;
+            mesh.vertices.push(Vertex {
+                pos: egui::pos2(center.x + r * a.cos(), center.y + r * a.sin()),
+                uv: egui::pos2(0.0, 0.0),
+                color,
+            });
+        }
+        start
+    };
+    let i0 = ring(&mut mesh, r_in);
+    let i1 = ring(&mut mesh, r_out);
+    for k in 0..n {
+        let k2 = (k + 1) % n;
+        let a = i0 + k as u32;
+        let b = i0 + k2 as u32;
+        let c = i1 + k as u32;
+        let d = i1 + k2 as u32;
+        mesh.indices.extend_from_slice(&[a, c, b, b, c, d]);
+    }
+    mesh
 }
 
 /// 在一个坐标系矩形内绘制：网格 + 坐标轴（含箭头）+ 刻度 + 函数曲线 + 表达式标签。
@@ -521,6 +618,7 @@ impl IntegratedApp {
             pending_image: None,
             pending_armed: false,
             shape_draw: None,
+            magnifier: MagnifierTool::default(),
             selected_element_id: None,
             next_z_index: 0,
             last_page: 0,
@@ -3100,7 +3198,154 @@ impl IntegratedApp {
                         self.activate_protractor(ProtractorMode::Measure, ctx);
                     }
                 });
+                ui.horizontal(|ui| {
+                    // 放大镜：点一下激活 / 再点一下退出（也可按 Esc 退出）。
+                    if ui.selectable_label(self.magnifier.active, "🔍 放大镜").clicked() {
+                        self.magnifier.active = !self.magnifier.active;
+                    }
+                });
             });
+    }
+
+    /// 每帧更新放大镜：Esc 退出；滚轮在 1x–4x 间调倍数；圆心跟随鼠标；随后叠加绘制。
+    ///
+    /// 放大镜是**纯 UI 覆盖层**：不拦截画布交互（用 `pointer.hover_pos` 而非 `response`）、
+    /// 不产生持久元素、不进 Undo 栈 —— 业务数据（文档 / 叠加层实例）完全不受其影响。
+    fn update_magnifier(&mut self, ctx: &egui::Context) {
+        if !self.magnifier.active {
+            return;
+        }
+        // Esc 退出放大镜（回到普通授课视图）。
+        if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
+            self.magnifier.active = false;
+            return;
+        }
+        // 圆心跟随鼠标；用 hover_pos 而非 response 拦截，避免吞掉底层画布/覆盖层的交互。
+        if let Some(p) = ctx.input(|i| i.pointer.hover_pos()) {
+            self.magnifier.center = p;
+        }
+        // 鼠标滚轮调节放大倍数（1.0 → 4.0），每格约 0.2x。
+        let scroll = ctx.input(|i| i.smooth_scroll_delta.y);
+        if scroll.abs() > 0.001 {
+            self.magnifier.zoom_factor =
+                (self.magnifier.zoom_factor + scroll * 0.004).clamp(1.0, 4.0);
+        }
+        self.draw_magnifier(ctx);
+    }
+
+    /// 叠加放大镜层（必须在所有元素/叠加层绘制完成后调用）：圈内内容放大重绘、圈外压暗、
+    /// 蓝色圆圈边框 + 当前放大倍数角标。纯预览，不改变任何数据模型。
+    #[allow(clippy::needless_borrows_for_generic_args)]
+    fn draw_magnifier(&mut self, ctx: &egui::Context) {
+        let tool = self.magnifier;
+        if !tool.active {
+            return;
+        }
+        let center = tool.center;
+        let radius = tool.radius;
+        let zoom = tool.zoom_factor;
+        let screen = ctx.screen_rect();
+        let painter = ctx.layer_painter(egui::LayerId::new(
+            egui::Order::Foreground,
+            egui::Id::new("magnifier_overlay"),
+        ));
+        // 相机 / 画布偏移：与形状叠加层一致（授课全屏用 DisplayApp 相机；备课用 EditApp 相机）。
+        let (cam, panel_offset) = if let Some(d) = self.display.as_ref() {
+            (Some(d.camera.clone()), egui::Vec2::ZERO)
+        } else {
+            (
+                Some(self.edit.camera.clone()),
+                egui::vec2(self.edit.canvas_offset[0], self.edit.canvas_offset[1]),
+            )
+        };
+        let cur_page = self.current_canvas_page();
+        // 圈内绘制裁剪到圆的外接正方形（近似圆，圆角外的角落由环形遮罩压暗）。
+        let clip_rect = egui::Rect::from_center_size(center, egui::vec2(radius * 2.0, radius * 2.0));
+        let inner = painter.with_clip_rect(clip_rect);
+
+        // ── 圈内放大重绘：只重新绘制「所圈区域内的可见元素」──
+        // 形状：把每个形状的屏幕矩形以圆心为基准放大 zoom 倍后，用同一渲染器重绘。
+        let shape_keys: Vec<String> = self.shape_instances.keys().cloned().collect();
+        for key in &shape_keys {
+            let inst = match self.shape_instances.get(key) {
+                Some(i) => i,
+                None => continue,
+            };
+            if inst.page != cur_page {
+                continue;
+            }
+            let base_rect = if let Some(wr) = inst.world_rect {
+                match &cam {
+                    Some(c) => {
+                        let tl = c.world_to_screen([wr.min.x, wr.min.y]) + panel_offset;
+                        let br = c.world_to_screen([wr.max.x, wr.max.y]) + panel_offset;
+                        egui::Rect::from_two_pos(tl, br)
+                    }
+                    None => default_overlay_rect(screen),
+                }
+            } else {
+                default_overlay_rect(screen)
+            };
+            let r = inst.user_rect.unwrap_or(base_rect);
+            // 放大后的屏幕矩形（圆心不动、坐标与尺寸等比外扩）。
+            let mag = egui::Rect::from_min_max(
+                magnifier_transform(r.min, center, panel_offset, 1.0, zoom),
+                magnifier_transform(r.max, center, panel_offset, 1.0, zoom),
+            );
+            let stroke = egui::Stroke::new(
+                inst.stroke_width,
+                egui::Color32::from_rgba_unmultiplied(
+                    inst.stroke_color.0,
+                    inst.stroke_color.1,
+                    inst.stroke_color.2,
+                    inst.stroke_color.3,
+                ),
+            );
+            let fill = inst
+                .fill_color
+                .map(|c| egui::Color32::from_rgba_unmultiplied(c.0, c.1, c.2, c.3));
+            draw_shape(&inner, mag, inst.kind, stroke, fill, inst.arc_degrees, inst.line_flipped);
+        }
+
+        // 函数绘图：在主画布矩形放大后，重绘完整的坐标系 + 曲线（内部自带裁剪）。
+        let func_keys: Vec<String> = self.function_instances.keys().cloned().collect();
+        for key in &func_keys {
+            let inst = match self.function_instances.get(key) {
+                Some(i) => i,
+                None => continue,
+            };
+            if inst.page != cur_page {
+                continue;
+            }
+            let r = inst.user_rect.unwrap_or_else(|| function_default_rect(screen, inst.scale));
+            let mag = egui::Rect::from_min_max(
+                magnifier_transform(r.min, center, panel_offset, 1.0, zoom),
+                magnifier_transform(r.max, center, panel_offset, 1.0, zoom),
+            );
+            draw_function_plot(&inner, mag, inst.scale, &inst.expr, &inst.expr_str);
+        }
+
+        // ── 圈外压暗（带洞环形遮罩），只留圆内内容高亮。──
+        // 外半径取足够大，覆盖整个屏幕角落（with_clip 未裁剪此层）。
+        let ring_color = egui::Color32::from_rgba_unmultiplied(18, 22, 30, 120);
+        painter.add(egui::Shape::mesh(annulus_mesh(center, radius, 8000.0, ring_color)));
+
+        // 蓝色圆圈边框。
+        painter.circle_stroke(
+            center,
+            radius,
+            egui::Stroke::new(3.0, egui::Color32::from_rgb(0, 150, 255)),
+        );
+        // 当前放大倍数角标（圆圈下方）。
+        painter.text(
+            egui::pos2(center.x, center.y + radius + 6.0),
+            egui::Align2::CENTER_TOP,
+            format!("🔍 {zoom:.1}x"),
+            egui::FontId::proportional(12.0),
+            egui::Color32::from_rgb(0, 170, 255),
+        );
+
+        ctx.request_repaint();
     }
 
     /// 函数曲线提交：采样点 → SVG polyline path → 文档层 `Element::SvgShape`（可 Undo、可序列化）。
@@ -4586,6 +4831,9 @@ impl App for IntegratedApp {
             draw_active_tool(&painter, &self.active_tool, time);
         }
 
+        // 放大镜叠加层（置于所有元素 / 教具之上，但低于监控面板）；仅激活时生效。
+        self.update_magnifier(ctx);
+
         // 监控面板置于最上层，两种模式下都可用。
         if self.show_profiler {
             self.profiler_window(ctx);
@@ -4728,6 +4976,45 @@ mod tests {
     use super::*;
     use drafftink_core::model::ShapeKind;
     use egui::{pos2, vec2, Rect};
+
+    /// 放大镜坐标变换正确性：圆心保持不动，周围点以圆心为基准等比外扩；
+    /// 且任意 canvas_offset / canvas_zoom 下，通用公式退化为纯屏幕缩放（二者抵消）。
+    #[test]
+    fn magnifier_transform_correct() {
+        // 恒等画布（offset=0、zoom=1）、放大 2x：圆心不动，边角点向外翻倍。
+        let c = pos2(100.0, 100.0);
+        let f = |p| magnifier_transform(p, c, vec2(0.0, 0.0), 1.0, 2.0);
+        assert_eq!(f(pos2(100.0, 100.0)), pos2(100.0, 100.0), "圆心保持不动");
+        assert_eq!(f(pos2(150.0, 150.0)), pos2(200.0, 200.0), "右下点放大 2x");
+        assert_eq!(f(pos2(50.0, 80.0)), pos2(0.0, 60.0), "左上点放大 2x");
+
+        // 非恒等画布（offset/zoom 改变、放大 3x）：通用公式手算校验。
+        // 圆心屏幕 (250,230) → 画布 (100,100)；屏幕点 (270,240) → 画布 (110,105)
+        // → 画布放大 3x 后 (130,115) → 映射回屏幕 (310,260)。
+        let out = magnifier_transform(
+            pos2(270.0, 240.0),
+            pos2(250.0, 230.0),
+            vec2(50.0, 30.0),
+            2.0,
+            3.0,
+        );
+        assert_eq!(out, pos2(310.0, 260.0), "通用画布参数 → 世界放大后映射回屏幕");
+
+        // 关键不变量：**任何**画布参数与放大倍数下，放大镜圆心都保持固定。
+        for zf in [1.0, 2.0, 4.0] {
+            assert_eq!(
+                magnifier_transform(
+                    pos2(250.0, 230.0),
+                    pos2(250.0, 230.0),
+                    vec2(50.0, 30.0),
+                    2.0,
+                    zf,
+                ),
+                pos2(250.0, 230.0),
+                "圆心在不同倍数下均应保持不动 (zf={zf})"
+            );
+        }
+    }
 
     /// 构造一个已固定（user_rect 已知）的形状实例，便于在测试中做命中检测，
     /// 无需真实相机 / 画布坐标变换。
