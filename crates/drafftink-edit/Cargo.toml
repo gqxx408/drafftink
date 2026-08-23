@@ -1,0 +1,29 @@
+[package]
+name = "drafftink-edit"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "edit"
+path = "src/main.rs"
+
+[lib]
+name = "drafftink_edit"
+path = "src/lib.rs"
+
+[dependencies]
+drafftink-core = { path = "../drafftink-core" }
+enbx_importer = { path = "../enbx_importer" }
+egui.workspace = true
+eframe.workspace = true
+kurbo = "0.11"
+serde.workspace = true
+bincode.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+rfd.workspace = true
+raw-window-handle.workspace = true
+log.workspace = true
+env_logger = "0.11"
+image.workspace = true

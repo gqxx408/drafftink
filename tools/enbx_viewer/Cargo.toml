@@ -1,0 +1,10 @@
+[package]
+name = "enbx_viewer"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+format_enbx = { path = "../../plugins/format_enbx" }
+drafftink-core = { path = "../../crates/drafftink-core" }
+egui.workspace = true
+eframe.workspace = true

@@ -1,0 +1,263 @@
+2026-07-28T12:07:51.7470442Z [INFO] Log started → "C:\\My-project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T12:07:51.7480028Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T12:07:51.9279964Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T12:07:51.9283257Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T12:07:51.929926Z [INFO] [display] Plugin dir: "C:\\My-project\\seewo-class-mvp\\plugins"
+2026-07-28T12:07:51.9310868Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T12:07:51.9312938Z [INFO] [plugin] Loading "C:\\My-project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T12:07:51.9658069Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T12:07:51.9659Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T12:07:51.965961Z [INFO] [format_enbx] Loaded
+2026-07-28T12:07:51.9868934Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T12:08:35.7749262Z [INFO] [render] frame=60 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T12:08:37.3248055Z [INFO] [render] frame=120 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T12:08:42.8347132Z [INFO] [render] frame=180 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T12:08:43.9595425Z [INFO] [render] frame=240 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T12:08:49.2280008Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T12:08:49.2280789Z [INFO] [app] Available importers: 1
+2026-07-28T12:08:49.2281363Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T12:08:49.2282847Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T12:08:49.228455Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T12:08:51.0164603Z [INFO] [render] frame=300 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T12:15:59.9037551Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T12:15:59.9043568Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T12:16:00.1784283Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T12:16:00.1786408Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T12:16:00.180751Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T12:16:00.181594Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T12:16:00.1817183Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T12:16:00.1827017Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T12:16:00.1828098Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T12:16:00.182924Z [INFO] [format_enbx] Loaded
+2026-07-28T12:16:00.7210831Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T12:16:02.8207461Z [INFO] [render] frame=60 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T12:16:05.7310728Z [INFO] [render] frame=120 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T12:16:13.101163Z [INFO] [render] frame=180 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T12:16:14.8117521Z [INFO] [render] frame=240 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T12:16:19.1350845Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T12:16:19.1352134Z [INFO] [app] Available importers: 1
+2026-07-28T12:16:19.135296Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T12:16:19.1354641Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T12:16:19.1363017Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T12:31:20.4771489Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T12:31:20.4775496Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T12:31:20.6663433Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T12:31:20.6665191Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T12:31:20.6682409Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T12:31:20.6689921Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T12:31:20.6690741Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T12:31:20.6698221Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T12:31:20.6699059Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T12:31:20.6699708Z [INFO] [format_enbx] Loaded
+2026-07-28T12:31:20.9955276Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:03:14.5016496Z [INFO] [render] frame=60 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:03:15.8376127Z [INFO] [render] frame=120 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:03:22.8451356Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T13:03:22.845234Z [INFO] [app] Available importers: 1
+2026-07-28T13:03:22.845295Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T13:03:22.8454286Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T13:03:22.8457668Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T13:03:24.1681959Z [INFO] [render] frame=180 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T13:03:25.7951784Z [INFO] [render] frame=240 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T13:03:30.8208626Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T13:03:30.8209619Z [INFO] [app] Available importers: 1
+2026-07-28T13:03:30.8210262Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T13:03:30.8212609Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T13:03:30.8215686Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T13:03:32.7525533Z [INFO] [render] frame=300 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T13:04:32.4330473Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T13:04:32.4336027Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T13:04:32.6486718Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T13:04:32.6488505Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T13:04:32.6505334Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T13:04:32.6514009Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T13:04:32.6514858Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T13:04:32.652357Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T13:04:32.6524444Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T13:04:32.6525093Z [INFO] [format_enbx] Loaded
+2026-07-28T13:04:32.9856455Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:05:53.4820843Z [INFO] [render] frame=60 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:05:55.533755Z [INFO] [render] frame=120 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:05:58.0336373Z [INFO] [render] frame=180 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:06:05.3786505Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T13:06:05.3787487Z [INFO] [app] Available importers: 1
+2026-07-28T13:06:05.3788085Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T13:06:05.3789396Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T13:06:05.3792887Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T13:06:06.9426443Z [INFO] [render] frame=240 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T13:07:58.7592121Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T13:07:58.7597539Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T13:07:59.0402658Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T13:07:59.0404791Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T13:07:59.0423855Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T13:07:59.0432013Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T13:07:59.043299Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T13:07:59.0444081Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T13:07:59.0445105Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T13:07:59.0445869Z [INFO] [format_enbx] Loaded
+2026-07-28T13:07:59.4473589Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:08:02.1918226Z [INFO] [render] frame=60 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:08:07.6269781Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T13:08:07.6271095Z [INFO] [app] Available importers: 1
+2026-07-28T13:08:07.6271858Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T13:08:07.6273508Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T13:08:07.627758Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T13:08:09.25058Z [INFO] [render] frame=120 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T13:19:11.4368006Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T13:19:11.4375555Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T13:19:11.7356703Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T13:19:11.7358575Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T13:19:11.7380208Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T13:19:11.7390395Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T13:19:11.7391515Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T13:19:11.7402429Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T13:19:11.7403628Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T13:19:11.7404489Z [INFO] [format_enbx] Loaded
+2026-07-28T13:19:12.1856314Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:39:19.823475Z [INFO] [render] frame=60 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:39:22.0499335Z [INFO] [render] frame=120 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:39:25.8686587Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T13:39:25.8687583Z [INFO] [app] Available importers: 1
+2026-07-28T13:39:25.8688179Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T13:39:25.8689515Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T13:39:25.8693039Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T13:39:27.6423707Z [INFO] [render] frame=180 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T13:41:35.7517425Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T13:41:35.7525457Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T13:41:36.0735603Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T13:41:36.0741244Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T13:41:36.0815706Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T13:41:36.0824241Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T13:41:36.0828355Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T13:41:36.0856825Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T13:41:36.085793Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T13:41:36.0859706Z [INFO] [format_enbx] Loaded
+2026-07-28T13:41:36.4538404Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:41:39.3908271Z [INFO] [render] frame=60 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:41:41.0682518Z [INFO] [render] frame=120 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:41:42.7336895Z [INFO] [render] frame=180 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:41:43.835383Z [INFO] [render] frame=240 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:41:48.4254Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T13:41:48.4255015Z [INFO] [app] Available importers: 1
+2026-07-28T13:41:48.4256145Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T13:41:48.4269431Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T13:41:48.4275866Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T13:41:49.8168129Z [INFO] [render] frame=300 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T13:42:23.2992312Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T13:42:23.2996915Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T13:42:23.5087831Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T13:42:23.5089877Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T13:42:23.5107336Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T13:42:23.5115408Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T13:42:23.5116356Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T13:42:23.5125276Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T13:42:23.5126248Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T13:42:23.5126974Z [INFO] [format_enbx] Loaded
+2026-07-28T13:42:23.9156338Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:42:25.9594371Z [INFO] [render] frame=60 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:42:27.6178074Z [INFO] [render] frame=120 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:42:31.7466637Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T13:42:31.7467633Z [INFO] [app] Available importers: 1
+2026-07-28T13:42:31.746825Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T13:42:31.7469575Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T13:42:31.7472963Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T13:42:32.9572381Z [INFO] [render] frame=180 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T13:43:31.8012517Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T13:43:31.8018086Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T13:43:32.0070158Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T13:43:32.0072156Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T13:43:32.008914Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T13:43:32.0096658Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T13:43:32.0097554Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T13:43:32.0105558Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T13:43:32.010648Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T13:43:32.0107188Z [INFO] [format_enbx] Loaded
+2026-07-28T13:43:32.3793549Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:44:37.3353255Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T13:44:37.3358052Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T13:44:37.5579451Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T13:44:37.5581232Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T13:44:37.5598694Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T13:44:37.5608889Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T13:44:37.561007Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T13:44:37.5620086Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T13:44:37.5621027Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T13:44:37.5621737Z [INFO] [format_enbx] Loaded
+2026-07-28T13:44:38.0745919Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:56:44.1802233Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T13:56:44.1806534Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T13:56:44.403722Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T13:56:44.4038837Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T13:56:44.4056787Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T13:56:44.4063508Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T13:56:44.4064354Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T13:56:44.4072447Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T13:56:44.4073292Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T13:56:44.4073927Z [INFO] [format_enbx] Loaded
+2026-07-28T13:56:44.7384812Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:56:49.4688167Z [INFO] [render] frame=60 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:57:52.9344685Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T13:57:52.93487Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T13:57:53.1389656Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T13:57:53.1392508Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T13:57:53.1408591Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T13:57:53.1415114Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T13:57:53.1415912Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T13:57:53.1423178Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T13:57:53.1424537Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T13:57:53.1425171Z [INFO] [format_enbx] Loaded
+2026-07-28T13:57:53.4744569Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:57:55.1469749Z [INFO] [render] frame=60 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T13:58:00.5264138Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T13:58:00.5265141Z [INFO] [app] Available importers: 1
+2026-07-28T13:58:00.5265748Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T13:58:00.5267076Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T13:58:00.5270429Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T13:58:01.2395743Z [INFO] [render] frame=120 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T13:58:02.2397618Z [INFO] [render] frame=180 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T14:13:33.2047601Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T14:13:33.2052515Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T14:13:33.4483561Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T14:13:33.448521Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T14:13:33.450198Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T14:13:33.4508683Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T14:13:33.4509504Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T14:13:33.4518804Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T14:13:33.4519679Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T14:13:33.4520323Z [INFO] [format_enbx] Loaded
+2026-07-28T14:13:33.8273565Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T14:13:35.3716262Z [INFO] [render] frame=60 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T14:13:36.3688738Z [INFO] [render] frame=120 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T14:13:38.1263657Z [INFO] [render] frame=180 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T14:13:42.5720157Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T14:13:42.5721151Z [INFO] [app] Available importers: 1
+2026-07-28T14:13:42.5721764Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T14:13:42.5723535Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T14:13:42.5726854Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T14:13:44.4662981Z [INFO] [render] frame=240 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T14:13:46.2231835Z [INFO] [render] frame=300 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T14:13:50.7164316Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T14:13:50.7165336Z [INFO] [app] Available importers: 1
+2026-07-28T14:13:50.7165964Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T14:13:50.7166782Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T14:13:50.7172226Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T14:13:51.6925899Z [INFO] [render] frame=360 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]
+2026-07-28T14:15:21.9878089Z [INFO] Log started → "C:\\My-Project\\seewo-class-mvp\\logs\\display_2026-07-28.log"
+2026-07-28T14:15:21.9882894Z [INFO] [display] No file argument, starting with empty canvas.
+2026-07-28T14:15:22.2009259Z [INFO] [font] Loaded CJK font: SimHei (9517.4 KB, path=C:\Windows\Fonts\simhei.ttf)
+2026-07-28T14:15:22.201113Z [INFO] [font] Installed CJK fallback: SimHei
+2026-07-28T14:15:22.2029823Z [INFO] [display] Plugin dir: "C:\\My-Project\\seewo-class-mvp\\plugins"
+2026-07-28T14:15:22.2039159Z [INFO] [display] Found 1 plugin(s)
+2026-07-28T14:15:22.2040281Z [INFO] [plugin] Loading "C:\\My-Project\\seewo-class-mvp\\plugins\\format_enbx.dll"
+2026-07-28T14:15:22.2050719Z [INFO] [plugin] Loaded format_enbx v0.1.0 by drafftink
+2026-07-28T14:15:22.2051992Z [INFO] [plugin]   requires: 读取文件
+2026-07-28T14:15:22.2052988Z [INFO] [format_enbx] Loaded
+2026-07-28T14:15:22.5464671Z [INFO] [render] frame=0 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T14:15:24.4574875Z [INFO] [render] frame=60 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T14:15:26.3625105Z [INFO] [render] frame=120 pages=1 path="none" page_size=[1920.0, 1080.0]
+2026-07-28T14:15:32.1874556Z [INFO] [app] Loading .enbx: 21907 bytes
+2026-07-28T14:15:32.187559Z [INFO] [app] Available importers: 1
+2026-07-28T14:15:32.1876203Z [INFO] [app] Trying importer: format_enbx
+2026-07-28T14:15:32.1877528Z [INFO] [enbx] Importing 21907 bytes
+2026-07-28T14:15:32.1880836Z [INFO] [app] Loaded doc: 1 pages, page_size=[1280.0, 720.0]
+2026-07-28T14:15:33.8076084Z [INFO] [render] frame=180 pages=1 path="C:\\en5\\S01.enbx" page_size=[1280.0, 720.0]

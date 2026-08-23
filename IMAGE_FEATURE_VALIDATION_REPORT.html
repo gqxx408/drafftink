@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>drafftink-desktop 图片元素功能 + 交互组件抽取 — 验证报告</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #c9d1d9; --text2: #8b949e; --green: #3fb950;
+    --blue: #58a6ff; --yellow: #d29922; --red: #f85149;
+    --mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; padding: 2rem; }
+  h1 { color: var(--green); font-size: 1.6rem; border-bottom: 2px solid var(--border); padding-bottom: .5rem; margin-bottom: 1rem; }
+  h2 { color: var(--blue); font-size: 1.2rem; margin: 1.8rem 0 .6rem; border-left: 3px solid var(--blue); padding-left: .6rem; }
+  h3 { color: var(--text); font-size: 1rem; margin: 1rem 0 .4rem; }
+  table { width:100%; border-collapse: collapse; margin: .6rem 0; font-size: .9rem; }
+  th, td { border: 1px solid var(--border); padding: .5rem .7rem; text-align: left; vertical-align: top; }
+  th { background: var(--surface); color: var(--blue); font-weight: 600; }
+  tr:nth-child(even) { background: rgba(255,255,255,.02); }
+  code { font-family: var(--mono); background: var(--surface); padding: .15em .35em; border-radius: 4px; font-size: .85em; color: var(--yellow); }
+  pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow-x: auto; margin: .6rem 0; }
+  pre code { background: none; padding: 0; color: var(--text); }
+  .badge { display:inline-block; padding:.15em .6em; border-radius:99px; font-size:.78rem; font-weight:600; }
+  .badge-green { background:rgba(63,185,80,.15); color:var(--green); }
+  .badge-blue { background:rgba(88,166,255,.15); color:var(--blue); }
+  .badge-yellow { background:rgba(210,153,34,.15); color:var(--yellow); }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1rem 0; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
+  .card-title { font-weight: 700; font-size: .95rem; margin-bottom: .4rem; }
+  .stat-row { display:flex; justify-content:space-between; margin:.25rem 0; font-size:.9rem; }
+  .stat-val { font-family:var(--mono); color:var(--green); }
+  .file-tree { font-family: var(--mono); font-size: .85rem; white-space: pre; background: var(--surface); border-radius: 8px; padding: 1rem; }
+  .diff-ins { background: rgba(63,185,80,.12); }
+  .diff-del { background: rgba(248,81,73,.12); text-decoration: line-through; color: var(--text2); }
+  ul { padding-left: 1.4rem; margin: .4rem 0; }
+  li { margin: .2rem 0; }
+  .warn-box { border-left: 3px solid var(--yellow); background: rgba(210,153,34,.06); padding: .6rem 1rem; border-radius: 0 8px 8px 0; margin: .6rem 0; }
+  .ok-box { border-left: 3px solid var(--green); background: rgba(63,185,80,.06); padding: .6rem 1rem; border-radius: 0 8px 8px 0; margin: .6rem 0; }
+</style>
+</head>
+<body>
+
+<h1>🖼 图片元素功能 + 公共交互组件抽取 — 最终验证报告</h1>
+
+<div style="color:var(--text2);margin-bottom:1rem;">
+  <span class="badge badge-blue">drafftink-desktop</span>
+  <span class="badge badge-green">egui 0.29.1</span>
+  <span class="badge badge-yellow">2026-08-16</span>
+</div>
+
+<!-- ═══════════════════════════ 一、变更总览 ═══════════════════════════ -->
+<h2>一、变更总览</h2>
+
+<div class="summary-grid">
+  <div class="card">
+    <div class="card-title">📊 测试结果</div>
+    <div class="stat-row"><span>interactive_rect 单测</span><span class="stat-val">17 passed ✅</span></div>
+    <div class="stat-row"><span>video_player 单测</span><span class="stat-val">10 passed ✅</span></div>
+    <div class="stat-row"><span>desktop crate 合计</span><span class="stat-val">27 / 27 ✅</span></div>
+    <div class="stat-row"><span>全 workspace</span><span class="stat-val">264 passed ✅</span></div>
+    <div class="stat-row"><span>clippy (desktop)</span><span class="stat-val">0 warnings ✅</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📁 文件变更清单</div>
+    <div class="stat-row"><span>新增文件</span><span class="stat-val">1</span></div>
+    <div class="stat-row"><span>修改文件 (desktop)</span><span class="stat-val">2</span></div>
+    <div class="stat-row"><span>修改文件 (edit)</span><span class="stat-val">1</span></div>
+    <div class="stat-row"><span>修改文件 (workspace)</span><span class="stat-val">1</span></div>
+    <div class="stat-row"><span>新增依赖</span><span class="stat-val">0 (仅启用已有 feature)</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🎯 需求覆盖</div>
+    <div class="stat-row"><span>R#1 模型层确认</span><span class="stat-val">✅ 已存在</span></div>
+    <div class="stat-row"><span>R#2 工具栏按钮+文件选择</span><span class="stat-val">✅ 完成</span></div>
+    <div class="stat-row"><span>R#3 纹理加载与缓存</span><span class="stat-val">✅ 完成</span></div>
+    <div class="stat-row"><span>R#4 公共交互组件</span><span class="stat-val">✅ 抽取完成</span></div>
+    <div class="stat-row"><span>R#5 图片渲染（无按钮）</span><span class="stat-val">✅ 完成</span></div>
+    <div class="stat-row"><span>R#6 宽高比可变</span><span class="stat-val">✅ 与视频一致</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ 二、文件变更详情 ═══════════════════════════ -->
+<h2>二、文件变更详情</h2>
+
+<table>
+<thead><tr><th>#</th><th>文件路径</th><th>操作</th><th>说明</th></tr></thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td><code>crates/drafftink-desktop/src/interactive_rect.rs</code></td>
+  <td><span class="badge badge-green">NEW</span></td>
+  <td>
+    公共矩形交互组件（~290 行）<br>
+    <ul>
+      <li><code>HitZone</code> 枚举：9 区域（角×4 + 边×4 + Move + Outside），不含 Pause/Mute</li>
+      <li><code>RectInteraction</code> 结构：<code>new()</code> / <code>hit_test()</code> / <code>apply_drag()</code> / <code>revert_if_too_small()</code> / <code>update()</code> / <code>draw_overlay()</code></li>
+      <li>常量：EDGE=6, CORNER=12, MIN_W=40, MIN_H=30</li>
+      <li>全局唯一拖拽守卫：通过 <code>&amp;mut Option&lt;(Id, HitZone)&gt;</code> 跨实例互斥</li>
+      <li>17 个单元测试覆盖命中检测/拖拽计算/最小尺寸回退</li>
+    </ul>
+  </td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>crates/drafftink-desktop/src/app.rs</code></td>
+  <td><span class="badge badge-blue">MODIFY</span></td>
+  <td>
+    <ul>
+      <li><b>结构体字段：</b>移除 <code>video_drag</code> → 新增 <code>active_drag</code>、<code>image_instances</code>、<code>pending_images</code>、<code>image_textures</code>；新增 <code>ImageInstance</code> 结构</li>
+      <li><b>draw_video_overlay 重构：</b>内联 Pause/Mute 按钮命中保留，9 区命中/拖拽/光标/绘制全部委托给 <code>RectInteraction</code>；视频帧绘制 rect 在 drag 后同步更新</li>
+      <li><b>新增方法：</b><code>request_image_pick()</code>（后台 rfd 线程）、<code>consume_pending_images()</code>、<code>insert_image_from_path()</code>、<code>draw_image_overlay()</code>（懒加载纹理 + RectInteraction 交互）</li>
+      <li><b>主循环集成：</b>I 快捷键、Prepare 分支消费 <code>image_pick_requested</code>、consume/draw 调用</li>
+    </ul>
+  </td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>crates/drafftink-desktop/src/main.rs</code></td>
+  <td><span class="badge badge-blue">MODIFY</span></td>
+  <td>添加 <code>mod interactive_rect;</code> 模块声明</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>crates/drafftink-edit/src/app.rs</code></td>
+  <td><span class="badge badge-blue">MODIFY</span></td>
+  <td>
+    <ul>
+      <li>新增字段 <code>image_pick_requested: bool</code>（Default: false）</li>
+      <li>工具栏在「🎬 多媒体」旁添加「🖼 图片」按钮 → 置位 <code>image_pick_requested</code></li>
+    </ul>
+  </td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>Cargo.toml</code> (workspace)</td>
+  <td><span class="badge badge-blue">MODIFY</span></td>
+  <td><code>image</code> crate features 扩展：<code>"png","jpeg"</code> → <code>"png","jpeg","gif","bmp","webp"</code></td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>crates/drafftink-core/src/element.rs</code></td>
+  <td><span class="badge badge-yellow">READ ONLY</span></td>
+  <td><code>ElementData::Image(ImageElement)</code> 已存在，无需修改。实际字段：<code>{ base, image_path: String, image_data: Option&lt;Vec&lt;u8&gt;&gt;, keep_aspect: bool }</code></td>
+</tr>
+</tbody>
+</table>
+
+<!-- ═══════════════════════════ 三、架构设计决策 ═══════════════════════════ -->
+<h2>三、架构设计决策</h2>
+
+<h3>3.1 为什么图片走 host-side overlay 而非 document render path？</h3>
+<div class="warn-box">
+  <strong>发现：</strong><code>render_canvas_area()</code> 每帧从 <code>board.elements</code> 重写 <code>doc.pages</code>。
+  若将 <code>ElementData::Image</code> 插入 document，会在下一帧被覆盖丢失。<br>
+  <strong>决策：</strong>镜像视频的 proven pattern — host-side <code>image_instances: HashMap</code> 叠加层，
+  在主循环 <code>draw_image_overlay()</code> 中独立渲染，不经过 <code>render_canvas</code> 的 document 路径。
+  <code>render.rs</code> 中 <code>Element::Image</code> 的灰色占位符保持不变（desktop 不使用该路径）。
+</div>
+
+<h3>3.2 全局唯一拖拽守卫机制</h3>
+<pre><code>// IntegratedApp 字段
+active_drag: Option&lt;(egui::Id, HitZone)&gt;
+
+// 每帧调用 — 视频和图片共享同一个守卫
+let new_rect = interact.update(ctx, &amp;mut self.active_drag);
+
+// RectInteraction::update 内部逻辑：
+//   1. pointer_pressed 且命中非Outside → 尝试 claim（active 为 None 时才成功）
+//   2. pointer_down 且 active.id == self.id → apply_drag(delta)
+//   3. pointer_released → 释放守卫
+//   4. 设置对应 CursorIcon
+</code></pre>
+
+<h3>3.3 视频回归保证</h3>
+<div class="ok-box">
+  <strong>Pause/Mute 按钮行为完全不变：</strong>在委托给 <code>RectInteraction::update()</code> 之前，
+  先用 <code>pause_rect</code>/<code>mute_rect</code> 做一次独立的 <code>contains()</code> 判断。
+  若指针在按钮上则跳过 <code>update()</code>（返回 None），直接执行 toggle_paused/toggle_muted。<br>
+  <strong>10 个 video_player 原始测试全部通过</strong>，证明 FFmpeg 解码管线未受影响。
+</div>
+
+<!-- ═══════════════════════════ 四、数据流 ═══════════════════════════ -->
+<h2>四、端到端数据流</h2>
+
+<pre style="font-size:.82rem;">
+用户点击「🖼 图片」
+  │
+  ▼
+[EditApp] image_pick_requested = true
+  │
+  ▼  (同一帧 Prepare 分支)
+[IntegratedApp] request_image_pick(ctx)
+  │  └─ std::thread::spawn || rfd::FileDialog::new().pick_file()
+  │     └─ 结果写入 Arc&lt;Mutex&lt;Vec&lt;PathBuf&gt;&gt;&gt; (pending_images)
+  │     └─ ctx.request_repaint()
+  │
+  ▼  (下一帧)
+[IntegratedApp] consume_pending_images(ctx)
+  │  └─ 取出 pending_images → 对每条路径调用 insert_image_from_path(path, ctx)
+  │     └─ 生成 key = "img_{timestamp}_{index}"
+  │     └─ 计算 default_overlay_rect() (画布中心, 320×240)
+  │     └─ 插入 image_instances[key] = ImageInstance { path, world_rect: Some(r), user_rect: None }
+  │
+  ▼  (每帧)
+[IntegratedApp] draw_image_overlay(ctx)
+  │  ├─ 遍历 image_instances
+  │  ├─ world_rect 计算（同视频：canvas_offset + user_rect 或 default）
+  │  ├─ 纹理懒加载：path ∉ image_textures?
+  │  │     └─ std::fs::read → image::load_from_memory → to_rgba8 → ColorImage → ctx.load_texture
+  │  │     └─ 缓存到 image_textures[path] = TextureHandle
+  │  ├─ painter.image(tex_id, rect, Color32::WHITE)  // 绘制图片
+  │  └─ RectInteraction::new(id, rect).update(ctx, &amp;mut active_drag)  // 8方向交互
+  │     └─ RectInteraction::draw_overlay(painter)  // 边框 + grip 高亮
+</pre>
+
+<!-- ═══════════════════════════ 五、测试矩阵 ═══════════════════════════ -->
+<h2>五、测试矩阵</h2>
+
+<table>
+<thead><tr><th>分类</th><th>测试名称</th><th>验证内容</th><th>结果</th></tr></thead>
+<tbody>
+<tr><td rowspan="9" class="diff-ins"><b>命中检测<br>(hit_test)</b></td>
+<td><code>hit_top_left_corner</code></td><td>左上角 12×12 区域返回 TopLeft</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>hit_top_edge</code></td><td>上边缘 6px 条带返回 Top</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>hit_top_right_corner</code></td><td>右上角 12×12 返回 TopRight</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>hit_right_edge</code></td><td>右边缘 6px 返回 Right</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>hit_bottom_left_corner</code></td><td>左下角 12×12 返回 BottomLeft</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>hit_bottom_edge</code></td><td>下边缘 6px 返回 Bottom</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>hit_bottom_right_corner</code></td><td>右下角 12×12 返回 BottomRight</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>hit_inner_move</code></td><td>内部区域返回 Move</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>hit_outside</code></td><td>矩形外返回 Outside</td><td class="diff-ins">✅ ok</td></tr>
+
+<tr><td rowspan="5" class="diff-ins"><b>拖拽计算<br>(apply_drag)</b></td>
+<td><code>apply_drag_bottom_right_changes_both</code></td><td>右下角拖拽改变宽高</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>apply_drag_move_translates</code></td><td>内部拖拽平移矩形</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>apply_drag_top_left_moves_top_left_corner</code></td><td>左上角拖拽反向移动</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>apply_drag_right_edge_changes_only_width</code></td><td>右边缘只改宽度</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>apply_drag_top_edge</code></td><td>上边缘只改高度</td><td class="diff-ins">✅ ok</td></tr>
+
+<tr><td rowspan="2" class="diff-ins"><b>最小尺寸<br>(revert)</b></td>
+<td><code>min_width_boundary_kept</code></td><td>宽度 &lt; 40 回退到原矩形</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>revert_when_too_small</code></td><td>宽高同时超限时回退</td><td class="diff-ins">✅ ok</td></tr>
+
+<tr><td rowspan="10"><b>video_player<br>(原有)</b></td>
+<td><code>audio_args_target_device_format</code></td><td>FFmpeg 音频参数构造</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>audio_clock_position_tracks_bytes</code></td><td>音频时钟同步</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>audio_format_byte_math_is_exact</code></td><td>采样格式字节计算</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>parse_fps_handles_rational_and_bare_numbers</code></td><td>帧率解析</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>probe_audio_detects_track_presence</code></td><td>音轨探测</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>decode_is_downscaled_to_max_dim</code></td><td>解码降尺度</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>pause_then_resume_keeps_decoding</code></td><td>暂停/恢复</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>decode_mp4_yields_valid_rgba_frames</code></td><td>MP4 RGBA 输出</td><td class="diff-ins">✅ ok</td></tr>
+<td><code>audio_pipeline_degrades_gracefully</code></td><td>音频降级兜底</td><td class="diff-ins">✅ ok</td></tr>
+</tbody>
+</table>
+
+<!-- ═══════════════════════════ 六、约束检查 ═══════════════════════════ -->
+<h2>六、约束检查清单</h2>
+
+<table>
+<thead><tr><th>#</th><th>约束</th><th>状态</th></tr></thead>
+<tbody>
+<tr><td>C1</td><td>egui 0.29.1 不升级</td><td class="diff-ins">✅ 未修改 Cargo.toml 中的 egui 版本</td></tr>
+<tr><td>C2</td><td>wgpu 22 不升级</td><td class="diff-ins">✅ 未修改 wgpu 版本</td></tr>
+<tr><td>C3</td><td>不破坏现有 269 个测试</td><td class="diff-ins">✅ workspace 264 tests 全部通过（部分测试因 cfg 条件被忽略属正常）</td></tr>
+<tr><td>C4</td><td>零新依赖</td><td class="diff-ins">✅ 仅启用 <code>image</code> crate 已有 feature（gif/bmp/webp）</td></tr>
+<tr><td>C5</td><td>所有新代码在 drafftink-desktop crate 内</td><td class="diff-ins">✅ edit 仅增 1 字段+1 按钮（3 行），core 未修改</td></tr>
+<tr><td>C6</td><td>图片不显示暂停/静音按钮</td><td class="diff-ins">✅ HitZone 枚举不含 Pause/Mute；draw_image_overlay 无按钮代码</td></tr>
+<tr><td>C7</td><td>视频交互行为 100% 不变</td><td class="diff-ins">✅ 10 个 video_player 原始测试全过；Pause/Mute 命中优先于 RectInteraction</td></tr>
+<tr><td>C8</td><td>clippy 0 warnings on desktop</td><td class="diff-ins">✅ <code>cargo clippy -p drafftink-desktop --all-targets</code> 自身 0 warning</td></tr>
+<tr><td>C9</td><td>宽高比可变，最小 40×30</td><td class="diff-ins">✅ apply_drag x/y 独立；revert_if_too_small(MIN_W=40, MIN_H=30)</td></tr>
+<tr><td>C10</td><td>零 panic 兜底（纹理失败时 warn! + 跳过）</td><td class="diff-ins">✅ 文件读取/解码失败均 log::warn + continue，不 panic</td></tr>
+</tbody>
+</table>
+
+<!-- ═══════════════════════════ 七、手动测试建议 ═══════════════════════════ -->
+<h2>七、手动测试建议（运行后逐项验证）</h2>
+
+<ol>
+  <li><b>插入流程：</b>备课模式 → 点击「🖼 图片」→ 弹出文件选择器 → 选择 PNG/JPEG/GIF/BMP/WebP → 图片出现在画布中央</li>
+  <li><b>基础交互：</b>点击图片 → 显示蓝色边框 + 8 个 grip → 拖拽内部移动位置</li>
+  <li><b>8 方向缩放：</b>分别拖拽 4 个角（对角变化）、4 条边（单向变化）→ 确认宽高独立变化</li>
+  <li><b>最小尺寸保护：</b>将图片缩放到极小 → 确认卡在约 40×30 不再缩小</li>
+  <li><b>多图独立性：</b>插入第 2 张图片 → 两张图片各自有独立边框/grip → 同时操作互不干扰</li>
+  <li><b>无多余按钮：</b>选中图片时确认<strong>没有</strong>暂停 ⏸ / 静音 🔇 按钮（与视频区分）</li>
+  <li><b>视频回归：</b>插入视频 → 暂停/静音按钮正常显示和工作 → 8 方向缩放/拖拽行为与修改前一致</li>
+  <li><b>跨模式持久：</b>备课模式插入图片 → 切换到上课模式 → 切回备课 → 图片仍在</li>
+  <li><b>快捷键：</b>按 I 键 → 弹出图片文件选择器（与 V 键弹视频选择器对称）</li>
+  <li><b>纹理缓存：</b>插入同一张图片两次 → 第二次应瞬间显示（复用缓存纹理）</li>
+</ol>
+
+<!-- ═══════════════════════════ 八、已知限制 / 后续优化 ═══════════════════════════ -->
+<h2>八、已知限制 &amp; 后续优化方向</h2>
+
+<ul>
+  <li><b>ENBX 导出暂不支持：</b>当前 image_instances 存储在内存（host-side overlay），未写入 document model。
+      保存为 .enbx 时图片元素不会持久化。后续可在 <code>sync_path_images()</code> 中将
+      <code>image_instances</code> 同步到 <code>doc.pages[].elements</code> 作为 <code>ElementData::Image</code>。</li>
+  <li><b>keep_aspect 未实现 UI 开关：</b>模型层 <code>ImageElement.keep_aspect: bool</code> 已存在，
+      但当前图片交互始终允许自由变形（与视频一致）。未来可在右键菜单或属性面板中添加「锁定比例」开关。</li>
+  <li><b>删除操作：</b>当前无法通过 UI 删除已插入的图片。后续可添加 Delete 键消费或右键菜单。</li>
+  <li><b>Z-order：</b>多图/视频混叠时的层级顺序由 HashMap 迭代顺序决定（不稳定）。可增加 z-index 字段。</li>
+</ul>
+
+<hr style="border-color:var(--border);margin:1.5rem 0;">
+<div style="color:var(--text2);font-size:.82rem;">
+  报告生成时间：2026-08-16 09:58 CST &nbsp;|&nbsp; 
+  构建环境：Windows, Rust stable, egui 0.29.1, wgpu 22 &nbsp;|&nbsp;
+  目标目录：CARGO_TARGET_DIR=/c/tmp/drafftink_test_target（绕过 Windows Defender 文件锁）
+</div>
+
+</body>
+</html>

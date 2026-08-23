@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+env:
+  CARGO_TERM_COLOR: always
+  # 与 rust-toolchain.toml 保持一致；该仓库面向 Windows（希沃班级产品）构建。
+  RUST_TOOLCHAIN: "1.88.0"
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: clippy, rustfmt
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (baseline)
+        # 基线检查：不阻断既有告警，仅报告。
+        run: cargo clippy --workspace --all-targets
+
+      - name: Clippy (unwrap / expect guard)
+        # 安全加固门禁：显式标记 .unwrap() / .expect() 使用，便于在审查中收敛关键路径。
+        # 使用 -W（警告而非 -D 拒绝），避免历史告警阻塞流水线；新代码应逐步消除。
+        run: cargo clippy --workspace --all-targets -- -W clippy::unwrap_used -W clippy::expect_used
+
+      - name: Test
+        run: cargo test --workspace

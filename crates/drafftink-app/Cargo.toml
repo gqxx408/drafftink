@@ -1,0 +1,31 @@
+[package]
+name = "drafftink-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "seewo-class"
+path = "src/main.rs"
+
+[dependencies]
+drafftink-core = { path = "../drafftink-core" }
+drafftink-quiz = { path = "../drafftink-quiz" }
+egui.workspace = true
+eframe.workspace = true
+egui_extras.workspace = true
+serde.workspace = true
+bincode.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+image.workspace = true
+rfd.workspace = true
+raw-window-handle.workspace = true
+anyhow.workspace = true
+mimalloc = "0.1"
+enbx_importer = { path = "../enbx_importer" }
+seewo-plugin-api = { path = "../seewo-plugin-api" }
+seewo-plugin-loader = { path = "../seewo-plugin-loader" }
+log.workspace = true
+rodio.workspace = true
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "time"] }

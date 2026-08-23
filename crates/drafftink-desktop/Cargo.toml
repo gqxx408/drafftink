@@ -1,0 +1,37 @@
+[package]
+name = "drafftink-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+build = "build.rs"
+
+[[bin]]
+name = "drafftink-desktop"
+path = "src/main.rs"
+
+[dependencies]
+drafftink-core = { path = "../drafftink-core" }
+drafftink-edit = { path = "../drafftink-edit" }
+drafftink-display = { path = "../drafftink-display" }
+drafftink-enbx = { path = "../drafftink-enbx" }
+eframe.workspace = true
+egui.workspace = true
+egui_extras.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+anyhow.workspace = true
+log.workspace = true
+rfd.workspace = true
+image.workspace = true
+raw-window-handle.workspace = true
+chrono.workspace = true
+# ENBX 导出时对本地资源按 md5(路径) 命名（与解析器资源表对称）。
+md5 = "0.7"
+# 音频输出：cpal 提供跨平台声卡输出流，ringbuf 提供无锁 SPSC 环形缓冲区，
+# 二者共同把 ffmpeg 子进程解出的 PCM 送进声卡回调（详见 docs/audio_integration.md）。
+cpal = "0.15"
+ringbuf = "0.3"
+
+[dev-dependencies]
+zip = { version = "2.1", default-features = false, features = ["deflate"] }

@@ -1,0 +1,80 @@
+{
+  "source": "crates/drafftink-etl/examples/dirty_school_data.csv",
+  "total_rows": 7,
+  "date_columns": [
+    "birth_date",
+    "enroll_date"
+  ],
+  "normalized": 12,
+  "failed": 2,
+  "failures": [
+    {
+      "row": 5,
+      "column": "birth_date",
+      "raw": "2008-13-01"
+    },
+    {
+      "row": 5,
+      "column": "enroll_date",
+      "raw": "2024/2/30"
+    }
+  ],
+  "rows": [
+    {
+      "birth_date": "2008-09-01",
+      "enroll_date": "2024-09-01",
+      "gender": "1",
+      "name": "张三",
+      "note": "正常",
+      "student_id": "S001"
+    },
+    {
+      "birth_date": "2009-08-12",
+      "enroll_date": "2024-08-31",
+      "gender": "2",
+      "name": "李四",
+      "note": "正常",
+      "student_id": "S002"
+    },
+    {
+      "birth_date": "2010-03-05",
+      "enroll_date": "2024-09-01",
+      "gender": "1",
+      "name": "王五",
+      "note": "中文日期",
+      "student_id": "S003"
+    },
+    {
+      "birth_date": "2010-03-05",
+      "enroll_date": "2024-08-09",
+      "gender": "2",
+      "name": "赵六",
+      "note": "8位基本格式",
+      "student_id": "S004"
+    },
+    {
+      "birth_date": "2008-13-01",
+      "enroll_date": "2024/2/30",
+      "gender": "1",
+      "name": "钱七",
+      "note": "非法月份与非法日",
+      "student_id": "S005"
+    },
+    {
+      "birth_date": "2007-06-15",
+      "enroll_date": "2024-09-01",
+      "gender": "2",
+      "name": "孙八",
+      "note": "带时间",
+      "student_id": "S006"
+    },
+    {
+      "birth_date": "2008-08-08",
+      "enroll_date": "2024-08-31",
+      "gender": "1",
+      "name": "周九",
+      "note": "单数字段",
+      "student_id": "S007"
+    }
+  ]
+}

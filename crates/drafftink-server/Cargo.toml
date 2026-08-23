@@ -1,0 +1,8 @@
+[package]
+name = "drafftink-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# WebSocket collaboration server — deferred to post-MVP.
+[dependencies]

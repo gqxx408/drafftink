@@ -1,0 +1,26 @@
+{
+  "name": "drafftink-mobile",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "校园移动办公 PWA（待办审批 / 公文流转 / 通知公告 / 会议预约 / 用印申请 / 消息中心 / AI 学情看板），对接 drafftink-backend 移动办公 REST 接口。",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2",
+    "sm-crypto": "^0.3.13"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.8"
+  }
+}

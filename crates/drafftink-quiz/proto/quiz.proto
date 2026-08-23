@@ -1,0 +1,92 @@
+syntax = "proto3";
+package quiz;
+
+// ── 学生端 → 老师端 ──
+
+message StudentHello {
+  string student_id = 1;
+  string student_name = 2;
+  string device_id = 3;
+}
+
+message StudentAnswer {
+  string question_id = 1;
+  oneof answer {
+    int32 single_choice = 2;   // 0=A, 1=B, ...
+    MultiChoice multi_choice = 3;
+    bool true_false = 4;
+    string text = 5;           // 主观题
+  }
+}
+
+message MultiChoice {
+  repeated int32 options = 1;
+}
+
+message QuickAnswerBuzz {
+  string question_id = 1;
+  int64 timestamp_ns = 2;      // 学生端纳秒时间戳
+}
+
+message Heartbeat {
+  string student_id = 1;
+  int64 timestamp_ms = 2;
+}
+
+// ── 老师端 → 学生端 ──
+
+message QuestionStart {
+  string question_id = 1;
+  QuestionType question_type = 2;
+  string content = 3;           // 题干文本
+  repeated string options = 4;  // 选项列表
+  int32 time_limit_sec = 5;     // 倒计时秒数，0=不限时
+}
+
+enum QuestionType {
+  SINGLE_CHOICE = 0;
+  MULTIPLE_CHOICE = 1;
+  TRUE_FALSE = 2;
+  QUICK_ANSWER = 3;
+  TEXT = 4;
+}
+
+message AnswerResult {
+  string question_id = 1;
+  bool is_correct = 2;
+  int32 score = 3;
+  string feedback = 4;
+}
+
+message QuickAnswerResult {
+  string question_id = 1;
+  string winner_student_id = 2;
+  string winner_name = 3;
+  int64 response_time_ms = 4;
+}
+
+message SessionEnd {
+  string session_id = 1;
+  int32 total_score = 2;
+  int32 max_score = 3;
+}
+
+// ── 顶层消息封装 ──
+
+message ClientMessage {
+  oneof payload {
+    StudentHello hello = 1;
+    StudentAnswer answer = 2;
+    QuickAnswerBuzz buzz = 3;
+    Heartbeat heartbeat = 4;
+  }
+}
+
+message ServerMessage {
+  oneof payload {
+    QuestionStart question_start = 1;
+    AnswerResult answer_result = 2;
+    QuickAnswerResult quick_answer_result = 3;
+    SessionEnd session_end = 4;
+  }
+}

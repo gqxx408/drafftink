@@ -1,0 +1,14 @@
+[package]
+name = "plugin-enbx-importer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+seewo-plugin-api = { path = "../seewo-plugin-api" }
+enbx_importer = { path = "../enbx_importer" }
+log.workspace = true
+serde_json.workspace = true

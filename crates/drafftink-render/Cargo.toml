@@ -1,0 +1,9 @@
+[package]
+name = "drafftink-render"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+drafftink-core = { path = "../drafftink-core" }
+egui.workspace = true

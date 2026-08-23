@@ -1,0 +1,11 @@
+[package]
+name = "drafftink-migrator"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+# 零依赖策略：除 serde / serde_json 外不引入任何第三方库。
+# XML 解析已由上游 drafftink-enbx 完成，本 crate 只做模型映射与降级。
+serde = { workspace = true }
+serde_json = { workspace = true }

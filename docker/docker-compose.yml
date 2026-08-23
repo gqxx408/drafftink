@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - backend-data:/app/data
+    environment:
+      - DRAFTTINK_LISTEN_ADDR=0.0.0.0:8080
+      - DRAFTTINK_DB_PATH=/app/data/db
+      - DRAFTTINK_STORAGE_PATH=/app/data/storage
+      - DRAFTTINK_BACKUP_PATH=/app/data/backup
+      - DRAFTTINK_JWT_SECRET=change-me-in-production
+      - DRAFTTINK_BACKUP_HOUR=2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  gateway:
+    build:
+      context: ..
+      dockerfile: docker/gateway.Dockerfile
+    ports:
+      - "443:443"
+      - "80:80"
+    environment:
+      - DRAFTTINK_LISTEN_ADDR=0.0.0.0:80
+      - DRAFTTINK_BACKEND_URL=http://backend:8080
+      - DRAFTTINK_RATE_LIMIT_PER_MINUTE=60
+      - DRAFTTINK_MAX_REQUEST_SIZE=10485760
+      - DRAFTTINK_JWT_SECRET=change-me-in-production
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  backend-data:

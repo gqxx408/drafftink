@@ -1,0 +1,38 @@
+[package]
+name = "drafftink-display"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "display"
+path = "src/main.rs"
+
+[lib]
+name = "drafftink_display"
+path = "src/lib.rs"
+
+[dependencies]
+drafftink-core = { path = "../drafftink-core" }
+drafftink-cosmos = { path = "../drafftink-cosmos" }
+drafftink-mindmap = { path = "../drafftink-mindmap" }
+drafftink-functions = { path = "../drafftink-functions" }
+drafftink-geometry = { path = "../drafftink-geometry" }
+format_enbx = { path = "../../plugins/format_enbx" }
+egui.workspace = true
+eframe.workspace = true
+serde.workspace = true
+bincode.workspace = true
+uuid.workspace = true
+crc32fast = "1.4"
+log.workspace = true
+env_logger = "0.11"
+simplelog = "0.12"
+chrono = "0.4"
+image.workspace = true
+rfd.workspace = true
+raw-window-handle.workspace = true
+kurbo = "0.11"
+lyon = "1.0"
+sysinfo = "0.30"
+wgpu.workspace = true

@@ -1,0 +1,10 @@
+[package]
+name = "seewo-plugin-loader"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+seewo-plugin-api = { path = "../seewo-plugin-api" }
+libloading = "0.8"
+log.workspace = true

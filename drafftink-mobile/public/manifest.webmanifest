@@ -1,0 +1,16 @@
+{
+  "name": "校园移动办公平台",
+  "short_name": "移动办公",
+  "description": "校本教学套件移动办公：待办审批、公文流转、通知公告、会议预约、用印申请、消息中心与 AI 学情看板。",
+  "theme_color": "#1f6feb",
+  "background_color": "#0f1116",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

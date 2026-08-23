@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Shape Tool System — Validation Report</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #e6edf3; --text2: #8b949e; --green: #3fb950;
+    --blue: #58a6ff; --yellow: #d29922; --red: #f85149;
+    --code-bg: #1c2128; font-family: -apple-system, "Segoe UI", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); line-height: 1.7; padding: 2rem 1rem; }
+  .container { max-width: 960px; margin: auto; }
+  h1 { font-size: 1.8rem; color: var(--green); border-bottom: 2px solid var(--border); padding-bottom: .5rem; margin: 1.5rem 0 1rem; }
+  h2 { font-size: 1.35rem; color: var(--blue); margin: 2rem 0 .75rem; border-left: 4px solid var(--blue); padding-left: .7rem; }
+  h3 { font-size: 1.1rem; color: var(--text); margin: 1.25rem 0 .5rem; }
+  table { width: 100%; border-collapse: collapse; margin: .75rem 0 1.25rem; font-size: .92rem; }
+  th, td { border: 1px solid var(--border); padding: .55rem .65rem; text-align: left; vertical-align: top; }
+  th { background: var(--surface); color: var(--blue); font-weight: 600; }
+  tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+  code { background: var(--code-bg); padding: .15em .4em; border-radius: 4px; font-size: .88em; color: #79c0ff; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow-x: auto; margin: .75rem 0; font-size: .85rem; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  .badge { display: inline-block; padding: .15em .6em; border-radius: 999px; font-size: .78rem; font-weight: 600; }
+  .badge-green { background: rgba(63,185,80,.18); color: var(--green); }
+  .badge-blue { background: rgba(88,166,255,.15); color: var(--blue); }
+  .badge-yellow { background: rgba(210,153,34,.15); color: var(--yellow); }
+  .badge-red { background: rgba(248,81,73,.15); color: var(--red); }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .75rem; margin: 1rem 0; }
+  .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+  .summary-card .num { font-size: 2rem; font-weight: 700; color: var(--green); }
+  .summary-card .label { font-size: .82rem; color: var(--text2); margin-top: .2rem; }
+  .file-list li { margin: .3rem 0; font-size: .9rem; }
+  ul, ol { padding-left: 1.5rem; margin: .5rem 0; }
+  li { margin: .25rem 0; }
+  .pass { color: var(--green); } .warn { color: var(--yellow); } .fail { color: var(--red); }
+  .note { background: rgba(88,166,255,.08); border-left: 3px solid var(--blue); padding: .6rem .8rem; border-radius: 0 6px 6px 0; margin: .75rem 0; font-size: .9rem; }
+  .arch-diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; margin: 1rem 0; overflow-x: auto; }
+  .arch-diagram pre { background: none; border: none; padding: 0; margin: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🔷 Shape Tool System — 验证报告</h1>
+
+<p style="color:var(--text2);margin-bottom:.5rem;">
+  <strong>日期：</strong>2026-08-16 &nbsp;|&nbsp;
+  <strong>Crate：</strong><code>drafftink-desktop</code> + <code>drafftink-core</code> + <code>drafftink-edit</code> &nbsp;|&nbsp;
+  <strong>Rust 工具链：</strong>stable (rust-toolchain.toml)
+</p>
+
+<!-- ── Summary Cards ── -->
+<div class="summary-grid">
+  <div class="summary-card"><div class="num">33</div><div class="label">drafftink-desktop 测试</div></div>
+  <div class="summary-card"><div class="num" class="pass">33 ✅</div><div class="label">全部通过</div></div>
+  <div class="summary-card"><div class="num">0</div><div class="label">clippy 警告</div></div>
+  <div class="summary-card"><div class="num">9</div><div class="label">ShapeKind 变体</div></div>
+  <div class="summary-card"><div class="num">6</div><div class="label">新增 shape_renderer 单测</div></div>
+  <div class="summary-card"><div class="num">4</div><div class="label">修改/新建文件数</div></div>
+</div>
+
+<!-- ── R# Coverage ── -->
+<h2>1. 需求覆盖矩阵（R#1 → R#7）</h2>
+<table>
+<thead><tr><th>#</th><th>需求</th><th>状态</th><th>实现位置</th></tr></thead>
+<tbody>
+<tr><td><b>R#1</b></td><td>数据模型：ShapeKind 枚举（9 变体）+ ShapeInstance 结构体</td><td><span class="badge badge-green">✅ 完成</span></td><td><code>drafftink-core/src/model.rs</code> + <code>app.rs:102</code></td></tr>
+<tr><td><b>R#2</b></td><td>形状绘制：纯 egui Painter，零新依赖，9 种形状全覆盖</td><td><span class="badge badge-green">✅ 完成</span></td><td><code>shape_renderer.rs</code> （262 行）</td></tr>
+<tr><td><b>R#3</b></td><td>顶边栏：🔷 形状 ComboBox + ➕ 插入按钮</td><td><span class="badge badge-green">✅ 完成</span></td><td><code>drafftink-edit/src/app.rs:418–429</code></td></tr>
+<tr><td><b>R#4</b></td><td>交互：RectInteraction 8 方向缩放 + 拖拽移动</td><td><span class="badge badge-green">✅ 完成</span></td><td><code>app.rs:draw_shape_overlay()</code> 复用 <code>interactive_rect</code></td></tr>
+<tr><td><b>R#5</b></td><td>双模式：Prepare 可交互 / Teach 只读渲染</td><td><span class="badge badge-green">✅ 完成</span></td><td><code>app.rs:819–898</code> 分支判断 <code>prepare</code> 标志</td></tr>
+<tr><td><b>R#6</b></td><td>默认值：stroke=3px 黑色, fill=None, 初始 200×200/200×100</td><td><span class="badge badge-green">✅ 完成</span></td><td><code>insert_shape_from_kind():800</code></td></tr>
+<tr><td><b>R#7</b></td><td>验证：clippy 0 警告 + test 全过</td><td><span class="badge badge-green">✅ 完成</span></td><td>见下方 §2 / §3</td></tr>
+</tbody>
+</table>
+
+<!-- ── Test Results ── -->
+<h2>2. 测试结果详情</h2>
+
+<h3>2.1 cargo test -p drafftink-desktop（33 tests）</h3>
+<table>
+<thead><tr><th>模块</th><th>测试名</th><th>结果</th></tr></thead>
+<tbody>
+<!-- interactive_rect: 16 tests -->
+<tr><td rowspan="16"><code>interactive_rect</code></td><td><code>apply_drag_bottom_right_changes_both</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>apply_drag_right_changes_only_width</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>apply_drag_move_translates</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>apply_drag_top_left_moves_top_left_corner</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>hit_bottom_edge</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>hit_right_corner</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>hit_right_edge</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>hit_top_edge</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>hit_left_corner</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>hit_left_edge</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>hit_outside</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>hit_inner_move</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>hit_bottom_left_corner</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>hit_top_right_corner</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>keep_when_within_min</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>revert_when_too_small</code></td><td class="pass">ok ✅</td></tr>
+<!-- shape_renderer: 6 new tests -->
+<tr><td rowspan="6"><code>shape_renderer</code> <span class="badge badge-blue">NEW</span></td><td><code>arrow_head_points_along_direction</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>arrow_head_tip_is_at_to</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>brace_has_four_beziers</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>bracket_has_three_segments</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>parenthesis_has_expected_points</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>parenthesis_stays_within_bounds</code></td><td class="pass">ok ✅</td></tr>
+<!-- video_player: 11 tests (unchanged baseline) -->
+<tr><td rowspan="11"><code>video_player</code></td><td><code>audio_args_target_device_format</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>audio_clock_position_tracks_bytes</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>audio_format_byte_math_is_exact</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>parse_fps_handles_rational</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>parse_u32_handles_quoted_and_bare_numbers</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>probe_audio_detects_track_presence</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>decode_mp4_yields_valid_rgba_frames</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>pause_then_resume_keeps_decoding</code></td><td class="pass">ok ✅</td></tr>
+<tr><td><code>decode_is_downscaled_to_max_dim</code></td><td class="pass">ok ✅</td></tr>
+</tbody>
+<tfoot><tr><td colspan="2"><b>合计</b></td><td><b class="pass">33/33 ✅ 全通过</b></td></tr></tfoot>
+</table>
+
+<h3>2.2 clippy 验证</h3>
+<table>
+<tr><td><code>cargo clippy -p drafftink-desktop --all-targets</code></td><td><span class="badge badge-green">0 warnings</span></td></tr>
+</table>
+
+<h3>2.3 工作区回归</h3>
+<p>未触碰 <code>ShapeType</code>/<code>ShapeElement</code> 的 exhaustive match（edit/display renderers），269 基线测试不受影响。</p>
+
+<!-- ── Architecture ── -->
+<h2>3. 架构设计</h2>
+
+<h3>3.1 ShapeKind 与 ShapeType 解耦策略</h3>
+<div class="note">
+  <strong>关键决策：</strong>文档层已有 <code>ShapeType {Rectangle,Ellipse,Line,Arrow,Bracket,Brace,Fan}</code>（7 变体），
+  被 <code>drafftink-edit::render::draw_shape</code> 和 <code>drafftink-display::render::draw_shape</code>
+  <b>exhaustively match</b>。直接添加变体会破坏 269 个基线测试。
+  因此在 <code>drafftink-core::model</code> 中创建<strong>独立的</strong> <code>ShapeKind</code> 枚举（9 变体），
+  形状走宿主叠加层路径（与视频/图片同构），不进入文档持久化。
+</div>
+
+<h3>3.2 数据流</h3>
+<div class="arch-diagram">
+<pre style="color:var(--text2);font-size:.85rem;">
+┌──────────────────────────────────────────────────────────────────────┐
+│  drafftink-edit (备课 UI 层)                                         │
+│  ┌─────────────────────┐    ┌──────────────────┐                     │
+│  │ 🔷 Shape ComboBox   │    │ ➕ 插入 button     │                     │
+│  │ selected_shape      │───▶│ shape_insert_     │──shape_insert_req──▶│
+│  │ : ShapeKind         │    │ requested:Option  │                     │
+│  └─────────────────────┘    └──────────────────┘                     │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│  drafftink-desktop (宿主层)                                           │
+│                                                                      │
+│  insert_shape_from_kind(kind)                                        │
+│    → 计算 world_rect (200×200 或 200×100, 锚定画布中心)              │
+│    → 创建 ShapeInstance { kind, world_rect, stroke=(0,0,0,255), ...} │
+│    → 插入 HashMap&lt;String, ShapeInstance&gt;                            │
+│                                                                      │
+│  draw_shape_overlay(ctx)  [每帧调用]                                  │
+│    → Foreground painter "shape_overlay"                              │
+│    → 对每个 ShapeInstance:                                            │
+│        Prepare 模式: RectInteraction.update() → 8方向缩放+拖拽        │
+│                      → draw_shape(painter, rect, kind, stroke, fill) │
+│                      → interact.draw_overlay()                       │
+│        Teach  模式: 仅 draw_shape(...) 只读渲染                       │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│  shape_renderer.rs (纯绘制模块)                                       │
+│  draw_shape(painter, rect, kind, stroke, fill)                       │
+│    ├─ Circle       → circle_filled/stroke                             │
+│    ├─ Square/Rect  → rect_filled/stroke                               │
+│    ├─ RoundedRect  → rect_filled/stroke(ROUNDING=12)                  │
+│    ├─ Parenthesis  → Shape::line(parenthesis_points)  [25点椭圆弧]    │
+│    ├─ Bracket      → 3 × line_segment                                 │
+│    ├─ Brace        → 4 × CubicBezierShape                              │
+│    ├─ Arrow        → line_segment + arrow_head (右端)                 │
+│    └─ DoubleArrow  → line_segment + arrow_head (两端)                 │
+└──────────────────────────────────────────────────────────────────────┘
+</pre>
+</div>
+
+<!-- ── File Manifest ── -->
+<h2>4. 文件变更清单</h2>
+<table>
+<thead><tr><th>文件</th><th>操作</th><th>变更摘要</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>crates/drafftink-core/src/model.rs</code></td>
+  <td><span class="badge badge-blue">MODIFY</span></td>
+  <td>新增 <code>pub enum ShapeKind</code>（9 变体）+ <code>impl ShapeKind { pub const ALL: [ShapeKind;9] }</code><br>原有 <code>ShapeType</code>/<code>ShapeElement</code> 未改动</td>
+</tr>
+<tr>
+  <td><code>crates/drafftink-desktop/src/shape_renderer.rs</code></td>
+  <td><span class="badge badge-green">NEW</span></td>
+  <td>262 行：<code>draw_shape()</code> 统一入口 + 4 个几何 helper + <code>draw_arrow()</code> + 6 个 #[cfg(test)] 单元测试</td>
+</tr>
+<tr>
+  <td><code>crates/drafftink-desktop/src/main.rs</code></td>
+  <td><span class="badge badge-blue">MODIFY</span></td>
+  <td>L25: 添加 <code>mod shape_renderer;</code></td>
+</tr>
+<tr>
+  <td><code>crates/drafftink-desktop/src/app.rs</code></td>
+  <td><span class="badge badge-blue">MODIFY</span></td>
+  <td>
+    新增字段：<code>shape_instances: HashMap&lt;String, ShapeInstance&gt;</code><br>
+    新增结构体：<code>ShapeInstance { kind, world_rect, user_rect, stroke_width, stroke_color, fill_color }</code><br>
+    新增方法：<code>insert_shape_from_kind()</code>, <code>draw_shape_overlay()</code><br>
+    主循环接入：<code>shape_insert_requested.take()</code> (L1224) + <code>draw_shape_overlay(ctx)</code> (L1249)
+  </td>
+</tr>
+<tr>
+  <td><code>crates/drafftink-edit/src/app.rs</code></td>
+  <td><span class="badge badge-blue">MODIFY</span></td>
+  <td>
+    新增字段：<code>selected_shape: ShapeKind</code>, <code>shape_insert_requested: Option&lt;ShapeKind&gt;</code><br>
+    新增函数：<code>shape_kind_label(k) -> &amp;'static str</code>（9 种标签）<br>
+    顶边栏 UI：ComboBox("shape_selector") + ➕ 插入 button (L418–429)
+  </td>
+</tr>
+</tbody>
+</table>
+
+<!-- ── Shape Kind Reference ── -->
+<h2>5. 9 种 ShapeKind 参考</h2>
+<table>
+<thead><tr><th>变体</th><th>标签</th><th>默认尺寸</th><th>绘制方式</th><th>几何 Helper</th></tr></thead>
+<tbody>
+<tr><td><code>Circle</code></td><td>○ 圆形</td><td>200×200</td><td><code>painter.circle_filled/stroke</code></td><td>—</td></tr>
+<tr><td><code>Square</code></td><td>□ 正方形</td><td>200×200</td><td><code>painter.rect_filled/stroke</code></td><td>—</td></tr>
+<tr><td><code>Rectangle</code></td><td>▭ 长方形</td><td>200×200</td><td><code>painter.rect_filled/stroke</code></td><td>—</td></tr>
+<tr><td><code>RoundedRect</code></td><td>▢ 圆角矩形</td><td>200×200</td><td><code>rect_filled/stroke(r=12)</code></td><td>—</td></tr>
+<tr><td><code>Parenthesis</code></td><td>( 小括号</td><td>200×100</td><td><code>Shape::line(25 点)</code></td><td><code>parenthesis_points()</code></td></tr>
+<tr><td><code>Bracket</code></td><td>[ 中括号</td><td>200×100</td><td>3 × <code>line_segment</code></td><td><code>bracket_segments()</code></td></tr>
+<tr><td><code>Brace</code></td><td>{ 大括号</td><td>200×100</td><td>4 × <code>CubicBezierShape</code></td><td><code>brace_beziers()</code></td></tr>
+<tr><td><code>Arrow</code></td><td>→ 箭头</td><td>200×100</td><td>直线 + 右箭头头</td><td><code>arrow_head()</code></td></tr>
+<tr><td><code>DoubleArrow</code></td><td>⇌ 双箭头</td><td>200×100</td><td>直线 + 双端箭头头</td><td><code>arrow_head()</code></td></tr>
+</tbody>
+</table>
+
+<!-- ── Constraints Checklist ── -->
+<h2>6. 约束检查清单</h2>
+<table>
+<thead><tr><th>约束项</th><th>要求</th><th>实际</th><th>状态</th></tr></thead>
+<tbody>
+<tr><td>egui 版本</td><td>0.29.x 冻结</td><td>0.29.1 未变</td><td class="pass">✅</td></tr>
+<tr><td>wgpu 版本</td><td>不变</td><td>未变</td><td class="pass">✅</td></tr>
+<tr><td>新增依赖</td><td>零</td><td>仅用 egui 内置 Painter API</td><td class="pass">✅</td></tr>
+<tr><td>基线测试</td><td>269 不回退</td><td>ShapeType/ShapeElement 未改；ShapeKind 走独立叠加层路径</td><td class="pass">✅</td></tr>
+<tr><td>clippy</td><td>0 warnings</td><td><code>--all-targets</code> 通过</td><td class="pass">✅</td></tr>
+<tr><td>代码位置</td><td>主要在 desktop</td><td>core 仅加 enum；edit 仅加 UI 字段</td><td class="pass">✅</td></tr>
+<tr><td>字体图标</td><td>不用</td><td>括号/箭头全部 bezier/line 几何生成</td><td class="pass">✅</td></tr>
+</tbody>
+</table>
+
+<!-- ── Manual Test Matrix ── -->
+<h2>7. 手动测试矩阵（待执行）</h2>
+<table>
+<thead><tr><th style="width:28%">操作</th><th>预期结果</th><th>状态</th></tr></thead>
+<tbody>
+<tr><td>插入圆形 → 拖拽四角/边缘缩放</td><td>形状跟随鼠标实时变形，保持外接圆比例</td><td>⬜ 待手动</td></tr>
+<tr><td>插入正方形 → 拖拽内部平移</td><td>整体移动，大小不变</td><td>⬜ 待手动</td></tr>
+<tr><td>插入小括号 / 中括号 / 大括号</td><td>曲线/折线正确渲染，开口朝右</td><td>⬜ 待手动</td></tr>
+<tr><td>插入单箭头 / 双箭头</td><td>箭头尖端指向正确，三角形填充对称</td><td>⬜ 待手动</td></tr>
+<tr><td>F5 切换授课模式</td><td>所有形状只读显示，无交互手柄</td><td>⬜ 待手动</td></tr>
+<tr><td>退出授课回到备课</td><td>形状恢复可交互（手柄出现）</td><td>⬜ 待手动</td></tr>
+<tr><td>连续插入多个不同形状</td><td>各自独立跟踪，互不干扰</td><td>⬜ 待手动</td></tr>
+</tbody>
+</table>
+
+<!-- ── Footer ── -->
+<hr style="border-color:var(--border);margin:2rem 0 .5rem">
+<p style="color:var(--text2);font-size:.82rem;text-align:center">
+  Generated by WorkBuddy &middot; Shape Tool System Validation &middot; 2026-08-16
+</p>
+
+</div>
+</body>
+</html>

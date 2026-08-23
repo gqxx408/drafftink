@@ -1,0 +1,16 @@
+[package]
+name = "drafftink-pdf-extractor"
+version = "0.1.0"
+edition = "2021"
+description = "Pure-Rust GB/T standard PDF text extractor with ToUnicode CMap support."
+
+[dependencies]
+lopdf = "0.44"
+
+[[bin]]
+name = "pdf_extract_cli"
+path = "src/main.rs"
+
+[lib]
+name = "drafftink_pdf_extractor"
+path = "src/lib.rs"

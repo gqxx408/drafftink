@@ -1,0 +1,19 @@
+[package]
+name = "enbx_importer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+drafftink-core = { path = "../drafftink-core" }
+zip = { version = "2.1", default-features = false, features = ["deflate"] }
+quick-xml = { version = "0.31", features = ["serialize"] }
+serde.workspace = true
+serde_json.workspace = true
+bincode.workspace = true
+image.workspace = true
+uuid.workspace = true
+egui.workspace = true
+log.workspace = true
+thiserror = "1.0"
+sha2 = "0.10"
