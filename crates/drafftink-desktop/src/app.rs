@@ -36,8 +36,8 @@ use crate::tools::{
     angle_of, closest_point_on_line, dist_to_segment, draw_active_tool, find_nearest_edge,
     line_draw_result, protractor_to_unified, set_square_centroid, set_square_edges,
     snap_angle, snap_angle_grid15, snap_dir_grid45, unified_to_protractor, ActiveTool,
-    CompassMode, CompassTool, FunctionPlotTool, PolygonTool, ProtractorMode, ProtractorTool,
-    RulerTool, SetSquareKind, SetSquareTool, WhichEnd,
+    CompassMode, CompassTool, FunctionPlotTool, NumberLineTool, PolygonTool, ProtractorMode,
+    ProtractorTool, RulerTool, SetSquareKind, SetSquareTool, WhichEnd,
 };
 use crate::undo::{UndoCmd, UndoHistory};
 use crate::video_player::VideoPlayer;
@@ -106,6 +106,10 @@ pub struct IntegratedApp {
     /// 放置模式武装标志：跳过「打开文件对话框 / 点插入按钮」那一下的点击，
     /// 下一帧起才允许放置，避免误放到工具栏或文件对话框上。
     pending_armed: bool,
+    /// 「插入图形」拖拽绘制中的临时状态（仅 UI 层，不进入持久化数据）。
+    /// 按下左键 → `Some`，拖动实时更新 `current_screen`，松开时提交为 `ShapeInstance`
+    /// 并清除；`None` 表示当前没有正在拖拽绘制的矩形。
+    shape_draw: Option<ShapeDrawState>,
     /// 当前选中的画布元素（形状 / 视频 / 图片之一，仅备课模式有效）。
     /// `None` 表示无选中——元素以「固定背景元素」呈现（无边框 / 抓手），
     /// 老师主动单击该元素才选中进入微调（「先隐身后选中」范式）。
@@ -136,6 +140,23 @@ struct FunctionMenuState {
     text: String,
     /// 点击「📈 函数绘图」后解析失败的错误信息（`Some` 时菜单内显示红字并保持打开）。
     error: Option<String>,
+}
+
+/// 「插入图形」拖拽绘制的临时 UI 状态（橡皮筋 / 拖拽绘制）。
+///
+/// 只存在于 UI 层（本集成宿主），**不混入**文档业务数据（`PageData`）——
+/// 按下左键记录 `start_screen`，拖动把当前鼠标位置写进 `current_screen`，
+/// 松开时一次性转为 `ShapeInstance` 落库并清除本状态。因此绘制过程中的
+/// 矩形既不是持久化元素，也不进 Undo 栈，直到提交才作为正式实例存在。
+struct ShapeDrawState {
+    /// 正在绘制的形状种类（来自「➕ 插入」按钮）。
+    #[allow(dead_code)]
+    kind: drafftink_core::model::ShapeKind,
+    /// 按下左键时的画布起点（屏幕坐标 `Pos2`）。
+    start_screen: egui::Pos2,
+    /// 当前鼠标拖动位置（屏幕坐标 `Pos2`）；`None` 表示尚未开始移动。
+    /// 宽高 = `start_screen` 到 `current_screen` 的差，随鼠标实时变化。
+    current_screen: Option<egui::Pos2>,
 }
 
 /// 画布上可被单击选中的叠加层元素种类。
@@ -420,18 +441,6 @@ fn fmt_time(ms: u64) -> String {    let total = ms / 1000;
     }
 }
 
-/// 某种形状在未缩放时的默认世界尺寸（像素）：方形类 200×200，扁形类 200×100。
-fn default_shape_size(kind: drafftink_core::model::ShapeKind) -> (f32, f32) {
-    match kind {
-        drafftink_core::model::ShapeKind::Parenthesis
-        | drafftink_core::model::ShapeKind::Bracket
-        | drafftink_core::model::ShapeKind::Brace
-        | drafftink_core::model::ShapeKind::Arrow
-        | drafftink_core::model::ShapeKind::DoubleArrow => (200.0, 100.0),
-        _ => (200.0, 200.0),
-    }
-}
-
 /// 备课端通过「🎬 多媒体」插入的本地视频记录。
 ///
 /// 模型层 `VideoElement` 只能通过 `resource_id`（内嵌资源 hex id）索引，且所在文档
@@ -511,6 +520,7 @@ impl IntegratedApp {
             pending_video: None,
             pending_image: None,
             pending_armed: false,
+            shape_draw: None,
             selected_element_id: None,
             next_z_index: 0,
             last_page: 0,
@@ -1291,6 +1301,8 @@ impl IntegratedApp {
             ShapeKind::Arc => "arc",
             ShapeKind::Sector => "fan",
             ShapeKind::Polygon { .. } => "polygon",
+            // 数轴降级为直线段保存（Seewo 无「数轴」原语；读取侧近似为 line）。
+            ShapeKind::NumberLine { .. } => "line",
         }
         .to_string()
     }
@@ -1589,6 +1601,7 @@ impl IntegratedApp {
     ///
     /// 供「点击放置」流程调用：幽灵形状跟随光标，单击画布时把光标处屏幕坐标经相机
     /// 反变换为 `world_center` 后调用本方法固定形状。
+    #[allow(dead_code)] // 仍被测试（save_enbx_creates_valid_zip 等）与旧放置路径引用
     fn insert_shape_at(
         &mut self,
         kind: drafftink_core::model::ShapeKind,
@@ -1641,6 +1654,31 @@ impl IntegratedApp {
     }
 
     // ── 统一选中 / 命中检测 ────────────────────────────────────────────────
+
+    /// 把一个**屏幕空间**矩形映射为**画布世界**矩形（供拖拽绘制提交用）。
+    ///
+    /// 屏幕坐标（`Pos2`，来自 `PointerState`）先扣除画布偏移 `canvas_offset`，
+    /// 再经相机 `screen_to_world` 转世界坐标；Y 轴翻转由相机负责。若授课/无相机会退，
+    /// 则退化为「屏幕坐标即世界坐标」（全屏授课时二者一致）。
+    fn screen_rect_to_world_rect(&self, screen_rect: egui::Rect) -> egui::Rect {
+        let (cam, panel_offset) = if let Some(d) = self.display.as_ref() {
+            (Some(d.camera.clone()), egui::Vec2::ZERO)
+        } else {
+            (
+                Some(self.edit.camera.clone()),
+                egui::vec2(self.edit.canvas_offset[0], self.edit.canvas_offset[1]),
+            )
+        };
+        let to_world = |p: egui::Pos2| -> [f32; 2] {
+            let local = p - panel_offset;
+            cam.as_ref()
+                .map(|c| c.screen_to_world(local))
+                .unwrap_or([local.x, local.y])
+        };
+        let wmin = to_world(screen_rect.min);
+        let wmax = to_world(screen_rect.max);
+        egui::Rect::from_two_pos(egui::pos2(wmin[0], wmin[1]), egui::pos2(wmax[0], wmax[1]))
+    }
 
     /// 当前画布所处的页面索引：备课模式取 `EditApp` 的当前页，授课模式取 `DisplayApp`
     /// 的当前页（从 `display.multi_page.current_page` 读取）。叠加层渲染 / 命中检测
@@ -2470,49 +2508,70 @@ impl IntegratedApp {
         let screen = ctx.screen_rect();
         let prepare = self.mode == AppMode::Prepare;
 
-        // ── 点击放置（pending）──
-        // 备课时点「🔷 形状 → ➕ 插入」后进入此模式：半透明幽灵形状跟随光标，
-        // 单击画布任意处将其固定到该位置（Esc 取消放置）。放置后视为「已固定」——
-        // 不自动选中、不显示边框/抓手；老师主动单击该形状才会选中进入微调。
+        // ── 拖拽绘制（pencil / rubber-band）──
+        // 备课时点「🔷 形状 → ➕ 插入」后进入此模式：按下左键确定起点，拖动鼠标时
+        // 实时绘制半透明亮蓝边框的矩形虚影（无填充），松开左键提交为正式形状并退出。
+        // 绘制中的矩形仅作为 UI 层临时状态（`shape_draw`），不混入文档业务数据，
+        // 直到提交才作为 `ShapeInstance` 落入宿主层并纳入 Undo 栈（业务/视图解耦）。
         if prepare {
             if let Some(kind) = self.pending_shape {
                 let esc = ctx.input(|i| i.key_pressed(egui::Key::Escape));
-                let pressed = ctx.input(|i| i.pointer.primary_pressed());
+                let (pressed, released) = ctx.input(|i| {
+                    (i.pointer.primary_pressed(), i.pointer.primary_released())
+                });
                 let pointer = ctx.pointer_interact_pos();
+
                 if esc {
-                    // Esc 取消放置，回到普通状态。
+                    // Esc 取消绘制模式，回到普通状态。
                     self.pending_shape = None;
                     self.pending_armed = false;
-                } else {
-                    // 幽灵预览：以光标为中心的半透明形状（屏幕尺寸 = 世界默认尺寸 × zoom）。
-                    if let Some(pos) = pointer {
-                        let zoom = cam.as_ref().map(|c| c.zoom).unwrap_or(1.0);
-                        let (gw, gh) = default_shape_size(kind);
-                        let ghost_rect = egui::Rect::from_center_size(
-                            pos,
-                            egui::vec2(gw * zoom, gh * zoom),
-                        );
-                        let gstroke = egui::Stroke::new(
-                            2.0,
-                            egui::Color32::from_rgba_unmultiplied(0, 150, 255, 200),
-                        );
-                        let gfill = Some(egui::Color32::from_rgba_unmultiplied(0, 150, 255, 70));
-                        draw_shape(&painter, ghost_rect, kind, gstroke, gfill, None, false);
+                    self.shape_draw = None;
+                } else if self.shape_draw.is_some() {
+                    // ── 正在拖拽绘制：跟随鼠标更新并实时绘制虚影。 ──
+                    let mut draw = self.shape_draw.take().unwrap();
+                    if let Some(p) = pointer {
+                        draw.current_screen = Some(p);
                     }
-                    // 跳过「插入」按钮那一下的点击，下一帧起才允许放置，避免误放到工具栏上。
+                    if let Some(cur) = draw.current_screen {
+                        let start = draw.start_screen;
+                        // 绘制中虚影：亮蓝边框、50% 透明、无填充、线宽 2.0。
+                        let preview = egui::Rect::from_two_pos(start, cur);
+                        let stroke = egui::Stroke::new(
+                            2.0,
+                            egui::Color32::from_rgba_unmultiplied(0, 150, 255, 128),
+                        );
+                        painter.rect_stroke(preview, 0.0, stroke);
+                    }
+                    if released {
+                        // 松开左键：屏幕矩形 → 画布矩形 → 提交为正式形状并退出绘制模式。
+                        self.pending_shape = None;
+                        self.pending_armed = false;
+                        if let Some(cur) = draw.current_screen {
+                            let start = draw.start_screen;
+                            let screen_rect = egui::Rect::from_two_pos(start, cur);
+                            // 过小的「点击」不生成形状（视为取消）。
+                            if screen_rect.width() >= 8.0 && screen_rect.height() >= 8.0 {
+                                let world_rect = self.screen_rect_to_world_rect(screen_rect);
+                                self.commit_shape_geom(kind, world_rect, None, false, false, ctx);
+                                // 刚生成的形状以「固定」状态呈现：清空选中，避免边框/抓手
+                                // 立即挡住光标或遮挡图形，影响老师绘制下一个图形。
+                                self.selected_element_id = None;
+                            }
+                        }
+                    } else {
+                        // 仍在拖动：把更新后的状态存回，下一帧继续。
+                        self.shape_draw = Some(draw);
+                    }
+                } else {
+                    // ── 等待第一次左键按下，确定拖拽起点。 ──
+                    // 跳过「插入」按钮那一下的点击，下一帧起才允许绘制，避免误放到工具栏上。
                     if self.pending_armed && pressed {
                         if let Some(pos) = pointer {
-                            let local = pos - panel_offset;
-                            let world = cam
-                                .as_ref()
-                                .map(|c| c.screen_to_world(local))
-                                .unwrap_or([pos.x, pos.y]);
-                            self.insert_shape_at(kind, world, ctx);
-                            self.pending_shape = None;
-                            self.pending_armed = false;
-                            // 刚放置的形状以「固定」状态呈现：清空选中，避免边框/抓手
-                            // 立即挡住光标或遮挡图形，影响老师绘制下一个图形。
-                            self.selected_element_id = None;
+                            self.shape_draw = Some(ShapeDrawState {
+                                kind,
+                                start_screen: pos,
+                                current_screen: Some(pos),
+                            });
                         }
                     } else if !self.pending_armed {
                         self.pending_armed = true;
@@ -2993,6 +3052,20 @@ impl IntegratedApp {
         ctx.request_repaint();
     }
 
+    /// 激活数轴：点击定起点 → 拖拽定终点 → 松开提交。
+    fn activate_number_line(&mut self, ctx: &egui::Context) {
+        let c = self.canvas_screen_center();
+        self.active_tool = ActiveTool::NumberLine(NumberLineTool {
+            start: c,
+            end: c,
+            dragging: false,
+            step: 20.0,
+            label_interval: 2,
+        });
+        self.selected_element_id = None;
+        ctx.request_repaint();
+    }
+
     /// 函数曲线提交：采样点 → SVG polyline path → 文档层 `Element::SvgShape`（可 Undo、可序列化）。
     fn commit_function_plot(
         &mut self,
@@ -3456,6 +3529,44 @@ impl IntegratedApp {
                 } else {
                     self.active_tool = ActiveTool::FunctionPlot(t);
                 }
+            }
+            ActiveTool::NumberLine(mut t) => {
+                // 按下定起点 → 拖拽定终点（Shift 吸附水平/垂直）→ 松开提交。
+                if pressed && !t.dragging {
+                    if let Some(p) = pointer {
+                        t.start = p;
+                        t.end = p;
+                        t.dragging = true;
+                    }
+                }
+                if t.dragging && down {
+                    if let Some(p) = pointer {
+                        let shift = ctx.input(|i| i.modifiers.shift);
+                        let v = p - t.start;
+                        // Shift：吸附到 0°（水平）或 90°（垂直）。snap_dir_grid45 会吸附
+                        // 到最近的 45° 网格，水平/垂直是其中的主方向。
+                        t.end = if shift { t.start + snap_dir_grid45(v) } else { p };
+                    }
+                }
+                if t.dragging && released {
+                    if t.start.distance(t.end) > 5.0 {
+                        let rect = egui::Rect::from_two_pos(t.start, t.end);
+                        commit = Some((
+                            ShapeKind::NumberLine {
+                                start: [t.start.x, t.start.y],
+                                end: [t.end.x, t.end.y],
+                                step: t.step,
+                                label_interval: t.label_interval,
+                            },
+                            rect,
+                            None,
+                            false,
+                            false,
+                        ));
+                    }
+                    t.dragging = false;
+                }
+                self.active_tool = ActiveTool::NumberLine(t);
             }
             ActiveTool::None => {}
         }
@@ -4205,6 +4316,7 @@ impl App for IntegratedApp {
                         TeachingToolKind::Ruler => self.activate_ruler(ctx),
                         TeachingToolKind::Polygon(sides) => self.activate_polygon(sides, ctx),
                         TeachingToolKind::FunctionPlot => self.activate_function_plot(ctx),
+                        TeachingToolKind::NumberLine => self.activate_number_line(ctx),
                     }
                 }
             }

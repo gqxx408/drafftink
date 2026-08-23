@@ -13,7 +13,7 @@
 
 use drafftink_core::model::ShapeKind;
 use egui::epaint::CubicBezierShape;
-use egui::{Color32, Painter, Pos2, Rect, Shape, Stroke, Vec2};
+use egui::{Align2, Color32, FontId, Painter, Pos2, Rect, Shape, Stroke, Vec2};
 
 /// 圆角矩形的圆角半径（px，屏幕空间）。
 const ROUNDING: f32 = 12.0;
@@ -131,6 +131,15 @@ pub fn draw_shape(
             }
             painter.add(Shape::closed_line(pts, stroke));
         }
+        ShapeKind::NumberLine { step, label_interval, .. } => {
+            draw_number_line(
+                painter,
+                rect,
+                step.max(2.0),
+                label_interval.max(1),
+                stroke,
+            );
+        }
     }
 }
 
@@ -182,6 +191,69 @@ pub fn polygon_vertices(center: Pos2, radius: f32, sides: u8, start_deg: f32) ->
             angle_point(center, radius, a)
         })
         .collect()
+}
+
+/// 数轴几何（纯函数，可单测）：返回 `(主线起点, 主线终点, 每刻度相对起点的偏移)`。
+///
+/// 方向判定：rect 宽 ≥ 高 → 水平（左→右，箭头在右端）；否则垂直（上→下，箭头在底端）。
+/// 刻度从主线起点按 `step`（px）等距排布，最后一段不足 `step` 时截断。
+pub fn number_line_geometry(rect: Rect, step: f32) -> (Pos2, Pos2, Vec<f32>) {
+    let horizontal = rect.width() >= rect.height();
+    let (a, b) = if horizontal {
+        (
+            Pos2::new(rect.left(), rect.center().y),
+            Pos2::new(rect.right(), rect.center().y),
+        )
+    } else {
+        (
+            Pos2::new(rect.center().x, rect.top()),
+            Pos2::new(rect.center().x, rect.bottom()),
+        )
+    };
+    let span = if horizontal { rect.width() } else { rect.height() };
+    let step = step.max(1.0);
+    let n = (span / step).floor() as i32;
+    let ticks: Vec<f32> = (0..=n).map(|i| i as f32 * step).collect();
+    (a, b, ticks)
+}
+
+/// 数轴渲染：主线 + 末端箭头 + 等距刻度（每 `step` px 短竖线）+ 每
+/// `label_interval` 个刻度标数字（从 0 起）。
+fn draw_number_line(
+    painter: &Painter,
+    rect: Rect,
+    step: f32,
+    label_interval: i32,
+    stroke: Stroke,
+) {
+    let (a, b, ticks) = number_line_geometry(rect, step);
+    painter.line_segment([a, b], stroke);
+
+    // 末端箭头（右端 / 底端）。
+    let dir = (b - a).normalized();
+    let perp = Vec2::new(-dir.y, dir.x);
+    let head = 8.0;
+    painter.line_segment([b, b - dir * head + perp * head * 0.5], stroke);
+    painter.line_segment([b, b - dir * head - perp * head * 0.5], stroke);
+
+    // 刻度：每 step px 一个短竖线；每 label_interval 个标数字。
+    let tick_len = 6.0;
+    let tick_stroke = Stroke::new(1.0, stroke.color);
+    for (i, off) in ticks.iter().enumerate() {
+        let base = a + dir * (*off);
+        let tip = base + perp * tick_len;
+        painter.line_segment([base, tip], tick_stroke);
+        if label_interval > 0 && i % label_interval as usize == 0 {
+            let label_pos = base + perp * (tick_len + 12.0);
+            painter.text(
+                label_pos,
+                Align2::CENTER_CENTER,
+                format!("{i}"),
+                FontId::proportional(11.0),
+                stroke.color,
+            );
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -374,6 +446,36 @@ mod tests {
             let pts = polygon_vertices(Pos2::ZERO, 40.0, sides, 90.0);
             assert_eq!(pts.len(), sides as usize, "sides={sides} 应产生等量顶点");
         }
+    }
+
+    #[test]
+    fn numberline_tick_count() {
+        // 200px 宽、step=20px → 11 个刻度（0, 20, …, 200）。
+        let rect = Rect::from_min_size(Pos2::new(100.0, 100.0), Vec2::new(200.0, 50.0));
+        let (a, b, ticks) = number_line_geometry(rect, 20.0);
+        assert_eq!(ticks.len(), 11, "200/20=10 → 含起点共 11 个刻度");
+        assert!((a.x - 100.0).abs() < 1e-4 && (b.x - 300.0).abs() < 1e-4, "水平主线左→右");
+        // 刻度相对偏移严格等距。
+        for w in ticks.windows(2) {
+            assert!((w[1] - w[0] - 20.0).abs() < 1e-3, "刻度应等距 20px");
+        }
+        // 不足一步的最后一段被截断：step=30 → 200/30=6.67 → 7 个刻度（0..=180）。
+        let (_, _, ticks2) = number_line_geometry(rect, 30.0);
+        assert_eq!(ticks2.len(), 7, "200/30 下取整=6 → 共 7 个刻度");
+    }
+
+    #[test]
+    fn numberline_axis_direction() {
+        // 水平 rect（宽 ≥ 高）：主线在 rect 竖直中线（center().y）。
+        let h = Rect::from_min_size(Pos2::new(0.0, 0.0), Vec2::new(200.0, 50.0));
+        let (a, b, _) = number_line_geometry(h, 10.0);
+        assert!((a.y - h.center().y).abs() < 1e-4 && (b.y - h.center().y).abs() < 1e-4);
+        assert!(a.x < b.x, "水平数轴起点在左");
+        // 垂直 rect（高 > 宽）：主线在 rect 竖直中线（center().x），上→下。
+        let v = Rect::from_min_size(Pos2::new(0.0, 0.0), Vec2::new(50.0, 200.0));
+        let (a, b, _) = number_line_geometry(v, 10.0);
+        assert!((a.x - v.center().x).abs() < 1e-4 && (b.x - v.center().x).abs() < 1e-4);
+        assert!(a.y < b.y, "垂直数轴起点在上");
     }
 
     #[test]

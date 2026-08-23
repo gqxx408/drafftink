@@ -159,6 +159,24 @@ pub struct FunctionPlotTool {
     pub error: Option<String>,
 }
 
+/// 数轴：点击定起点 → 拖拽定终点 → Shift 吸附水平/垂直 → 松开提交。
+///
+/// 与直尺的端点拖拽不同，数轴是**一次性拖拽**（按下定起点、拖动定终点、松开即提交），
+/// 交互更接近「画线段」。
+#[derive(Debug, Clone)]
+pub struct NumberLineTool {
+    /// 起点（按下时固定）。
+    pub start: Pos2,
+    /// 终点（拖拽中跟随鼠标，Shift 时吸附水平/垂直）。
+    pub end: Pos2,
+    /// 是否正在拖拽确定终点。
+    pub dragging: bool,
+    /// 每刻度像素间距（px）。
+    pub step: f32,
+    /// 每 N 个刻度标一个数字（≥1）。
+    pub label_interval: i32,
+}
+
 /// 当前激活的教具。
 #[derive(Debug, Clone, Default)]
 pub enum ActiveTool {
@@ -170,6 +188,7 @@ pub enum ActiveTool {
     Ruler(RulerTool),
     Polygon(PolygonTool),
     FunctionPlot(FunctionPlotTool),
+    NumberLine(NumberLineTool),
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -692,6 +711,50 @@ pub fn draw_function_plot(painter: &Painter, t: &FunctionPlotTool) {
     }
 }
 
+/// 数轴教具预览：主线 + 末端箭头 + 等距刻度 + 数字（交互态）。
+pub fn draw_number_line_tool(painter: &Painter, t: &NumberLineTool) {
+    let body = Color32::from_gray(60);
+    let rect = egui::Rect::from_two_pos(t.start, t.end);
+    let step = t.step.max(2.0);
+    let (a, b, ticks) = crate::shape_renderer::number_line_geometry(rect, step);
+    let stroke = Stroke::new(2.0, body);
+    painter.line_segment([a, b], stroke);
+
+    // 末端箭头。
+    let dir = (b - a).normalized();
+    let perp = Vec2::new(-dir.y, dir.x);
+    let head = 8.0;
+    painter.line_segment([b, b - dir * head + perp * head * 0.5], stroke);
+    painter.line_segment([b, b - dir * head - perp * head * 0.5], stroke);
+
+    // 刻度 + 数字（每 label_interval 个标一个，从 0 起）。
+    let tick_len = 6.0;
+    for (i, off) in ticks.iter().enumerate() {
+        let base = a + dir * (*off);
+        let tip = base + perp * tick_len;
+        painter.line_segment([base, tip], Stroke::new(1.0, body));
+        if t.label_interval > 0 && i % t.label_interval as usize == 0 {
+            let label_pos = base + perp * (tick_len + 12.0);
+            painter.text(
+                label_pos,
+                Align2::CENTER_CENTER,
+                format!("{i}"),
+                FontId::proportional(11.0),
+                body,
+            );
+        }
+    }
+
+    // 端点：起点深蓝实心；拖拽中终点蓝色高亮圆环。
+    painter.circle_filled(t.start, 4.0, Color32::from_rgb(20, 40, 120));
+    if t.dragging {
+        painter.circle_stroke(t.end, 6.0, Stroke::new(2.0, Color32::from_rgb(0, 150, 255)));
+        painter.circle_filled(t.end, 3.0, Color32::from_rgb(0, 150, 255));
+    } else {
+        painter.circle_filled(t.end, 4.0, Color32::from_rgb(20, 40, 120));
+    }
+}
+
 /// 绘制当前激活教具（覆盖在最上层）。
 pub fn draw_active_tool(painter: &Painter, tool: &ActiveTool) {
     match tool {
@@ -702,6 +765,7 @@ pub fn draw_active_tool(painter: &Painter, tool: &ActiveTool) {
         ActiveTool::Ruler(r) => draw_ruler(painter, r),
         ActiveTool::Polygon(p) => draw_polygon(painter, p),
         ActiveTool::FunctionPlot(f) => draw_function_plot(painter, f),
+        ActiveTool::NumberLine(n) => draw_number_line_tool(painter, n),
     }
 }
 

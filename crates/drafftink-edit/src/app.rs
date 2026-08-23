@@ -32,6 +32,7 @@ fn shape_kind_label(k: ShapeKind) -> &'static str {
         ShapeKind::Sector => "扇形",
         ShapeKind::Angle => "∠ 角",
         ShapeKind::Polygon { .. } => "⬡ 正多边形",
+        ShapeKind::NumberLine { .. } => "📏 数轴",
     }
 }
 
@@ -56,6 +57,8 @@ pub enum TeachingToolKind {
     Polygon(u8),
     /// 函数绘图（F）：输入表达式 → 画坐标系 + 曲线 → 提交。
     FunctionPlot,
+    /// 数轴（N）：点击定起点 → 拖拽定终点（Shift 吸附水平/垂直）→ 松开提交。
+    NumberLine,
 }
 
 impl TeachingToolKind {
@@ -81,6 +84,7 @@ impl TeachingToolKind {
                 _ => "⬡ 正多边形",
             },
             TeachingToolKind::FunctionPlot => "📈 函数绘图 (F)",
+            TeachingToolKind::NumberLine => "📏 数轴 (N)",
         }
     }
 }
@@ -486,6 +490,7 @@ impl eframe::App for EditApp {
                             TeachingToolKind::SetSquare45,
                             TeachingToolKind::Protractor,
                             TeachingToolKind::Ruler,
+                            TeachingToolKind::NumberLine,
                             TeachingToolKind::FunctionPlot,
                         ] {
                             if ui.button(kind.label()).clicked() {

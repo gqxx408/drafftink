@@ -1,3 +1,5 @@
+/target2/
 /target/
 **/*_assets/
 *.courseware
+third_party/ffmpeg/bin/*.dll

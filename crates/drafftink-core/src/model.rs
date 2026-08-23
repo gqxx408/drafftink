@@ -167,6 +167,15 @@ pub enum ShapeKind {
     /// 中心与半径（保证拖拽缩放后几何仍跟随），因此 `center`/`radius` 主要作为
     /// 提交时的定义参数保存，渲染以 rect 为唯一真相来源。
     Polygon { center: [f32; 2], radius: f32, sides: u8 },
+    /// 数轴（虚拟教具提交：数轴工具）。
+    ///
+    /// `start`/`end` 为定义几何（屏幕空间，拖拽确定）；`step` 为每刻度像素间距；
+    /// `label_interval` 为每 N 个刻度标一个数字（≥1）。
+    /// 实际渲染时主线方向由 rect 宽高比派生（宽 ≥ 高 → 水平左→右、箭头在右；
+    /// 否则垂直上→下、箭头在底），刻度从主线起点按 `step` 等距排布——与
+    /// [`ShapeKind::Polygon`] 一致，以 rect 为唯一真相来源，`start`/`end` 主要作为
+    /// 提交时的定义参数保存。
+    NumberLine { start: [f32; 2], end: [f32; 2], step: f32, label_interval: i32 },
 }
 
 impl ShapeKind {
