@@ -11,7 +11,7 @@
 //! - 与视频/图片叠加层复用同一套 `RectInteraction`（`interactive_rect.rs`）做
 //!   8 方向缩放与拖拽移动，本模块只负责「画」、不负责「交互」。
 
-use drafftink_core::model::ShapeKind;
+use drafftink_core::model::{NumberLineData, ShapeKind};
 use egui::epaint::CubicBezierShape;
 use egui::{Align2, Color32, FontId, Painter, Pos2, Rect, Shape, Stroke, Vec2};
 
@@ -131,14 +131,8 @@ pub fn draw_shape(
             }
             painter.add(Shape::closed_line(pts, stroke));
         }
-        ShapeKind::NumberLine { step, label_interval, .. } => {
-            draw_number_line(
-                painter,
-                rect,
-                step.max(2.0),
-                label_interval.max(1),
-                stroke,
-            );
+        ShapeKind::NumberLine(data) => {
+            draw_number_line(painter, rect, &data, stroke);
         }
     }
 }
@@ -193,11 +187,11 @@ pub fn polygon_vertices(center: Pos2, radius: f32, sides: u8, start_deg: f32) ->
         .collect()
 }
 
-/// 数轴几何（纯函数，可单测）：返回 `(主线起点, 主线终点, 每刻度相对起点的偏移)`。
+/// 数轴几何（纯函数，可单测）：返回 `(主线起点, 主线终点, 主刻度数)`。
 ///
 /// 方向判定：rect 宽 ≥ 高 → 水平（左→右，箭头在右端）；否则垂直（上→下，箭头在底端）。
-/// 刻度从主线起点按 `step`（px）等距排布，最后一段不足 `step` 时截断。
-pub fn number_line_geometry(rect: Rect, step: f32) -> (Pos2, Pos2, Vec<f32>) {
+/// 主刻度数 = `span / step` 下取整（不足一步的最后一段截断）。
+pub fn number_line_geometry(rect: Rect, step: f32) -> (Pos2, Pos2, i32) {
     let horizontal = rect.width() >= rect.height();
     let (a, b) = if horizontal {
         (
@@ -211,48 +205,72 @@ pub fn number_line_geometry(rect: Rect, step: f32) -> (Pos2, Pos2, Vec<f32>) {
         )
     };
     let span = if horizontal { rect.width() } else { rect.height() };
-    let step = step.max(1.0);
-    let n = (span / step).floor() as i32;
-    let ticks: Vec<f32> = (0..=n).map(|i| i as f32 * step).collect();
-    (a, b, ticks)
+    let major_count = (span / step.max(1.0)).floor() as i32;
+    (a, b, major_count)
 }
 
-/// 数轴渲染：主线 + 末端箭头 + 等距刻度（每 `step` px 短竖线）+ 每
-/// `label_interval` 个刻度标数字（从 0 起）。
-fn draw_number_line(
-    painter: &Painter,
-    rect: Rect,
-    step: f32,
-    label_interval: i32,
-    stroke: Stroke,
-) {
-    let (a, b, ticks) = number_line_geometry(rect, step);
-    painter.line_segment([a, b], stroke);
-
-    // 末端箭头（右端 / 底端）。
+/// 数轴渲染：主线 + 左右箭头 + 主刻度（带数值标签）+ 次刻度。
+///
+/// 刻度参数全部来自 [`NumberLineData`]；主线方向由 `rect` 宽高比派生（保证选中
+/// 缩放后刻度跟随）。
+fn draw_number_line(painter: &Painter, rect: Rect, data: &NumberLineData, stroke: Stroke) {
+    let step = data.step.max(2.0);
+    let (a, b, _major_count) = number_line_geometry(rect, step);
     let dir = (b - a).normalized();
     let perp = Vec2::new(-dir.y, dir.x);
-    let head = 8.0;
-    painter.line_segment([b, b - dir * head + perp * head * 0.5], stroke);
-    painter.line_segment([b, b - dir * head - perp * head * 0.5], stroke);
 
-    // 刻度：每 step px 一个短竖线；每 label_interval 个标数字。
-    let tick_len = 6.0;
-    let tick_stroke = Stroke::new(1.0, stroke.color);
-    for (i, off) in ticks.iter().enumerate() {
-        let base = a + dir * (*off);
-        let tip = base + perp * tick_len;
-        painter.line_segment([base, tip], tick_stroke);
-        if label_interval > 0 && i % label_interval as usize == 0 {
-            let label_pos = base + perp * (tick_len + 12.0);
-            painter.text(
-                label_pos,
-                Align2::CENTER_CENTER,
-                format!("{i}"),
-                FontId::proportional(11.0),
-                stroke.color,
-            );
+    // 主线（粗 2px）。
+    painter.line_segment([a, b], stroke);
+
+    // 右端箭头（用户要求 show_arrow 控制）。
+    if data.show_arrow {
+        let head = 8.0;
+        painter.line_segment([b, b - dir * head + perp * head * 0.6], stroke);
+        painter.line_segment([b, b - dir * head - perp * head * 0.6], stroke);
+    }
+    // 左端反向小箭头（双向数轴风格）。
+    let head = 8.0;
+    painter.line_segment([a, a + dir * head + perp * head * 0.6], stroke);
+    painter.line_segment([a, a + dir * head - perp * head * 0.6], stroke);
+
+    // 主刻度 + 数值标签。
+    let major_stroke = Stroke::new(2.0, stroke.color);
+    let minor_stroke = Stroke::new(1.0, Color32::GRAY);
+    let divisions = data.minor_divisions.max(1) as f32;
+    let minor_step = step / divisions;
+    let minor_count = ((a.distance(b)) / minor_step).floor() as i32;
+
+    for i in 0..=minor_count {
+        let pos = a + dir * (i as f32 * minor_step);
+        let is_major = i % divisions as i32 == 0;
+        if is_major {
+            painter.line_segment([pos, pos - perp * data.tick_length], major_stroke);
+            // 数值标签（每 label_interval 个主刻度标一个，从 start_value 起按
+            // unit_per_major 递增）。
+            let major_i = (i as f32 / divisions) as i32;
+            if data.label_interval > 0 && major_i % data.label_interval == 0 {
+                let value = data.start_value + major_i as f32 * data.unit_per_major;
+                let label_pos = pos - perp * (data.tick_length + 12.0);
+                painter.text(
+                    label_pos,
+                    Align2::CENTER_CENTER,
+                    format_number_line_label(value),
+                    FontId::proportional(11.0),
+                    stroke.color,
+                );
+            }
+        } else {
+            painter.line_segment([pos, pos - perp * data.minor_tick_length], minor_stroke);
         }
+    }
+}
+
+/// 数值 → 数轴标签（纯函数，可单测）：整数显示 `"0"`，小数显示 `"0.5"`。
+pub fn format_number_line_label(v: f32) -> String {
+    if v.fract() == 0.0 {
+        format!("{}", v as i32)
+    } else {
+        format!("{v:.1}")
     }
 }
 
@@ -448,20 +466,29 @@ mod tests {
         }
     }
 
+    /// 用户要求：`number_line_tick_count_correct` —— 200px / step40 → 5 个主刻度。
     #[test]
-    fn numberline_tick_count() {
-        // 200px 宽、step=20px → 11 个刻度（0, 20, …, 200）。
+    fn number_line_tick_count_correct() {
         let rect = Rect::from_min_size(Pos2::new(100.0, 100.0), Vec2::new(200.0, 50.0));
-        let (a, b, ticks) = number_line_geometry(rect, 20.0);
-        assert_eq!(ticks.len(), 11, "200/20=10 → 含起点共 11 个刻度");
+        let (a, b, major_count) = number_line_geometry(rect, 40.0);
+        assert_eq!(major_count, 5, "200/40=5 个主刻度");
         assert!((a.x - 100.0).abs() < 1e-4 && (b.x - 300.0).abs() < 1e-4, "水平主线左→右");
-        // 刻度相对偏移严格等距。
-        for w in ticks.windows(2) {
-            assert!((w[1] - w[0] - 20.0).abs() < 1e-3, "刻度应等距 20px");
-        }
-        // 不足一步的最后一段被截断：step=30 → 200/30=6.67 → 7 个刻度（0..=180）。
-        let (_, _, ticks2) = number_line_geometry(rect, 30.0);
-        assert_eq!(ticks2.len(), 7, "200/30 下取整=6 → 共 7 个刻度");
+        // 不足一步截断：step=30 → 200/30=6.67 → 6 个主刻度。
+        let (_, _, c2) = number_line_geometry(rect, 30.0);
+        assert_eq!(c2, 6, "200/30 下取整=6");
+    }
+
+    /// 用户要求：`number_line_label_formatting` —— 整数 / 小数标签。
+    #[test]
+    fn number_line_label_formatting() {
+        // start_value=0, unit=1 → "0","1","2"。
+        assert_eq!(format_number_line_label(0.0), "0");
+        assert_eq!(format_number_line_label(1.0), "1");
+        assert_eq!(format_number_line_label(2.0), "2");
+        // start_value=0.5, unit=0.5 → "0.5","1.0","1.5"。
+        assert_eq!(format_number_line_label(0.5), "0.5");
+        assert_eq!(format_number_line_label(1.0), "1");
+        assert_eq!(format_number_line_label(1.5), "1.5");
     }
 
     #[test]
@@ -476,6 +503,19 @@ mod tests {
         let (a, b, _) = number_line_geometry(v, 10.0);
         assert!((a.x - v.center().x).abs() < 1e-4 && (b.x - v.center().x).abs() < 1e-4);
         assert!(a.y < b.y, "垂直数轴起点在上");
+    }
+
+    /// 用户要求：`number_line_shift_snap_horizontal` —— Shift 吸附到水平/垂直。
+    #[test]
+    fn number_line_shift_snap_horizontal() {
+        // 近水平（|dx| > |dy|）→ 吸附到水平（y=0）。
+        let h = crate::tools::snap_dir_axis(Vec2::new(100.0, 3.0));
+        assert!(h.y.abs() < 1e-4, "近水平应吸附到 y=0，得到 {h:?}");
+        assert!((h.x.abs() - 100.0).abs() < 1.0, "长度保持，得到 {h:?}");
+        // 近垂直（|dy| > |dx|）→ 吸附到垂直（x=0）。
+        let v = crate::tools::snap_dir_axis(Vec2::new(2.0, 100.0));
+        assert!(v.x.abs() < 1e-4, "近垂直应吸附到 x=0，得到 {v:?}");
+        assert!((v.y.abs() - 100.0).abs() < 1.0, "长度保持，得到 {v:?}");
     }
 
     #[test]

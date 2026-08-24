@@ -159,22 +159,46 @@ pub struct FunctionPlotTool {
     pub error: Option<String>,
 }
 
-/// 数轴：点击定起点 → 拖拽定终点 → Shift 吸附水平/垂直 → 松开提交。
+/// 数轴：第一次点击定起点 → 拖拽实时预览（蓝色虚线 + 动态刻度）→ 松开提交。
 ///
-/// 与直尺的端点拖拽不同，数轴是**一次性拖拽**（按下定起点、拖动定终点、松开即提交），
-/// 交互更接近「画线段」。
+/// Shift 吸附：拖拽中按住 Shift 将方向吸附到水平（0°）/ 垂直（90°）。
 #[derive(Debug, Clone)]
 pub struct NumberLineTool {
-    /// 起点（按下时固定）。
-    pub start: Pos2,
-    /// 终点（拖拽中跟随鼠标，Shift 时吸附水平/垂直）。
-    pub end: Pos2,
-    /// 是否正在拖拽确定终点。
+    /// 第一次点击确定的起点；`None` 表示等待第一次点击。
+    pub start: Option<Pos2>,
+    /// 拖拽中的当前鼠标位置（预览用）。
+    pub current: Option<Pos2>,
+    /// 是否正在拖拽。
     pub dragging: bool,
-    /// 每刻度像素间距（px）。
+    /// 主刻度间隔（像素）。
     pub step: f32,
-    /// 每 N 个刻度标一个数字（≥1）。
-    pub label_interval: i32,
+    /// 左端点对应的数值（默认 0.0）。
+    pub start_value: f32,
+    /// 每个主刻度代表的数值增量（默认 1.0）。
+    pub unit_per_major: f32,
+}
+
+impl Default for NumberLineTool {
+    fn default() -> Self {
+        Self {
+            start: None,
+            current: None,
+            dragging: false,
+            step: 40.0,
+            start_value: 0.0,
+            unit_per_major: 1.0,
+        }
+    }
+}
+
+/// Shift 吸附：把向量吸附到水平（0°）/ 垂直（90°）——取 `|dx|` 与 `|dy|` 中较大者
+/// 作为长度，另一分量归零（与 `snap_dir_grid45` 的主方向一致，纯函数可单测）。
+pub fn snap_dir_axis(v: Vec2) -> Vec2 {
+    if v.x.abs() >= v.y.abs() {
+        Vec2::new(v.x.signum() * v.length(), 0.0)
+    } else {
+        Vec2::new(0.0, v.y.signum() * v.length())
+    }
 }
 
 /// 倒计时器：授课模式计时工具（纯 UI 覆盖层，不序列化）。
@@ -851,48 +875,72 @@ pub fn draw_function_plot(painter: &Painter, t: &FunctionPlotTool) {
     }
 }
 
-/// 数轴教具预览：主线 + 末端箭头 + 等距刻度 + 数字（交互态）。
+/// 数轴教具预览：蓝色虚线主线 + 箭头 + 动态主/次刻度 + 数值标签（拖拽交互态）。
 pub fn draw_number_line_tool(painter: &Painter, t: &NumberLineTool) {
-    let body = Color32::from_gray(60);
-    let rect = egui::Rect::from_two_pos(t.start, t.end);
+    let (Some(start), Some(cur)) = (t.start, t.current) else {
+        // 等待第一次点击：画一个提示十字。
+        if let Some(p) = t.start.or(t.current) {
+            painter.circle_filled(p, 3.0, Color32::from_rgb(0, 150, 255));
+        }
+        return;
+    };
+    let rect = egui::Rect::from_two_pos(start, cur);
     let step = t.step.max(2.0);
-    let (a, b, ticks) = crate::shape_renderer::number_line_geometry(rect, step);
-    let stroke = Stroke::new(2.0, body);
-    painter.line_segment([a, b], stroke);
-
-    // 末端箭头。
+    let (a, b, _major_count) = crate::shape_renderer::number_line_geometry(rect, step);
     let dir = (b - a).normalized();
     let perp = Vec2::new(-dir.y, dir.x);
+    let blue = Color32::from_rgb(0, 150, 255);
     let head = 8.0;
-    painter.line_segment([b, b - dir * head + perp * head * 0.5], stroke);
-    painter.line_segment([b, b - dir * head - perp * head * 0.5], stroke);
+    // 虚线主线（蓝色）。egui 0.29 无 `Stroke::into_dashed`，用 `Shape::dashed_line`。
+    let dash_stroke = Stroke::new(2.0, blue);
+    painter.add(egui::Shape::dashed_line(&[a, b], dash_stroke, 8.0, 4.0));
 
-    // 刻度 + 数字（每 label_interval 个标一个，从 0 起）。
-    let tick_len = 6.0;
-    for (i, off) in ticks.iter().enumerate() {
-        let base = a + dir * (*off);
-        let tip = base + perp * tick_len;
-        painter.line_segment([base, tip], Stroke::new(1.0, body));
-        if t.label_interval > 0 && i % t.label_interval as usize == 0 {
-            let label_pos = base + perp * (tick_len + 12.0);
+    // 两端箭头（预览，实线）。
+    let solid = dash_stroke;
+    painter.line_segment([b, b - dir * head + perp * head * 0.6], solid);
+    painter.line_segment([b, b - dir * head - perp * head * 0.6], solid);
+    painter.line_segment([a, a + dir * head + perp * head * 0.6], solid);
+    painter.line_segment([a, a + dir * head - perp * head * 0.6], solid);
+
+    // 主刻度（蓝色实线）+ 数值标签；次刻度（半透明灰）。
+    let major_stroke = Stroke::new(2.0, blue);
+    let minor_stroke = Stroke::new(1.0, Color32::from_rgba_unmultiplied(120, 120, 120, 160));
+    let divisions = 2.0;
+    let minor_step = step / divisions;
+    let minor_count = ((a.distance(b)) / minor_step).floor() as i32;
+    for i in 0..=minor_count {
+        let pos = a + dir * (i as f32 * minor_step);
+        if i % divisions as i32 == 0 {
+            let tick_len = 10.0;
+            painter.line_segment([pos, pos - perp * tick_len], major_stroke);
+            let major_i = (i as f32 / divisions) as i32;
+            let value = t.start_value + major_i as f32 * t.unit_per_major;
+            let label_pos = pos - perp * (tick_len + 12.0);
             painter.text(
                 label_pos,
                 Align2::CENTER_CENTER,
-                format!("{i}"),
+                crate::shape_renderer::format_number_line_label(value),
                 FontId::proportional(11.0),
-                body,
+                blue,
             );
+        } else {
+            painter.line_segment([pos, pos - perp * 5.0], minor_stroke);
         }
     }
 
-    // 端点：起点深蓝实心；拖拽中终点蓝色高亮圆环。
-    painter.circle_filled(t.start, 4.0, Color32::from_rgb(20, 40, 120));
-    if t.dragging {
-        painter.circle_stroke(t.end, 6.0, Stroke::new(2.0, Color32::from_rgb(0, 150, 255)));
-        painter.circle_filled(t.end, 3.0, Color32::from_rgb(0, 150, 255));
-    } else {
-        painter.circle_filled(t.end, 4.0, Color32::from_rgb(20, 40, 120));
-    }
+    // 端点：起点深蓝实心；终点蓝色高亮圆环。
+    painter.circle_filled(start, 4.0, Color32::from_rgb(20, 40, 120));
+    painter.circle_stroke(cur, 6.0, Stroke::new(2.0, blue));
+    painter.circle_filled(cur, 3.0, blue);
+    // 长度提示。
+    let len = start.distance(cur);
+    painter.text(
+        a.lerp(b, 0.5) + perp * 30.0,
+        Align2::CENTER_CENTER,
+        format!("{len:.0}px · 每格 {:.0}px", t.step),
+        FontId::proportional(12.0),
+        blue,
+    );
 }
 
 /// 绘制当前激活教具（覆盖在最上层）。

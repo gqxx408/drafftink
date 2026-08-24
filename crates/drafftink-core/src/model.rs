@@ -169,13 +169,54 @@ pub enum ShapeKind {
     Polygon { center: [f32; 2], radius: f32, sides: u8 },
     /// 数轴（虚拟教具提交：数轴工具）。
     ///
-    /// `start`/`end` 为定义几何（屏幕空间，拖拽确定）；`step` 为每刻度像素间距；
-    /// `label_interval` 为每 N 个刻度标一个数字（≥1）。
-    /// 实际渲染时主线方向由 rect 宽高比派生（宽 ≥ 高 → 水平左→右、箭头在右；
-    /// 否则垂直上→下、箭头在底），刻度从主线起点按 `step` 等距排布——与
-    /// [`ShapeKind::Polygon`] 一致，以 rect 为唯一真相来源，`start`/`end` 主要作为
-    /// 提交时的定义参数保存。
-    NumberLine { start: [f32; 2], end: [f32; 2], step: f32, label_interval: i32 },
+    /// 携带完整刻度参数（[`NumberLineData`]）：主/次刻度、数值标签（起点数值 +
+    /// 每格增量）、左右箭头。渲染时主线方向由叠加层 rect 宽高比派生（宽 ≥ 高 →
+    /// 水平左→右；否则垂直上→下），刻度沿主线按 `step` 等距排布——与
+    /// [`ShapeKind::Polygon`] 一致，以 rect 为唯一真相来源，`start`/`end` 主要
+    /// 作为提交时的定义参数保存（保证拖拽缩放后刻度仍跟随）。
+    NumberLine(NumberLineData),
+}
+
+/// 数轴完整刻度参数（[`ShapeKind::NumberLine`] 的载荷）。
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct NumberLineData {
+    /// 左端点（屏幕坐标，提交时保存；渲染以 rect 派生为准）。
+    pub start: [f32; 2],
+    /// 右端点（屏幕坐标）。
+    pub end: [f32; 2],
+    /// 主刻度间隔（像素）。
+    pub step: f32,
+    /// 每个主刻度的细分数量（≥1，默认 2 → 半格次刻度）。
+    pub minor_divisions: u8,
+    /// 每几个主刻度标一个数字（≥1，默认 1 → 每格都标）。
+    pub label_interval: i32,
+    /// 左端点对应的数值（默认 0.0）。
+    pub start_value: f32,
+    /// 每个主刻度代表的数值增量（默认 1.0）。
+    pub unit_per_major: f32,
+    /// 右端是否画箭头（默认 true；左端始终画小号反向箭头，双向数轴风格）。
+    pub show_arrow: bool,
+    /// 主刻度线长度（像素，默认 10.0）。
+    pub tick_length: f32,
+    /// 次刻度线长度（像素，默认 5.0）。
+    pub minor_tick_length: f32,
+}
+
+impl Default for NumberLineData {
+    fn default() -> Self {
+        Self {
+            start: [0.0, 0.0],
+            end: [200.0, 0.0],
+            step: 40.0,
+            minor_divisions: 2,
+            label_interval: 1,
+            start_value: 0.0,
+            unit_per_major: 1.0,
+            show_arrow: true,
+            tick_length: 10.0,
+            minor_tick_length: 5.0,
+        }
+    }
 }
 
 impl ShapeKind {

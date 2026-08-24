@@ -140,6 +140,8 @@ fn shape_type_from_enbx(s: &str) -> ShapeType {
         "brace" => ShapeType::Brace,
         "fan" | "sector" | "wedge" => ShapeType::Fan,
         "triangle" => ShapeType::Rectangle, // closest fallback
+        // 数轴：Seewo 无「数轴」原语，读取时近似为直线（几何由 rect 保留）。
+        "numberline" | "number-line" | "number_line" => ShapeType::Line,
         _ => ShapeType::Rectangle,
     }
 }

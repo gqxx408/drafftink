@@ -32,7 +32,7 @@ fn shape_kind_label(k: ShapeKind) -> &'static str {
         ShapeKind::Sector => "扇形",
         ShapeKind::Angle => "∠ 角",
         ShapeKind::Polygon { .. } => "⬡ 正多边形",
-        ShapeKind::NumberLine { .. } => "📏 数轴",
+        ShapeKind::NumberLine(_) => "📏 数轴",
     }
 }
 

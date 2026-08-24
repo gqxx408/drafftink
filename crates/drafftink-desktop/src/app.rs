@@ -35,9 +35,10 @@ use crate::stroke_conv::{core_vec_to_ink, ink_vec_to_core};
 use crate::tools::{
     angle_of, closest_point_on_line, dist_to_segment, draw_active_tool, find_nearest_edge,
     line_draw_result, protractor_to_unified, set_square_centroid, set_square_edges,
-    snap_angle, snap_angle_grid15, snap_dir_grid45, unified_to_protractor, ActiveTool,
-    CompassMode, CompassTool, CountdownTool, FunctionPlotTool, NumberLineTool, PolygonTool,
-    ProtractorMode, ProtractorTool, RulerTool, SetSquareKind, SetSquareTool, WhichEnd,
+    snap_angle, snap_angle_grid15, snap_dir_axis, snap_dir_grid45, unified_to_protractor,
+    ActiveTool, CompassMode, CompassTool, CountdownTool, FunctionPlotTool, NumberLineTool,
+    PolygonTool, ProtractorMode, ProtractorTool, RulerTool, SetSquareKind, SetSquareTool,
+    WhichEnd,
 };
 use crate::undo::{UndoCmd, UndoHistory};
 use crate::video_player::VideoPlayer;
@@ -81,6 +82,100 @@ impl Default for MagnifierTool {
             zoom_factor: 2.0,
             active: false,
         }
+    }
+}
+
+/// 随机点名器（Name Picker）：老师临时输入学生名单，滚动暂停后选中一名。
+///
+/// **纯 UI / 临时数据**：名单仅存在本工具内、每次授课临时录入，**不序列化到 ENBX**；
+/// 关闭窗口（✕ / Esc / 关闭按钮）后名单保留，下次打开仍在。
+///
+/// - `names`：学生名单；`input_text`：当前输入框内容。
+/// - `display_name`：滚动显示区当前名字；`is_rolling`：是否正在滚动。
+/// - `roll_speed`：滚动切换间隔（秒）；`elapsed`：当前间隔累计时间。
+/// - `position`：窗口位置（可拖拽）；`selected_name`：最终选中的名字。
+/// - `visible`：窗口可见性（本工具独立维护，关闭 ≠ 清空名单）。
+#[derive(Debug, Clone)]
+pub struct NamePickerTool {
+    /// 学生名单。
+    pub names: Vec<String>,
+    /// 当前输入框内容。
+    pub input_text: String,
+    /// 当前滚动显示的名字。
+    pub display_name: String,
+    /// 是否正在滚动。
+    pub is_rolling: bool,
+    /// 滚动速度（名字切换间隔，秒）。
+    pub roll_speed: f32,
+    /// 累计时间（用于计时切换）。
+    pub elapsed: f32,
+    /// 窗口位置。
+    pub position: egui::Pos2,
+    /// 最终选中的名字。
+    pub selected_name: Option<String>,
+    /// 窗口是否可见（关闭时名单保留，下次打开仍在）。
+    pub visible: bool,
+}
+
+impl Default for NamePickerTool {
+    fn default() -> Self {
+        Self {
+            names: Vec::new(),
+            input_text: String::new(),
+            display_name: String::new(),
+            is_rolling: false,
+            roll_speed: 0.08,
+            elapsed: 0.0,
+            position: egui::Pos2::new(320.0, 180.0),
+            selected_name: None,
+            visible: false,
+        }
+    }
+}
+
+/// 解析名单输入：英文逗号 / 中文逗号 / 分号 / 换行分隔，去空白、跳过空项。
+///
+/// 独立成纯函数便于单测（`name_picker_add_names`）。
+pub(crate) fn parse_names(input: &str) -> Vec<String> {
+    input
+        .split([',', '，', ';', '；', '\n', '\r'])
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_owned)
+        .collect()
+}
+
+impl NamePickerTool {
+    /// 从输入框解析并追加名单（去重）；把已加入的名字去除后清空输入框。
+    pub fn add_from_input(&mut self) {
+        for n in parse_names(&self.input_text) {
+            if !self.names.contains(&n) {
+                self.names.push(n);
+            }
+        }
+        self.input_text.clear();
+    }
+
+    /// 清空名单并复位滚动 / 选中状态。
+    pub fn clear_names(&mut self) {
+        self.names.clear();
+        self.display_name.clear();
+        self.selected_name = None;
+        self.is_rolling = false;
+        self.elapsed = 0.0;
+    }
+
+    /// 停止滚动：锁定当前显示的名字为选中项。
+    /// 若显示区为空（尚未开始/名单空），则回退到名单第一项，保证永远选中一名。
+    pub fn stop_rolling(&mut self) {
+        self.is_rolling = false;
+        self.elapsed = 0.0;
+        if self.display_name.is_empty() {
+            if let Some(first) = self.names.first() {
+                self.display_name = first.clone();
+            }
+        }
+        self.selected_name = Some(self.display_name.clone());
     }
 }
 
@@ -144,6 +239,8 @@ pub struct IntegratedApp {
     shape_draw: Option<ShapeDrawState>,
     /// 放大镜工具状态（纯 UI 覆盖层：跟随鼠标、滚轮调倍数，不序列化、不进文档数据模型）。
     magnifier: MagnifierTool,
+    /// 随机点名器（授课工具：浮动窗口 + 临时名单，不序列化、闭环后名单保留）。
+    name_picker: NamePickerTool,
     /// 当前选中的画布元素（形状 / 视频 / 图片之一，仅备课模式有效）。
     /// `None` 表示无选中——元素以「固定背景元素」呈现（无边框 / 抓手），
     /// 老师主动单击该元素才选中进入微调（「先隐身后选中」范式）。
@@ -619,6 +716,7 @@ impl IntegratedApp {
             pending_armed: false,
             shape_draw: None,
             magnifier: MagnifierTool::default(),
+            name_picker: NamePickerTool::default(),
             selected_element_id: None,
             next_z_index: 0,
             last_page: 0,
@@ -1400,7 +1498,7 @@ impl IntegratedApp {
             ShapeKind::Sector => "fan",
             ShapeKind::Polygon { .. } => "polygon",
             // 数轴降级为直线段保存（Seewo 无「数轴」原语；读取侧近似为 line）。
-            ShapeKind::NumberLine { .. } => "line",
+            ShapeKind::NumberLine(_) => "numberline",
         }
         .to_string()
     }
@@ -3150,16 +3248,9 @@ impl IntegratedApp {
         ctx.request_repaint();
     }
 
-    /// 激活数轴：点击定起点 → 拖拽定终点 → 松开提交。
+    /// 激活数轴：第一次点击定起点 → 拖拽预览 → 松开提交。
     fn activate_number_line(&mut self, ctx: &egui::Context) {
-        let c = self.canvas_screen_center();
-        self.active_tool = ActiveTool::NumberLine(NumberLineTool {
-            start: c,
-            end: c,
-            dragging: false,
-            step: 20.0,
-            label_interval: 2,
-        });
+        self.active_tool = ActiveTool::NumberLine(NumberLineTool::default());
         self.selected_element_id = None;
         ctx.request_repaint();
     }
@@ -3197,14 +3288,140 @@ impl IntegratedApp {
                     if ui.button("📐 量角器").clicked() {
                         self.activate_protractor(ProtractorMode::Measure, ctx);
                     }
+                    if ui.button("📏 数轴").clicked() {
+                        self.activate_number_line(ctx);
+                    }
                 });
                 ui.horizontal(|ui| {
                     // 放大镜：点一下激活 / 再点一下退出（也可按 Esc 退出）。
                     if ui.selectable_label(self.magnifier.active, "🔍 放大镜").clicked() {
                         self.magnifier.active = !self.magnifier.active;
                     }
+                    // 随机点名器：点按打开浮动窗口（名单在该工具内临时保留）。
+                    if ui.button("🎲 随机点名").clicked() {
+                        self.name_picker.visible = true;
+                    }
                 });
             });
+    }
+
+    /// 每帧渲染随机点名器浮动窗口：Esc 关闭、滚动动画推进、窗口 UI；关闭不清空名单。
+    ///
+    /// 名单存于 `Self::name_picker`（`NamePickerTool`），**不序列化到 ENBX**；窗口关闭
+    /// （✕ / Esc / 「关闭」按钮）仅隐藏窗口，名单保留供下次打开复用。
+    fn render_name_picker(&mut self, ctx: &egui::Context) {
+        if !self.name_picker.visible {
+            return;
+        }
+        // Esc 关闭窗口（名单保留）。
+        if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
+            self.name_picker.visible = false;
+            self.name_picker.is_rolling = false;
+            return;
+        }
+        // ── 滚动动画：每 roll_speed 秒随机切换显示的名字。 ──
+        if self.name_picker.is_rolling {
+            self.name_picker.elapsed += ctx.input(|i| i.unstable_dt);
+            if self.name_picker.elapsed >= self.name_picker.roll_speed {
+                self.name_picker.elapsed = 0.0;
+                if !self.name_picker.names.is_empty() {
+                    let idx = (ctx.input(|i| i.time * 10.0) as usize)
+                        % self.name_picker.names.len();
+                    self.name_picker.display_name = self.name_picker.names[idx].clone();
+                }
+            }
+            // 滚动中驱动每帧重绘，保证动画连续。
+            ctx.request_repaint();
+        }
+
+        let mut open = self.name_picker.visible;
+        let base = self.name_picker.position;
+        let res = egui::Window::new("🎲 随机点名器")
+            .id(egui::Id::new("name_picker_window"))
+            .default_pos(base)
+            .resizable(false)
+            .open(&mut open)
+            .show(ctx, |ui| self.name_picker_window_ui(ui));
+        // 记录拖拽后的窗口位置，下次打开保持一致。
+        if let Some(res) = res {
+            self.name_picker.position = res.response.rect.min;
+        }
+        // 窗口右上角 ✕ 关闭 → 隐藏窗口（名单保留）。
+        if !open && self.name_picker.visible {
+            self.name_picker.visible = false;
+            self.name_picker.is_rolling = false;
+        }
+    }
+
+    /// 随机点名器窗口内容：输入区 / 名单 / 大号滚动显示区 / 控制按钮。
+    fn name_picker_window_ui(&mut self, ui: &mut egui::Ui) {
+        ui.label("输入学生名单（逗号 / 换行分隔），如: 张三,李四,王五");
+        ui.text_edit_singleline(&mut self.name_picker.input_text);
+        ui.horizontal(|ui| {
+            if ui.button("➕ 添加").clicked() {
+                self.name_picker.add_from_input();
+            }
+            if ui.button("🧹 清空").clicked() {
+                self.name_picker.clear_names();
+            }
+        });
+
+        let list = if self.name_picker.names.is_empty() {
+            "（空）".to_string()
+        } else {
+            format!("{}（{} 人）", self.name_picker.names.join("  "), self.name_picker.names.len())
+        };
+        ui.label(format!("当前名单: {list}"));
+
+        // ── 滚动显示区：大号字体；选中后金色背景 + 更大字号。 ──
+        let selected = self.name_picker.selected_name.is_some();
+        let big = egui::FontId::proportional(if selected { 42.0 } else { 30.0 });
+        let display = self.name_picker.display_name.clone();
+        let frame = egui::Frame::group(ui.style())
+            .fill(if selected {
+                egui::Color32::from_rgb(255, 215, 0)
+            } else {
+                ui.visuals().extreme_bg_color
+            })
+            .rounding(8.0);
+        frame.show(ui, |ui| {
+            ui.set_min_size(egui::vec2(260.0, 76.0));
+            ui.vertical_centered(|ui| {
+                let name = if display.is_empty() { "　" } else { display.as_str() };
+                let color = if selected {
+                    egui::Color32::from_rgb(70, 40, 0)
+                } else {
+                    egui::Color32::WHITE
+                };
+                ui.label(egui::RichText::new(name).size(big.size).color(color).strong());
+            });
+        });
+
+        // ── 控制按钮。 ──
+        ui.horizontal(|ui| {
+            if !self.name_picker.is_rolling {
+                let has_names = !self.name_picker.names.is_empty();
+                let disabled = ui.add_enabled(has_names, egui::Button::new("▶ 开始滚动"));
+                if disabled.clicked() {
+                    // 再次开始：清空选中状态，重新滚动。
+                    self.name_picker.is_rolling = true;
+                    self.name_picker.selected_name = None;
+                    self.name_picker.elapsed = 0.0;
+                    if self.name_picker.display_name.is_empty() {
+                        self.name_picker.display_name = self.name_picker.names[0].clone();
+                    }
+                }
+                if !has_names {
+                    ui.label(egui::RichText::new("（请先添加名单）").weak());
+                }
+            } else if ui.button("⏹ 停止").clicked() {
+                self.name_picker.stop_rolling();
+            }
+            if ui.button("✕ 关闭").clicked() {
+                self.name_picker.visible = false;
+                self.name_picker.is_rolling = false;
+            }
+        });
     }
 
     /// 每帧更新放大镜：Esc 退出；滚轮在 1x–4x 间调倍数；圆心跟随鼠标；随后叠加绘制。
@@ -3813,40 +4030,46 @@ impl IntegratedApp {
                 }
             }
             ActiveTool::NumberLine(mut t) => {
-                // 按下定起点 → 拖拽定终点（Shift 吸附水平/垂直）→ 松开提交。
-                if pressed && !t.dragging {
+                // 第一次点击定起点 → 拖拽实时预览（Shift 吸附水平/垂直）→ 松开提交。
+                if pressed && t.start.is_none() {
                     if let Some(p) = pointer {
-                        t.start = p;
-                        t.end = p;
+                        t.start = Some(p);
+                        t.current = Some(p);
                         t.dragging = true;
                     }
                 }
                 if t.dragging && down {
                     if let Some(p) = pointer {
                         let shift = ctx.input(|i| i.modifiers.shift);
-                        let v = p - t.start;
-                        // Shift：吸附到 0°（水平）或 90°（垂直）。snap_dir_grid45 会吸附
-                        // 到最近的 45° 网格，水平/垂直是其中的主方向。
-                        t.end = if shift { t.start + snap_dir_grid45(v) } else { p };
+                        if let Some(s) = t.start {
+                            let v = p - s;
+                            // Shift：吸附到水平（0°）/ 垂直（90°）。
+                            t.current = Some(if shift { s + snap_dir_axis(v) } else { p });
+                        }
                     }
                 }
                 if t.dragging && released {
-                    if t.start.distance(t.end) > 5.0 {
-                        let rect = egui::Rect::from_two_pos(t.start, t.end);
-                        commit = Some((
-                            ShapeKind::NumberLine {
-                                start: [t.start.x, t.start.y],
-                                end: [t.end.x, t.end.y],
+                    if let (Some(s), Some(c)) = (t.start, t.current) {
+                        if s.distance(c) > 5.0 {
+                            let rect = egui::Rect::from_two_pos(s, c);
+                            let data = drafftink_core::model::NumberLineData {
+                                start: [s.x, s.y],
+                                end: [c.x, c.y],
                                 step: t.step,
-                                label_interval: t.label_interval,
-                            },
-                            rect,
-                            None,
-                            false,
-                            false,
-                        ));
+                                ..drafftink_core::model::NumberLineData::default()
+                            };
+                            commit = Some((
+                                ShapeKind::NumberLine(data),
+                                rect,
+                                None,
+                                false,
+                                false,
+                            ));
+                        }
                     }
                     t.dragging = false;
+                    t.start = None;
+                    t.current = None;
                 }
                 self.active_tool = ActiveTool::NumberLine(t);
             }
@@ -4722,6 +4945,8 @@ impl App for IntegratedApp {
                 self.update_active_tool(ctx);
                 // 左上角授课工具面板。
                 self.teach_tools_panel(ctx);
+                // 随机点名器浮动窗口（授课模式，名单临时保留、不序列化）。
+                self.render_name_picker(ctx);
             }
         }
 
@@ -4976,6 +5201,53 @@ mod tests {
     use super::*;
     use drafftink_core::model::ShapeKind;
     use egui::{pos2, vec2, Rect};
+
+    /// 随机点名器：从输入框解析逗号 / 换行分隔的名字并入名单（去重、去空）。
+    #[test]
+    fn name_picker_add_names() {
+        let mut t = NamePickerTool {
+            input_text: "张三,李四，王五\n赵六".to_string(),
+            ..NamePickerTool::default()
+        };
+        t.add_from_input();
+        assert_eq!(t.names, ["张三", "李四", "王五", "赵六"], "英/中/换行分隔皆可解析");
+
+        // 重复名字不重复加入；输入框在加入后应清空。
+        t.input_text = "张三,小七".to_string();
+        t.add_from_input();
+        assert_eq!(t.names, ["张三", "李四", "王五", "赵六", "小七"], "重复去重");
+        assert!(t.input_text.is_empty(), "加入后清空输入框");
+
+        // 纯函数 parse_names：包围空白、分号、回车一并处理。
+        assert_eq!(
+            parse_names(" a , b; c，d;E\r\n f "),
+            ["a", "b", "c", "d", "E", "f"]
+        );
+        assert!(parse_names(" , ; \n").is_empty(), "全分隔符输入为空名单");
+    }
+
+    /// 随机点名器：停止滚动后锁定选中一个名字（selected_name 非空），并复位滚动态。
+    #[test]
+    fn name_picker_stop_selects_one() {
+        // 显示区已有名字：停止后锁死为当前显示的名字。
+        let mut t = NamePickerTool {
+            names: vec!["张三".into(), "李四".into(), "王五".into()],
+            display_name: "王五".into(),
+            is_rolling: true,
+            ..NamePickerTool::default()
+        };
+        t.stop_rolling();
+        assert!(!t.is_rolling, "停止后不再滚动");
+        assert_eq!(t.selected_name.as_deref(), Some("王五"), "选中当前显示的名字");
+
+        // 显示区为空（仍未开始滚动）：回退到名单第一项，保证永远选中一名。
+        let mut t2 = NamePickerTool {
+            names: vec!["张三".into(), "李四".into()],
+            ..NamePickerTool::default()
+        };
+        t2.stop_rolling();
+        assert_eq!(t2.selected_name.as_deref(), Some("张三"), "空显示区回退到名单首项");
+    }
 
     /// 放大镜坐标变换正确性：圆心保持不动，周围点以圆心为基准等比外扩；
     /// 且任意 canvas_offset / canvas_zoom 下，通用公式退化为纯屏幕缩放（二者抵消）。
