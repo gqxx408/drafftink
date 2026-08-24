@@ -567,13 +567,19 @@ pub fn draw_compass(painter: &Painter, t: &CompassTool) {
     }
 }
 
-/// 三角尺：半透明三角形 + 边框。
+/// 三角尺视觉统一灰色系：主体 / 刻度 / 文字分层，模拟「灰色半透明塑料片」。
+const SETSQUARE_GRAY: Color32 = Color32::from_gray(140); // 主体描边 / 手柄 / 孔轮廓
+const SETSQUARE_FILL: Color32 = Color32::from_rgba_premultiplied(140, 140, 140, 25); // 极淡灰，几乎透明
+const SETSQUARE_TICK_GRAY: Color32 = Color32::from_gray(120); // 刻度线（当前三角尺暂无尺身刻度，备用）
+const SETSQUARE_TEXT_GRAY: Color32 = Color32::from_gray(80); // 数字 / 旋转角文本
+
+/// 三角尺：半透明灰色三角形 + 边框 + 内部虚线小三角「悬挂孔」。
 pub fn draw_set_square(painter: &Painter, t: &SetSquareTool) {
     let pts = set_square_points(t);
     painter.add(egui::Shape::convex_polygon(
         pts.to_vec(),
-        Color32::from_rgba_unmultiplied(100, 150, 255, 80),
-        Stroke::new(1.0, Color32::from_rgb(20, 40, 120)),
+        SETSQUARE_FILL,
+        Stroke::new(2.0, SETSQUARE_GRAY),
     ));
     // 直角标记（小方块）。
     let dir = rotate_vec(Vec2::new(1.0, 0.0), t.rotation_deg.to_radians());
@@ -584,7 +590,7 @@ pub fn draw_set_square(painter: &Painter, t: &SetSquareTool) {
     painter.add(egui::Shape::convex_polygon(
         vec![o + dir * m, p3, o + perp * m],
         Color32::TRANSPARENT,
-        Stroke::new(1.0, Color32::from_rgb(20, 40, 120)),
+        Stroke::new(1.0, SETSQUARE_GRAY),
     ));
     // 旋转角文本。
     painter.text(
@@ -592,8 +598,11 @@ pub fn draw_set_square(painter: &Painter, t: &SetSquareTool) {
         Align2::CENTER_CENTER,
         format!("{:.0}°", t.rotation_deg),
         FontId::proportional(13.0),
-        Color32::from_rgb(20, 40, 120),
+        SETSQUARE_TEXT_GRAY,
     );
+
+    // 内部镂空小三角孔（作用于三角尺重心附近；在旋转手柄之前绘制）。
+    draw_set_square_hole(painter, pts[0], pts[1], pts[2]);
 
     // 旋转手柄（重心）：深色圆点 + 外圈，旋转拖拽时高亮为亮蓝。
     let grip = set_square_centroid(t);
@@ -601,8 +610,8 @@ pub fn draw_set_square(painter: &Painter, t: &SetSquareTool) {
         painter.circle_stroke(grip, 10.0, Stroke::new(2.0, Color32::from_rgb(0, 150, 255)));
         painter.circle_filled(grip, 5.0, Color32::from_rgb(0, 150, 255));
     } else {
-        painter.circle_stroke(grip, 8.0, Stroke::new(1.0, Color32::from_gray(160)));
-        painter.circle_filled(grip, 4.0, Color32::from_rgb(20, 40, 120));
+        painter.circle_stroke(grip, 8.0, Stroke::new(1.0, SETSQUARE_TICK_GRAY));
+        painter.circle_filled(grip, 4.0, SETSQUARE_GRAY);
     }
 
     // 三个顶点手柄：浅灰小圆点（拖拽任一顶点均可绕 origin 旋转）。
@@ -630,6 +639,32 @@ pub fn draw_set_square(painter: &Painter, t: &SetSquareTool) {
             );
         }
     }
+}
+
+/// 三角尺内部镂空的小三角形轮廓（模拟真实塑料三角板的「悬挂孔 / 减重孔」）。
+///
+/// 用**虚线**内三角形 + 重心小圆点模拟「孔」，而非真正挖洞（不引入 Mesh 布尔运算、
+/// 实线会像「画了一条线」而非「孔」）。`scale = 0.28`：孔约占三角尺面积的 8%，视觉合适。
+/// 注：egui 0.29 的 `Stroke::into_dashed` 返回线段集，这里改用本文件已用的 `dashed_line`。
+fn draw_set_square_hole(painter: &Painter, origin: Pos2, p30: Pos2, p60: Pos2) {
+    // 重心 = 三顶点坐标平均（Pos2 无加法，需逐分量求和）。
+    let centroid = Pos2::new(
+        (origin.x + p30.x + p60.x) / 3.0,
+        (origin.y + p30.y + p60.y) / 3.0,
+    );
+    let scale = 0.28;
+    let hole_origin = centroid + (origin - centroid) * scale;
+    let hole_p30 = centroid + (p30 - centroid) * scale;
+    let hole_p60 = centroid + (p60 - centroid) * scale;
+    let hole_stroke = Stroke::new(1.0, SETSQUARE_GRAY);
+    painter.add(egui::Shape::dashed_line(
+        &[hole_origin, hole_p30, hole_p60, hole_origin],
+        hole_stroke,
+        4.0,
+        3.0,
+    ));
+    // 打孔定位标记：孔中心小圆点。
+    painter.circle_filled(centroid, 1.5, SETSQUARE_GRAY);
 }
 
 /// 量角器：半圆盘 + 0°–180° 刻度 + 跟随鼠标的射线 + 角度文本。
