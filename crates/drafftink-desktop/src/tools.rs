@@ -516,6 +516,7 @@ pub fn snap_dir_grid45(v: Vec2) -> Vec2 {
 }
 
 /// 直尺第 `mm_index` 个毫米刻度的位置（0 = start 端点）。
+#[allow(dead_code)] // 绘制改由 `draw_ruler_ticks` 内联计算后，仅单测使用。
 pub fn ruler_tick_pos(t: &RulerTool, mm_index: usize) -> Pos2 {
     let dir = ruler_dir(t);
     let step = PIXELS_PER_CM / 10.0;
@@ -742,57 +743,111 @@ pub fn draw_protractor(painter: &Painter, t: &ProtractorTool) {
     }
 }
 
-/// 直尺：主体 + 毫米/厘米刻度 + 端点手柄 + 长度标注。
-pub fn draw_ruler(painter: &Painter, t: &RulerTool) {
-    let dir = ruler_dir(t);
-    let perp = dir.rot90();
-    let body = Color32::from_gray(60);
+/// 直尺厘米主刻度数（含 0 起点）：`length / pixels_per_cm` 向下取整。
+/// 200px / 37.8 ≈ 5，主刻度为 0..=5 共 6 条线、5 个数字标签。
+fn ruler_cm_tick_count(length: f32, pixels_per_cm: f32) -> usize {
+    (length / pixels_per_cm) as usize
+}
 
-    // 主体（3px 深灰直线）。
-    painter.line_segment([t.start, t.end], Stroke::new(3.0, body));
+/// 直尺双级刻度：mm 短刻度 + 半 cm 中刻度 + cm 长刻度（含 0,1,2… 数字）。
+///
+/// 刻度沿直尺轴线从主线往「上方」（+perp）延伸；`pixels_per_cm` 为每厘米像素数
+/// （标准 96 DPI 下 1cm ≈ 37.8px，作为参数传入而非全局读取）。
+fn draw_ruler_ticks(painter: &Painter, start: Pos2, end: Pos2, pixels_per_cm: f32) {
+    let dir = (end - start).normalized();
+    let perp = dir.rot90(); // 垂直直尺，指向刻度「上方」
+    let length = start.distance(end);
 
-    // 刻度：每 1mm 短刻度（3px），每 1cm 长刻度（8px）+ 数字标签。
-    let mm_step = PIXELS_PER_CM / 10.0;
-    let total_mm = (t.start.distance(t.end) / mm_step).floor() as usize;
-    for i in 0..=total_mm {
+    // --- mm 次刻度（约 1mm ≈ 3.78px；线长 4px；不标数字）---
+    let mm_step = pixels_per_cm / 10.0;
+    let mm_count = (length / mm_step) as i32;
+    for i in 1..mm_count {
         let is_cm = i % 10 == 0;
-        let tick_len = if is_cm { 8.0 } else { 3.0 };
-        let base = ruler_tick_pos(t, i);
-        let tip = base + perp * tick_len;
-        painter.line_segment([base, tip], Stroke::new(1.0, body));
-        if is_cm {
-            let label = base + perp * (tick_len + 12.0);
-            painter.text(
-                label,
-                Align2::CENTER_CENTER,
-                format!("{}", i / 10),
-                FontId::proportional(11.0),
-                body,
+        let is_half_cm = i % 5 == 0 && !is_cm;
+        if !is_cm && !is_half_cm {
+            let pos = start + dir * (i as f32 * mm_step);
+            painter.line_segment(
+                [pos, pos + perp * 4.0],
+                Stroke::new(1.0, SETSQUARE_TICK_GRAY),
             );
         }
     }
 
-    // 端点手柄：半径 5px 小圆点，拖拽中高亮为蓝色。
+    // --- 半 cm 中刻度（约 5mm ≈ 18.9px；线长 7px）---
+    let half_cm_step = pixels_per_cm / 2.0;
+    let half_cm_count = (length / half_cm_step) as i32;
+    for i in 1..half_cm_count {
+        if i % 2 != 0 {
+            let pos = start + dir * (i as f32 * half_cm_step);
+            painter.line_segment(
+                [pos, pos + perp * 7.0],
+                Stroke::new(1.0, SETSQUARE_TICK_GRAY),
+            );
+        }
+    }
+
+    // --- cm 主刻度（约 37.8px；线长 10px；数字 0,1,2…）---
+    let cm_count = ruler_cm_tick_count(length, pixels_per_cm) as i32;
+    for i in 0..=cm_count {
+        let pos = start + dir * (i as f32 * pixels_per_cm);
+        painter.line_segment([pos, pos + perp * 10.0], Stroke::new(1.5, SETSQUARE_GRAY));
+        if i > 0 {
+            let label = format!("{i}");
+            let label_pos = pos + perp * 14.0;
+            painter.text(
+                label_pos,
+                Align2::CENTER_BOTTOM,
+                label,
+                FontId::proportional(10.0),
+                SETSQUARE_TEXT_GRAY,
+            );
+        }
+    }
+}
+
+/// 直尺：灰色半透明主体（与三角尺同款灰色系）+ 双级刻度 + 端点手柄 + 长度标注。
+pub fn draw_ruler(painter: &Painter, t: &RulerTool) {
+    let dir = ruler_dir(t);
+    let perp = dir.rot90();
+    let length = t.start.distance(t.end);
+
+    // 主体：灰色半透明塑料片（SETSQUARE_FILL 填充 + 2px SETSQUARE_GRAY 边框）。
+    // 主体上边界取到最长刻度（cm 10px）之上，让刻度落在「尺面」内。
+    let top = 11.0;
+    let strip = [t.start + perp * top, t.end + perp * top, t.end, t.start];
+    painter.add(egui::Shape::convex_polygon(
+        strip.to_vec(),
+        SETSQUARE_FILL,
+        Stroke::new(2.0, SETSQUARE_GRAY),
+    ));
+    // 零边（下边）主线：cm 长刻度由该线延伸入尺面。
+    painter.line_segment([t.start, t.end], Stroke::new(2.0, SETSQUARE_GRAY));
+
+    // 双级刻度（主线之后、手柄之前）。
+    draw_ruler_ticks(painter, t.start, t.end, PIXELS_PER_CM);
+
+    // 端点手柄：默认半径 5px 灰点；拖拽中半径 7px 亮蓝高亮。
     let start_active = matches!(t.dragging_end, Some(WhichEnd::Start));
     let end_active = matches!(t.dragging_end, Some(WhichEnd::End));
     for (p, active) in [(t.start, start_active), (t.end, end_active)] {
         if active {
-            painter.circle_stroke(p, 6.0, Stroke::new(2.0, Color32::from_rgb(0, 150, 255)));
-            painter.circle_filled(p, 5.0, Color32::from_rgb(0, 150, 255));
+            painter.circle_stroke(p, 8.0, Stroke::new(2.0, Color32::from_rgb(0, 150, 255)));
+            painter.circle_filled(p, 7.0, Color32::from_rgb(0, 150, 255));
         } else {
-            painter.circle_filled(p, 4.0, body);
+            painter.circle_stroke(p, 5.0, Stroke::new(1.0, SETSQUARE_GRAY));
+            painter.circle_filled(p, 3.0, SETSQUARE_GRAY);
         }
     }
 
-    // 长度标注：直尺上方居中显示总长（cm）。
+    // 长度标注：直尺上方居中，灰色。
     let mid = t.start.lerp(t.end, 0.5);
-    let len_cm = t.start.distance(t.end) / PIXELS_PER_CM;
+    let len_cm = length / PIXELS_PER_CM;
     painter.text(
-        mid + perp * 22.0,
+        mid + perp * (top + 24.0),
         Align2::CENTER_CENTER,
         format!("L = {len_cm:.1} cm"),
         FontId::proportional(14.0),
-        Color32::from_rgb(180, 30, 30),
+        SETSQUARE_TEXT_GRAY,
     );
 }
 
@@ -1280,6 +1335,21 @@ mod tests {
         let a = ruler_tick_pos(&t, 1);
         let b = ruler_tick_pos(&t, 2);
         assert!((b.x - a.x - (PIXELS_PER_CM / 10.0)).abs() < 1e-3);
+    }
+
+    /// 直尺刻度数量：200px 长直尺（200 / 37.8 ≈ 5.29）→ 5 个整厘米区间，
+    /// 主刻度线为 0..=5 共 6 条（含 0 刻度）、数字标签 1..=5 共 5 个。
+    #[test]
+    fn test_ruler_tick_count_on_200px() {
+        let count = ruler_cm_tick_count(200.0, PIXELS_PER_CM);
+        assert_eq!(count, 5, "200px / 37.8 ≈ 5.29 → 主刻度数应为 5");
+        // 主刻度线数量（含 0 起点）= count + 1。
+        assert_eq!(count + 1, 6, "0..=5 应共 6 条主刻度线");
+        // 数字标签数量（0 不标）= count。
+        assert_eq!(count, 5, "数字 1..=5 应共 5 个标签");
+        // 边界：不足 1cm（30px）→ 只有 0 刻度；恰好 1cm → 1 个主刻度。
+        assert_eq!(ruler_cm_tick_count(30.0, PIXELS_PER_CM), 0);
+        assert_eq!(ruler_cm_tick_count(PIXELS_PER_CM, PIXELS_PER_CM), 1);
     }
 
     /// Shift 吸附：近水平方向吸附到水平、近竖直方向吸附到竖直，长度不变。
