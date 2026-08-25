@@ -208,7 +208,9 @@ pub fn parse_tounicode_cmap(cmap: &[u8]) -> (BTreeMap<Vec<u8>, String>, usize) {
                             break;
                         }
                         Tok::Hex(start) => {
-                            if let (Some(Tok::Hex(end)), Some(next)) = (toks.get(k + 1), toks.get(k + 2)) {
+                            if let (Some(Tok::Hex(end)), Some(next)) =
+                                (toks.get(k + 1), toks.get(k + 2))
+                            {
                                 if let Tok::Hex(dst) = next {
                                     add_bfrange(&mut map, start, end, dst);
                                     k += 3;
@@ -347,16 +349,15 @@ fn parse_differences(fdict: &Dictionary, doc: &Document) -> Option<BTreeMap<u8, 
 
 /// 为单个字体构建解码器。
 fn build_decoder(fdict: &Dictionary, doc: &Document) -> FontDecoder {
-    let is_type0 = fdict
-        .get(b"Subtype")
-        .and_then(Object::as_name)
-        .ok()
-        == Some(&b"Type0"[..]);
+    let is_type0 = fdict.get(b"Subtype").and_then(Object::as_name).ok() == Some(&b"Type0"[..]);
 
     let mut code_width = if is_type0 { 2 } else { 1 };
     let mut to_unicode = None;
 
-    if let Ok(stream) = fdict.get_deref(b"ToUnicode", doc).and_then(Object::as_stream) {
+    if let Ok(stream) = fdict
+        .get_deref(b"ToUnicode", doc)
+        .and_then(Object::as_stream)
+    {
         if let Ok(data) = stream.decompressed_content() {
             let (map, w) = parse_tounicode_cmap(&data);
             if !map.is_empty() {

@@ -45,8 +45,9 @@ impl SmartAlpha {
 
         // Content density – elements per 10 000 px²
         let area = canvas_width * canvas_height;
-        self.content_density =
-            ((element_count as f32) / (area / 10000.0)).min(1.0).max(0.0);
+        self.content_density = ((element_count as f32) / (area / 10000.0))
+            .min(1.0)
+            .max(0.0);
 
         self.recompute_all();
 
@@ -76,8 +77,7 @@ impl SmartAlpha {
         ];
 
         for (rgb, _) in &colors {
-            self.recommendations
-                .insert(*rgb, self.compute_alpha(rgb));
+            self.recommendations.insert(*rgb, self.compute_alpha(rgb));
         }
     }
 

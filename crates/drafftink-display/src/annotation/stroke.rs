@@ -81,8 +81,7 @@ pub fn merge_adjacent_strokes(strokes: &mut Vec<InkStroke>) {
                 && std::mem::discriminant(&a.tool) == std::mem::discriminant(&b.tool)
                 && b.timestamp_ms.saturating_sub(a.timestamp_ms) < 500
                 && {
-                    if let (Some(&(ax, ay)), Some(&(bx, by))) =
-                        (a.points.last(), b.points.first())
+                    if let (Some(&(ax, ay)), Some(&(bx, by))) = (a.points.last(), b.points.first())
                     {
                         let dx = ax - bx;
                         let dy = ay - by;

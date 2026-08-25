@@ -56,11 +56,7 @@ impl StudentScreen {
     ///
     /// 在第二屏幕的 egui 窗口中调用。
     /// 直接读取 `ui_state` 的最新快照。
-    pub fn ui(
-        &mut self,
-        ctx: &egui::Context,
-        ui_state: &Arc<Mutex<UiState>>,
-    ) {
+    pub fn ui(&mut self, ctx: &egui::Context, ui_state: &Arc<Mutex<UiState>>) {
         let mut state = ui_state.lock().unwrap();
         let has_changed = state.has_new_events();
         let snapshot = state.snapshot().cloned();
@@ -71,7 +67,8 @@ impl StudentScreen {
         if has_changed {
             self.animation_timer = 0.0;
         }
-        self.animation_timer = (self.animation_timer + ctx.input(|i| i.unstable_dt) as f64 * 3.0).min(1.0);
+        self.animation_timer =
+            (self.animation_timer + ctx.input(|i| i.unstable_dt) as f64 * 3.0).min(1.0);
         self.bar_config.animation_progress = self.animation_timer as f32;
 
         let snapshot = snapshot.unwrap_or_default();
@@ -109,7 +106,10 @@ impl StudentScreen {
 
     fn render_waiting_screen(ui: &mut egui::Ui, rect: Rect) {
         ui.put(
-            Rect::from_min_size(rect.center() - Vec2::new(200.0, 40.0), Vec2::new(400.0, 80.0)),
+            Rect::from_min_size(
+                rect.center() - Vec2::new(200.0, 40.0),
+                Vec2::new(400.0, 80.0),
+            ),
             egui::Label::new(
                 RichText::new("准备答题")
                     .size(48.0)
@@ -118,7 +118,10 @@ impl StudentScreen {
         );
 
         ui.put(
-            Rect::from_min_size(rect.center() - Vec2::new(200.0, -40.0), Vec2::new(400.0, 40.0)),
+            Rect::from_min_size(
+                rect.center() - Vec2::new(200.0, -40.0),
+                Vec2::new(400.0, 40.0),
+            ),
             egui::Label::new(
                 RichText::new("请打开平板/手机，连接到本教室")
                     .size(20.0)
@@ -154,7 +157,10 @@ impl StudentScreen {
         };
 
         ui.put(
-            Rect::from_min_size(Pos2::new(rect.min.x + 40.0, current_y), Vec2::new(200.0, 30.0)),
+            Rect::from_min_size(
+                Pos2::new(rect.min.x + 40.0, current_y),
+                Vec2::new(200.0, 30.0),
+            ),
             egui::Label::new(
                 RichText::new(type_label)
                     .size(18.0)
@@ -226,10 +232,13 @@ impl StudentScreen {
                     Vec2::new(rect.width() - 80.0, 60.0),
                 ),
                 egui::Label::new(
-                    RichText::new(format!("🏆 {} 抢答成功！({}ms)", winner.winner_name, winner.response_time_ms))
-                        .size(36.0)
-                        .color(Color32::from_rgb(46, 204, 113))
-                        .strong(),
+                    RichText::new(format!(
+                        "🏆 {} 抢答成功！({}ms)",
+                        winner.winner_name, winner.response_time_ms
+                    ))
+                    .size(36.0)
+                    .color(Color32::from_rgb(46, 204, 113))
+                    .strong(),
                 ),
             );
             current_y += 80.0;
@@ -277,7 +286,10 @@ impl StudentScreen {
 
     fn render_paused_screen(ui: &mut egui::Ui, rect: Rect) {
         ui.put(
-            Rect::from_min_size(rect.center() - Vec2::new(200.0, 40.0), Vec2::new(400.0, 80.0)),
+            Rect::from_min_size(
+                rect.center() - Vec2::new(200.0, 40.0),
+                Vec2::new(400.0, 80.0),
+            ),
             egui::Label::new(
                 RichText::new("⏸ 已暂停")
                     .size(48.0)
@@ -288,13 +300,12 @@ impl StudentScreen {
 
     // ── 结束画面 ────────────────────────────────────────────────
 
-    fn render_ended_screen(
-        ui: &mut egui::Ui,
-        rect: Rect,
-        snapshot: &SessionSnapshot,
-    ) {
+    fn render_ended_screen(ui: &mut egui::Ui, rect: Rect, snapshot: &SessionSnapshot) {
         ui.put(
-            Rect::from_min_size(rect.center() - Vec2::new(200.0, 40.0), Vec2::new(400.0, 80.0)),
+            Rect::from_min_size(
+                rect.center() - Vec2::new(200.0, 40.0),
+                Vec2::new(400.0, 80.0),
+            ),
             egui::Label::new(
                 RichText::new("答题结束")
                     .size(48.0)
@@ -304,7 +315,10 @@ impl StudentScreen {
 
         if let Some(ref stats) = snapshot.current_stats {
             ui.put(
-                Rect::from_min_size(rect.center() - Vec2::new(200.0, -40.0), Vec2::new(400.0, 40.0)),
+                Rect::from_min_size(
+                    rect.center() - Vec2::new(200.0, -40.0),
+                    Vec2::new(400.0, 40.0),
+                ),
                 egui::Label::new(
                     RichText::new(format!(
                         "正确率: {:.0}%  |  平均耗时: {:.0}ms",

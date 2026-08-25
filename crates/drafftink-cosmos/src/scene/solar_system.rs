@@ -15,9 +15,9 @@ use crate::resources::ResourceCache;
 /// 实体顺序：太阳、水星、金星、地球、火星、木星、土星、土星环、天王星、海王星。
 pub struct SolarSystemScene {
     pub transforms: Vec<Transform>,
-    pub meshes: Vec<Option<u64>>,     // 网格资源 ID，None 表示无网格
-    pub materials: Vec<Option<u64>>,  // 材质资源 ID
-    pub orbits: Vec<Option<Orbit>>,   // 轨道参数
+    pub meshes: Vec<Option<u64>>,    // 网格资源 ID，None 表示无网格
+    pub materials: Vec<Option<u64>>, // 材质资源 ID
+    pub orbits: Vec<Option<Orbit>>,  // 轨道参数
     pub rotations: Vec<Option<Rotation>>,
     pub labels: Vec<Option<Label>>,
     pub planet_infos: Vec<Option<PlanetInfo>>,
@@ -271,7 +271,8 @@ impl SolarSystemScene {
         }));
         planet_infos.push(Some(PlanetInfo {
             name: "地球".to_string(),
-            description: "我们的家园，太阳系中唯一已知存在生命的行星，表面 71% 被水覆盖。".to_string(),
+            description: "我们的家园，太阳系中唯一已知存在生命的行星，表面 71% 被水覆盖。"
+                .to_string(),
             diameter_km: 12_742.0,
             mass_kg: 5.972e24,
         }));
@@ -335,7 +336,8 @@ impl SolarSystemScene {
         }));
         planet_infos.push(Some(PlanetInfo {
             name: "木星".to_string(),
-            description: "太阳系最大的行星，气态巨行星，著名的大红斑是一场持续数百年的风暴。".to_string(),
+            description: "太阳系最大的行星，气态巨行星，著名的大红斑是一场持续数百年的风暴。"
+                .to_string(),
             diameter_km: 139_820.0,
             mass_kg: 1.898e27,
         }));
@@ -481,7 +483,9 @@ impl SolarSystemScene {
     /// - 中文：太阳、水星、金星、地球、火星、木星、土星、天王星、海王星
     pub fn get_planet_index_by_name(&self, name: &str) -> Option<usize> {
         let name_lower = name.to_lowercase();
-        self.names.iter().position(|n| n.to_lowercase() == name_lower)
+        self.names
+            .iter()
+            .position(|n| n.to_lowercase() == name_lower)
     }
 }
 

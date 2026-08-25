@@ -666,7 +666,10 @@ mod tests {
         assert_eq!(Resolution::R1536x768.dimensions(), (1536, 768));
         assert_eq!(Resolution::R1024x768.dimensions(), (1024, 768));
         assert_eq!(Resolution::R1280x720.as_str(), "1280x720");
-        assert_eq!(Resolution::from_str_lossy("1920x1080"), Some(Resolution::R1920x1080));
+        assert_eq!(
+            Resolution::from_str_lossy("1920x1080"),
+            Some(Resolution::R1920x1080)
+        );
         assert_eq!(Resolution::from_str_lossy("bad"), None);
     }
 
@@ -703,9 +706,18 @@ mod tests {
 
     #[test]
     fn container_format_parse() {
-        assert_eq!("mp4".parse::<ContainerFormat>().unwrap(), ContainerFormat::Mp4);
-        assert_eq!("WMV".parse::<ContainerFormat>().unwrap(), ContainerFormat::Wmv);
-        assert_eq!("H.264".parse::<ContainerFormat>().unwrap(), ContainerFormat::H264Raw);
+        assert_eq!(
+            "mp4".parse::<ContainerFormat>().unwrap(),
+            ContainerFormat::Mp4
+        );
+        assert_eq!(
+            "WMV".parse::<ContainerFormat>().unwrap(),
+            ContainerFormat::Wmv
+        );
+        assert_eq!(
+            "H.264".parse::<ContainerFormat>().unwrap(),
+            ContainerFormat::H264Raw
+        );
         assert!("XYZ".parse::<ContainerFormat>().is_err());
     }
 

@@ -5,13 +5,76 @@
 
 use crate::emgi::types::{DataType, EmgiRecordable, FieldDef, Obligation};
 
-pub const ZXTW010101: FieldDef = FieldDef { id: "ZXTW010101", name: "运动标识", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: None, note: "" };
-pub const ZXTW010102: FieldDef = FieldDef { id: "ZXTW010102", name: "学生标识码", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: Some("JCXS0101"), note: "取用 JCXS0101 学生标识码" };
-pub const ZXTW010103: FieldDef = FieldDef { id: "ZXTW010103", name: "学校标识码", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: Some("JCXX0101"), note: "取用 JCXX0101 学校标识码" };
-pub const ZXTW010104: FieldDef = FieldDef { id: "ZXTW010104", name: "运动类型", data_type: DataType::C, length: 1, obligation: Obligation::M, code_ref: Some("JYT_1001_SPORT_TYPE"), source: None, note: "" };
-pub const ZXTW010105: FieldDef = FieldDef { id: "ZXTW010105", name: "运动日期", data_type: DataType::D, length: 8, obligation: Obligation::M, code_ref: None, source: None, note: "YYYYMMDD" };
-pub const ZXTW010106: FieldDef = FieldDef { id: "ZXTW010106", name: "运动时长(分钟)", data_type: DataType::N, length: 4, obligation: Obligation::O, code_ref: None, source: None, note: "" };
-pub const ZXTW010107: FieldDef = FieldDef { id: "ZXTW010107", name: "运动强度", data_type: DataType::C, length: 4, obligation: Obligation::O, code_ref: None, source: None, note: "如 中/高" };
+pub const ZXTW010101: FieldDef = FieldDef {
+    id: "ZXTW010101",
+    name: "运动标识",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
+pub const ZXTW010102: FieldDef = FieldDef {
+    id: "ZXTW010102",
+    name: "学生标识码",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: Some("JCXS0101"),
+    note: "取用 JCXS0101 学生标识码",
+};
+pub const ZXTW010103: FieldDef = FieldDef {
+    id: "ZXTW010103",
+    name: "学校标识码",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: Some("JCXX0101"),
+    note: "取用 JCXX0101 学校标识码",
+};
+pub const ZXTW010104: FieldDef = FieldDef {
+    id: "ZXTW010104",
+    name: "运动类型",
+    data_type: DataType::C,
+    length: 1,
+    obligation: Obligation::M,
+    code_ref: Some("JYT_1001_SPORT_TYPE"),
+    source: None,
+    note: "",
+};
+pub const ZXTW010105: FieldDef = FieldDef {
+    id: "ZXTW010105",
+    name: "运动日期",
+    data_type: DataType::D,
+    length: 8,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "YYYYMMDD",
+};
+pub const ZXTW010106: FieldDef = FieldDef {
+    id: "ZXTW010106",
+    name: "运动时长(分钟)",
+    data_type: DataType::N,
+    length: 4,
+    obligation: Obligation::O,
+    code_ref: None,
+    source: None,
+    note: "",
+};
+pub const ZXTW010107: FieldDef = FieldDef {
+    id: "ZXTW010107",
+    name: "运动强度",
+    data_type: DataType::C,
+    length: 4,
+    obligation: Obligation::O,
+    code_ref: None,
+    source: None,
+    note: "如 中/高",
+};
 
 /// 学生体育运动（ZXTW01）。
 pub struct Sport {
@@ -41,13 +104,76 @@ impl EmgiRecordable for Sport {
     }
 }
 
-pub const ZXTW020101: FieldDef = FieldDef { id: "ZXTW020101", name: "医疗标识", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: None, note: "" };
-pub const ZXTW020102: FieldDef = FieldDef { id: "ZXTW020102", name: "学生标识码", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: Some("JCXS0101"), note: "取用 JCXS0101 学生标识码" };
-pub const ZXTW020103: FieldDef = FieldDef { id: "ZXTW020103", name: "学校标识码", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: Some("JCXX0101"), note: "取用 JCXX0101 学校标识码" };
-pub const ZXTW020104: FieldDef = FieldDef { id: "ZXTW020104", name: "医疗类型", data_type: DataType::C, length: 1, obligation: Obligation::M, code_ref: Some("JYT_1001_MEDICAL_TYPE"), source: None, note: "" };
-pub const ZXTW020105: FieldDef = FieldDef { id: "ZXTW020105", name: "医疗日期", data_type: DataType::D, length: 8, obligation: Obligation::M, code_ref: None, source: None, note: "YYYYMMDD" };
-pub const ZXTW020106: FieldDef = FieldDef { id: "ZXTW020106", name: "诊断", data_type: DataType::C, length: 200, obligation: Obligation::O, code_ref: None, source: None, note: "" };
-pub const ZXTW020107: FieldDef = FieldDef { id: "ZXTW020107", name: "医疗机构", data_type: DataType::C, length: 80, obligation: Obligation::O, code_ref: None, source: None, note: "" };
+pub const ZXTW020101: FieldDef = FieldDef {
+    id: "ZXTW020101",
+    name: "医疗标识",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
+pub const ZXTW020102: FieldDef = FieldDef {
+    id: "ZXTW020102",
+    name: "学生标识码",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: Some("JCXS0101"),
+    note: "取用 JCXS0101 学生标识码",
+};
+pub const ZXTW020103: FieldDef = FieldDef {
+    id: "ZXTW020103",
+    name: "学校标识码",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: Some("JCXX0101"),
+    note: "取用 JCXX0101 学校标识码",
+};
+pub const ZXTW020104: FieldDef = FieldDef {
+    id: "ZXTW020104",
+    name: "医疗类型",
+    data_type: DataType::C,
+    length: 1,
+    obligation: Obligation::M,
+    code_ref: Some("JYT_1001_MEDICAL_TYPE"),
+    source: None,
+    note: "",
+};
+pub const ZXTW020105: FieldDef = FieldDef {
+    id: "ZXTW020105",
+    name: "医疗日期",
+    data_type: DataType::D,
+    length: 8,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "YYYYMMDD",
+};
+pub const ZXTW020106: FieldDef = FieldDef {
+    id: "ZXTW020106",
+    name: "诊断",
+    data_type: DataType::C,
+    length: 200,
+    obligation: Obligation::O,
+    code_ref: None,
+    source: None,
+    note: "",
+};
+pub const ZXTW020107: FieldDef = FieldDef {
+    id: "ZXTW020107",
+    name: "医疗机构",
+    data_type: DataType::C,
+    length: 80,
+    obligation: Obligation::O,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 
 /// 医疗保健（ZXTW02）。
 pub struct Medical {

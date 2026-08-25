@@ -61,7 +61,10 @@ impl AudioInstance {
                 .and_then(|src| AudioPipeline::try_new_with_src(f, &path_str, is_loop, None, src))
         });
         if pipeline.is_none() {
-            log::warn!("[audio] 音频管线初始化失败（无音轨或设备不可用）: {}", path.display());
+            log::warn!(
+                "[audio] 音频管线初始化失败（无音轨或设备不可用）: {}",
+                path.display()
+            );
         }
         let mut inst = Self {
             pipeline,

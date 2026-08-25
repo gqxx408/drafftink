@@ -11,8 +11,8 @@
 
 use std::cmp::Ordering;
 
-use egui::{Color32, Mesh, Painter, Pos2, Rect, Stroke};
 use egui::epaint::Vertex;
+use egui::{Color32, Mesh, Painter, Pos2, Rect, Stroke};
 use nalgebra::{Matrix4, Point3, Vector3};
 
 use crate::ecs::Material;
@@ -247,11 +247,9 @@ impl SceneRenderer {
         }
 
         // ── 全局深度排序：远的先画（画家算法）──
-        batch.triangles.sort_by(|a, b| {
-            b.depth
-                .partial_cmp(&a.depth)
-                .unwrap_or(Ordering::Equal)
-        });
+        batch
+            .triangles
+            .sort_by(|a, b| b.depth.partial_cmp(&a.depth).unwrap_or(Ordering::Equal));
 
         // ── 构建单个 egui::Mesh（一次 Draw Call）──
         let offset_x = rect.min.x;
@@ -264,17 +262,26 @@ impl SceneRenderer {
             let base_idx = egui_mesh.vertices.len() as u32;
 
             egui_mesh.vertices.push(Vertex {
-                pos: Pos2::new(offset_x + tri.screen_pos[0].x, offset_y + tri.screen_pos[0].y),
+                pos: Pos2::new(
+                    offset_x + tri.screen_pos[0].x,
+                    offset_y + tri.screen_pos[0].y,
+                ),
                 uv: Pos2::ZERO,
                 color: tri.color,
             });
             egui_mesh.vertices.push(Vertex {
-                pos: Pos2::new(offset_x + tri.screen_pos[1].x, offset_y + tri.screen_pos[1].y),
+                pos: Pos2::new(
+                    offset_x + tri.screen_pos[1].x,
+                    offset_y + tri.screen_pos[1].y,
+                ),
                 uv: Pos2::ZERO,
                 color: tri.color,
             });
             egui_mesh.vertices.push(Vertex {
-                pos: Pos2::new(offset_x + tri.screen_pos[2].x, offset_y + tri.screen_pos[2].y),
+                pos: Pos2::new(
+                    offset_x + tri.screen_pos[2].x,
+                    offset_y + tri.screen_pos[2].y,
+                ),
                 uv: Pos2::ZERO,
                 color: tri.color,
             });

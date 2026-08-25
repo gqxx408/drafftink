@@ -26,9 +26,7 @@ pub enum SessionCommand {
     },
 
     /// 学生离线（IM Actor 发送）
-    StudentLeave {
-        student_id: StudentId,
-    },
+    StudentLeave { student_id: StudentId },
 
     /// 学生提交答案（IM Actor 发送）
     SubmitAnswer {
@@ -79,20 +77,13 @@ pub enum SessionCommand {
     },
 
     /// 暂停/恢复会话
-    SetPause {
-        paused: bool,
-    },
+    SetPause { paused: bool },
 
     /// USB 设备插拔事件（USB Actor 发送）
-    UsbEvent {
-        device_id: String,
-        connected: bool,
-    },
+    UsbEvent { device_id: String, connected: bool },
 
     /// 心跳（IM Actor 定期发送）
-    Heartbeat {
-        student_id: StudentId,
-    },
+    Heartbeat { student_id: StudentId },
 }
 
 // ── UI Actor 接收的消息 ─────────────────────────────────────────
@@ -113,22 +104,15 @@ pub enum UiEvent {
         student_name: String,
     },
     /// 学生离开
-    StudentLeft {
-        student_id: StudentId,
-    },
+    StudentLeft { student_id: StudentId },
     /// 抢答结果
     QuickAnswerWinner(QuickAnswerResult),
     /// 会话结束
-    SessionEnded {
-        total_answers: usize,
-    },
+    SessionEnded { total_answers: usize },
     /// 错误提示
     Error(String),
     /// USB 设备状态变化
-    UsbDeviceChanged {
-        device_id: String,
-        connected: bool,
-    },
+    UsbDeviceChanged { device_id: String, connected: bool },
 }
 
 // ── 会话快照（只读）─────────────────────────────────────────────
@@ -162,7 +146,12 @@ pub struct SessionSnapshot {
 impl std::fmt::Debug for SessionCommand {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::StudentJoin { student_id, student_name, device_id, .. } => f
+            Self::StudentJoin {
+                student_id,
+                student_name,
+                device_id,
+                ..
+            } => f
                 .debug_struct("StudentJoin")
                 .field("student_id", student_id)
                 .field("student_name", student_name)
@@ -172,14 +161,25 @@ impl std::fmt::Debug for SessionCommand {
                 .debug_struct("StudentLeave")
                 .field("student_id", student_id)
                 .finish(),
-            Self::SubmitAnswer { student_id, question_id, answer, timestamp_ns, .. } => f
+            Self::SubmitAnswer {
+                student_id,
+                question_id,
+                answer,
+                timestamp_ns,
+                ..
+            } => f
                 .debug_struct("SubmitAnswer")
                 .field("student_id", student_id)
                 .field("question_id", question_id)
                 .field("answer", answer)
                 .field("timestamp_ns", timestamp_ns)
                 .finish(),
-            Self::QuickAnswerBuzz { student_id, question_id, timestamp_ns, .. } => f
+            Self::QuickAnswerBuzz {
+                student_id,
+                question_id,
+                timestamp_ns,
+                ..
+            } => f
                 .debug_struct("QuickAnswerBuzz")
                 .field("student_id", student_id)
                 .field("question_id", question_id)
@@ -199,11 +199,13 @@ impl std::fmt::Debug for SessionCommand {
                 .debug_struct("GetStats")
                 .field("question_id", question_id)
                 .finish(),
-            Self::SetPause { paused } => f
-                .debug_struct("SetPause")
-                .field("paused", paused)
-                .finish(),
-            Self::UsbEvent { device_id, connected } => f
+            Self::SetPause { paused } => {
+                f.debug_struct("SetPause").field("paused", paused).finish()
+            }
+            Self::UsbEvent {
+                device_id,
+                connected,
+            } => f
                 .debug_struct("UsbEvent")
                 .field("device_id", device_id)
                 .field("connected", connected)

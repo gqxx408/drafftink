@@ -18,10 +18,10 @@ use std::sync::{Mutex, OnceLock};
 
 use egui::Color32;
 
+use drafftink_core::element::{AudioElement, VideoElement};
 use drafftink_core::model::{
     BaseElement, ImageElement, PathElement, ShapeElement, ShapeType, SvgShapeElement, TextElement,
 };
-use drafftink_core::element::{AudioElement, VideoElement};
 use drafftink_core::ElementData;
 
 use crate::parser::{
@@ -275,10 +275,7 @@ fn formula_to_enbx(f: &drafftink_core::element::FormulaElement) -> EnbxElement {
         content: format!("f(x) = {}", f.expression),
         font_size: 16.0,
         font_color: color32_to_argb_hex(&Color32::from_rgba_unmultiplied(
-            f.color[0],
-            f.color[1],
-            f.color[2],
-            f.color[3],
+            f.color[0], f.color[1], f.color[2], f.color[3],
         )),
         bold: false,
         italic: true,
@@ -418,13 +415,7 @@ pub fn map_element_from_enbx(enbx_elem: &EnbxElement) -> ElementData {
         EnbxElement::Topic(t) => topic_from_enbx(t),
         EnbxElement::Unknown(xv) => {
             warn_unknown_once(&xv.tag);
-            placeholder_shape(
-                0.0,
-                0.0,
-                200.0,
-                150.0,
-                &format!("Unknown: {}", xv.tag),
-            )
+            placeholder_shape(0.0, 0.0, 200.0, 150.0, &format!("Unknown: {}", xv.tag))
         }
     }
 }
@@ -868,11 +859,7 @@ fn warn_unknown_once(tag: &str) {
 /// Only linear commands are handled; curves (Q, C, A) are approximated by
 /// their endpoints.  Coordinates in the SVG path are relative to the element's
 /// bounding box and are converted to world space.
-fn parse_svg_path_points(
-    path_data: &str,
-    position: [f32; 2],
-    _size: [f32; 2],
-) -> Vec<(f64, f64)> {
+fn parse_svg_path_points(path_data: &str, position: [f32; 2], _size: [f32; 2]) -> Vec<(f64, f64)> {
     let mut points: Vec<(f64, f64)> = Vec::new();
     let mut current_x = position[0] as f64;
     let mut current_y = position[1] as f64;
@@ -1562,11 +1549,7 @@ mod tests {
         // map_element_from_enbx now returns ElementData directly (no Option) — a
         // dropped element would have been a compile error, but we still assert
         // the Unknown branch yields a labelled placeholder rather than nothing.
-        let mapped: Vec<ElementData> = slide
-            .elements
-            .iter()
-            .map(map_element_from_enbx)
-            .collect();
+        let mapped: Vec<ElementData> = slide.elements.iter().map(map_element_from_enbx).collect();
 
         // Video → Video (no longer dropped into Unknown / coerced to Image)
         assert!(matches!(mapped[0], ElementData::Video(_)));

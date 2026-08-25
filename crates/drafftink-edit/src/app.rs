@@ -2,12 +2,12 @@
 
 use drafftink_core::board::{EditBoard, Snapshot};
 use drafftink_core::document;
+use drafftink_core::integration::SharedAppContext;
 use drafftink_core::model::{CoursewareDoc, ShapeKind, ShapeType};
 use drafftink_core::Camera;
 use egui::{Color32, Sense, Ui};
 use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle, WindowHandle};
 use std::sync::{Arc, Mutex};
-use drafftink_core::integration::SharedAppContext;
 
 use crate::annotation::AnnotationState;
 use crate::interaction::{InteractionState, ToolMode};
@@ -90,11 +90,11 @@ impl TeachingToolKind {
 }
 
 // ── Colors ─────────────────────────────────────────────────────────────────
-const TOOLBAR_BG: Color32     = Color32::from_rgb(0x3C, 0x3C, 0x3C);
-const SIDEBAR_BG: Color32     = Color32::from_rgb(0xF5, 0xF5, 0xF5);
-const CANVAS_BG: Color32      = Color32::from_rgb(0xE0, 0xE0, 0xE0);
-const PAGE_ACTIVE: Color32    = Color32::from_rgb(0x00, 0xC8, 0x00);
-const PAGE_INACTIVE: Color32  = Color32::from_rgb(0xD0, 0xD0, 0xD0);
+const TOOLBAR_BG: Color32 = Color32::from_rgb(0x3C, 0x3C, 0x3C);
+const SIDEBAR_BG: Color32 = Color32::from_rgb(0xF5, 0xF5, 0xF5);
+const CANVAS_BG: Color32 = Color32::from_rgb(0xE0, 0xE0, 0xE0);
+const PAGE_ACTIVE: Color32 = Color32::from_rgb(0x00, 0xC8, 0x00);
+const PAGE_INACTIVE: Color32 = Color32::from_rgb(0xD0, 0xD0, 0xD0);
 
 // ---------------------------------------------------------------------------
 // ParentWindow — 包装 RawWindowHandle 用于 rfd::FileDialog::set_parent()
@@ -179,7 +179,8 @@ impl EditApp {
     /// Load a .drft file. Also accepts .enbx for backward compatibility.
     pub fn open_file(&mut self, path: &std::path::Path) {
         log::info!("Opening: {}", path.display());
-        let ext = path.extension()
+        let ext = path
+            .extension()
             .and_then(|e| e.to_str())
             .unwrap_or("")
             .to_lowercase();
@@ -387,8 +388,11 @@ impl EditApp {
         let painter = ui.painter_at(canvas_rect.intersect(panel_rect));
 
         painter.rect_filled(canvas_rect, 0.0, Color32::WHITE);
-        painter.rect_stroke(canvas_rect, 0.0,
-            egui::Stroke::new(1.0, Color32::from_rgb(0xD0, 0xD0, 0xD0)));
+        painter.rect_stroke(
+            canvas_rect,
+            0.0,
+            egui::Stroke::new(1.0, Color32::from_rgb(0xD0, 0xD0, 0xD0)),
+        );
 
         self.camera.viewport = [canvas_w, canvas_h];
         self.camera.zoom = zoom;
@@ -431,9 +435,11 @@ impl eframe::App for EditApp {
         let parent = self.parent_window;
         egui::TopBottomPanel::top("editor_toolbar")
             .min_height(36.0)
-            .frame(egui::Frame::none()
-                .fill(TOOLBAR_BG)
-                .inner_margin(egui::Margin::symmetric(12.0, 4.0)))
+            .frame(
+                egui::Frame::none()
+                    .fill(TOOLBAR_BG)
+                    .inner_margin(egui::Margin::symmetric(12.0, 4.0)),
+            )
             .show(ctx, |ui| {
                 let v = ui.visuals_mut();
                 v.widgets.noninteractive.fg_stroke.color = Color32::from_rgb(0xE0, 0xE0, 0xE0);
@@ -441,8 +447,8 @@ impl eframe::App for EditApp {
                 ui.horizontal(|ui| {
                     ui.menu_button(" 文件", |ui| {
                         if ui.button("打开...").clicked() {
-                            let mut dialog = rfd::FileDialog::new()
-                                .add_filter("Drafftink", &["drft", "enbx"]);
+                            let mut dialog =
+                                rfd::FileDialog::new().add_filter("Drafftink", &["drft", "enbx"]);
                             if let Some(ref p) = parent {
                                 dialog = dialog.set_parent(p);
                             }
@@ -452,8 +458,8 @@ impl eframe::App for EditApp {
                             ui.close_menu();
                         }
                         if ui.button("保存").clicked() {
-                            let mut dialog = rfd::FileDialog::new()
-                                .add_filter("Drafftink", &["drft"]);
+                            let mut dialog =
+                                rfd::FileDialog::new().add_filter("Drafftink", &["drft"]);
                             if let Some(ref p) = parent {
                                 dialog = dialog.set_parent(p);
                             }
@@ -513,7 +519,11 @@ impl eframe::App for EditApp {
                         .show_ui(ui, |combo| {
                             for k in ShapeKind::ALL {
                                 combo
-                                    .selectable_value(&mut self.selected_shape, k, shape_kind_label(k))
+                                    .selectable_value(
+                                        &mut self.selected_shape,
+                                        k,
+                                        shape_kind_label(k),
+                                    )
                                     .on_hover_text(shape_kind_label(k));
                             }
                         });
@@ -522,22 +532,30 @@ impl eframe::App for EditApp {
                     }
                     if label_btn(ui, " 表格", TOOLBAR_BG).clicked() {}
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        if ui.add_sized([72.0, 24.0],
-                            egui::Button::new(
-                                egui::RichText::new(" 保存").color(Color32::WHITE).strong()
+                        if ui
+                            .add_sized(
+                                [72.0, 24.0],
+                                egui::Button::new(
+                                    egui::RichText::new(" 保存").color(Color32::WHITE).strong(),
+                                )
+                                .fill(Color32::from_rgb(0x2D, 0x6C, 0xDF))
+                                .rounding(egui::Rounding::same(6.0)),
                             )
-                            .fill(Color32::from_rgb(0x2D, 0x6C, 0xDF))
-                            .rounding(egui::Rounding::same(6.0))
-                        ).clicked() {
+                            .clicked()
+                        {
                             self.save_requested = true;
                         }
-                        if ui.add_sized([88.0, 24.0],
-                            egui::Button::new(
-                                egui::RichText::new(" 授课").color(Color32::WHITE).strong()
+                        if ui
+                            .add_sized(
+                                [88.0, 24.0],
+                                egui::Button::new(
+                                    egui::RichText::new(" 授课").color(Color32::WHITE).strong(),
+                                )
+                                .fill(Color32::from_rgb(0x07, 0xC1, 0x60))
+                                .rounding(egui::Rounding::same(6.0)),
                             )
-                            .fill(Color32::from_rgb(0x07, 0xC1, 0x60))
-                            .rounding(egui::Rounding::same(6.0))
-                        ).clicked() {
+                            .clicked()
+                        {
                             self.teach_requested = true;
                         }
                     });
@@ -548,9 +566,11 @@ impl eframe::App for EditApp {
         egui::SidePanel::left("page_list")
             .default_width(80.0)
             .resizable(false)
-            .frame(egui::Frame::none()
-                .fill(SIDEBAR_BG)
-                .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0xC0, 0xC0, 0xC0))))
+            .frame(
+                egui::Frame::none()
+                    .fill(SIDEBAR_BG)
+                    .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0xC0, 0xC0, 0xC0))),
+            )
             .show(ctx, |ui| {
                 ui.vertical_centered(|ui| {
                     if ui.button("+\n新建").clicked() {
@@ -564,10 +584,8 @@ impl eframe::App for EditApp {
                     for i in 0..self.doc.pages.len().max(1) {
                         let active = i == self.multi_page.current_page;
                         // Allocate a clickable rect, then paint it manually
-                        let (rect, response) = ui.allocate_exact_size(
-                            egui::vec2(60.0, 32.0),
-                            egui::Sense::click(),
-                        );
+                        let (rect, response) =
+                            ui.allocate_exact_size(egui::vec2(60.0, 32.0), egui::Sense::click());
                         // Draw fill and border
                         let bg = if active {
                             Color32::from_rgb(0xF0, 0xFF, 0xF0)
@@ -579,16 +597,9 @@ impl eframe::App for EditApp {
                         } else {
                             (1.0, PAGE_INACTIVE)
                         };
-                        ui.painter().rect_filled(
-                            rect,
-                            4.0,
-                            bg,
-                        );
-                        ui.painter().rect_stroke(
-                            rect,
-                            4.0,
-                            egui::Stroke::new(border.0, border.1),
-                        );
+                        ui.painter().rect_filled(rect, 4.0, bg);
+                        ui.painter()
+                            .rect_stroke(rect, 4.0, egui::Stroke::new(border.0, border.1));
                         // Draw page number centered
                         ui.painter().text(
                             rect.center(),
@@ -602,7 +613,8 @@ impl eframe::App for EditApp {
                         );
                         if response.clicked() && i != self.multi_page.current_page {
                             // Flush current page edits to doc before switching
-                            if let Some(page) = self.doc.pages.get_mut(self.multi_page.current_page) {
+                            if let Some(page) = self.doc.pages.get_mut(self.multi_page.current_page)
+                            {
                                 page.elements.clone_from(&self.board.elements);
                             }
                             self.multi_page.save_annotations(&self.annotation);
@@ -621,10 +633,12 @@ impl eframe::App for EditApp {
         // ── Right inspector ────────────────────────────────────────
         egui::SidePanel::right("inspector")
             .min_width(250.0)
-            .frame(egui::Frame::none()
-                .fill(SIDEBAR_BG)
-                .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0xC0, 0xC0, 0xC0)))
-                .inner_margin(egui::Margin::same(10.0)))
+            .frame(
+                egui::Frame::none()
+                    .fill(SIDEBAR_BG)
+                    .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0xC0, 0xC0, 0xC0)))
+                    .inner_margin(egui::Margin::same(10.0)),
+            )
             .show(ctx, |ui| {
                 ui.add_space(4.0);
                 ui.label(egui::RichText::new("布局与背景").size(14.0).strong());
@@ -654,10 +668,12 @@ impl eframe::App for EditApp {
 fn label_btn(ui: &mut Ui, label: &str, bg: Color32) -> egui::Response {
     ui.add(
         egui::Button::new(
-            egui::RichText::new(label).size(12.0).color(Color32::from_rgb(0xE0, 0xE0, 0xE0))
+            egui::RichText::new(label)
+                .size(12.0)
+                .color(Color32::from_rgb(0xE0, 0xE0, 0xE0)),
         )
         .fill(bg)
         .frame(false)
-        .min_size(egui::vec2(0.0, 24.0))
+        .min_size(egui::vec2(0.0, 24.0)),
     )
 }

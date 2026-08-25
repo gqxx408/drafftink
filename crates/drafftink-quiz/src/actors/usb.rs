@@ -103,7 +103,11 @@ fn detect_quiz_keypads() -> Vec<String> {
 /// device_handle.read_interrupt(endpoint, &mut buf, timeout)?;
 /// Ok(buf.to_vec())
 /// ```
-fn read_hid_report(_device_handle: &(), _endpoint: u8, _timeout: Duration) -> Result<Vec<u8>, String> {
+fn read_hid_report(
+    _device_handle: &(),
+    _endpoint: u8,
+    _timeout: Duration,
+) -> Result<Vec<u8>, String> {
     // 骨架实现 — 需要 rusb 依赖时替换
     let _ = (_device_handle, _endpoint, _timeout);
     Ok(vec![0u8; 64])

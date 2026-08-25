@@ -55,8 +55,8 @@ impl AnnotationCache {
             strokes: strokes.to_vec(),
         };
 
-        let mut encoded = bincode::serialize(&payload)
-            .map_err(|e| format!("Cache serialize failed: {}", e))?;
+        let mut encoded =
+            bincode::serialize(&payload).map_err(|e| format!("Cache serialize failed: {}", e))?;
 
         // CRC32 checksum appended at end
         let crc = crc32fast::hash(&encoded);
@@ -64,10 +64,8 @@ impl AnnotationCache {
 
         // Atomic write
         let tmp_path = self.cache_path.with_extension("drfc.tmp");
-        fs::write(&tmp_path, &encoded)
-            .map_err(|e| format!("Write tmp failed: {}", e))?;
-        fs::rename(&tmp_path, &self.cache_path)
-            .map_err(|e| format!("Rename failed: {}", e))?;
+        fs::write(&tmp_path, &encoded).map_err(|e| format!("Write tmp failed: {}", e))?;
+        fs::rename(&tmp_path, &self.cache_path).map_err(|e| format!("Rename failed: {}", e))?;
 
         self.last_flush = std::time::Instant::now();
         self.pending_count = 0;

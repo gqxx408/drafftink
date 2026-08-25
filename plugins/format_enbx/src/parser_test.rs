@@ -1,10 +1,7 @@
 #[cfg(test)]
 mod tests {
+    use super::super::elements::{shape::SlideElement, text::ArgbColor};
     use super::super::parser::{parse_board, parse_document, parse_slide_xml};
-    use super::super::elements::{
-        shape::SlideElement,
-        text::ArgbColor,
-    };
 
     const TEST_SLIDE_XML: &str = r#"<?xml version="1.0" encoding="utf-8"?><Slide xmlns="http://schemas.seewo.com/enbx/2016"><Id>69d1f83b77124f95bdf330bf28bddfb1</Id><Width>1280</Width><Height>720</Height><Background><ColorBrush>#FFFFFFFF</ColorBrush></Background><Elements><Element><Id>964771d35d3644519dbb9b1a9733f896</Id><X>278.377</X><Y>270.752</Y><Width>710</Width><Height>107.793</Height><Rotation>0</Rotation><IsLocked>False</IsLocked><Background><ColorBrush>#00FFFFFF</ColorBrush></Background><Text><RichText><TextRuns><TextRun><Text>HI,SEEWO</Text><FontSize>40</FontSize><FontFamily><Source>微软雅黑</Source></FontFamily><FontWeight>Normal</FontWeight><Foreground><ColorBrush>#FF000000</ColorBrush></Foreground></TextRun></TextRuns></RichText></Text></Element></Elements></Slide>"#;
 
@@ -65,7 +62,8 @@ mod tests {
 
     #[test]
     fn empty_elements_returns_empty_vec() {
-        let xml = r#"<Slide xmlns="http://schemas.seewo.com/enbx/2016"><Elements></Elements></Slide>"#;
+        let xml =
+            r#"<Slide xmlns="http://schemas.seewo.com/enbx/2016"><Elements></Elements></Slide>"#;
         let elements = parse_slide_xml(xml).unwrap();
         assert!(elements.is_empty());
     }

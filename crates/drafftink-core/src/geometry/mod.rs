@@ -154,10 +154,7 @@ impl GeometryDefinition for FreePoint {
     }
 
     fn debug_print(&self) -> String {
-        format!(
-            "FreePoint({:.1}, {:.1})",
-            self.position.x, self.position.y
-        )
+        format!("FreePoint({:.1}, {:.1})", self.position.x, self.position.y)
     }
 }
 
@@ -291,10 +288,7 @@ impl GeometryDefinition for MidPoint {
     }
 
     fn debug_print(&self) -> String {
-        format!(
-            "MidPoint({:.1}, {:.1})",
-            self.position.x, self.position.y
-        )
+        format!("MidPoint({:.1}, {:.1})", self.position.x, self.position.y)
     }
 }
 
@@ -706,13 +700,20 @@ impl SolverContext {
 
     /// 打印所有元素的当前状态（调试用）。
     pub fn debug_print_all(&self) {
-        log::debug!("=== Geometry Solver State ({} elements) ===", self.definitions.len());
+        log::debug!(
+            "=== Geometry Solver State ({} elements) ===",
+            self.definitions.len()
+        );
         for id in &self.topo_order {
             if let Some(def) = self.definitions.get(id) {
                 log::debug!(
                     "  {}  {}",
                     def.debug_print(),
-                    if self.dirty.contains(id) { "[DIRTY]" } else { "" }
+                    if self.dirty.contains(id) {
+                        "[DIRTY]"
+                    } else {
+                        ""
+                    }
                 );
             }
         }
@@ -777,16 +778,26 @@ mod tests {
         ctx.solve_all();
 
         // 验证初始状态
-        let line_left_len = ctx.get_line(line_left_id).map(|(a, b)| (b - a).norm()).unwrap();
-        let line_right_len = ctx.get_line(line_right_id).map(|(a, b)| (b - a).norm()).unwrap();
+        let line_left_len = ctx
+            .get_line(line_left_id)
+            .map(|(a, b)| (b - a).norm())
+            .unwrap();
+        let line_right_len = ctx
+            .get_line(line_right_id)
+            .map(|(a, b)| (b - a).norm())
+            .unwrap();
 
         // Top(100,0) → BottomLeft(0,100): 距离 = sqrt(100² + 100²) ≈ 141.42
-        assert!((line_left_len - 141.42).abs() < 0.1,
-            "左线初始长度应该≈141.42，实际是{line_left_len}");
+        assert!(
+            (line_left_len - 141.42).abs() < 0.1,
+            "左线初始长度应该≈141.42，实际是{line_left_len}"
+        );
 
         // Top(100,0) → BottomRight(200,100): 距离 = sqrt(100² + 100²) ≈ 141.42
-        assert!((line_right_len - 141.42).abs() < 0.1,
-            "右线初始长度应该≈141.42，实际是{line_right_len}");
+        assert!(
+            (line_right_len - 141.42).abs() < 0.1,
+            "右线初始长度应该≈141.42，实际是{line_right_len}"
+        );
 
         // 中点验证：左中点应该在 (50, 50)
         let mid_left_pos = ctx.get_point(mid_left_id).unwrap();
@@ -825,16 +836,26 @@ mod tests {
         ctx.solve_all();
 
         // 验证线长度变化了
-        let line_left_len_new = ctx.get_line(line_left_id).map(|(a, b)| (b - a).norm()).unwrap();
-        let line_right_len_new = ctx.get_line(line_right_id).map(|(a, b)| (b - a).norm()).unwrap();
+        let line_left_len_new = ctx
+            .get_line(line_left_id)
+            .map(|(a, b)| (b - a).norm())
+            .unwrap();
+        let line_right_len_new = ctx
+            .get_line(line_right_id)
+            .map(|(a, b)| (b - a).norm())
+            .unwrap();
 
         // Top(100,50) → BottomLeft(0,100): 距离 = sqrt(100² + 50²) ≈ 111.80
-        assert!((line_left_len_new - 111.80).abs() < 0.1,
-            "移动后左线长度应该≈111.80，实际是{line_left_len_new}");
+        assert!(
+            (line_left_len_new - 111.80).abs() < 0.1,
+            "移动后左线长度应该≈111.80，实际是{line_left_len_new}"
+        );
 
         // Top(100,50) → BottomRight(200,100): 距离 = sqrt(100² + 50²) ≈ 111.80
-        assert!((line_right_len_new - 111.80).abs() < 0.1,
-            "移动后右线长度应该≈111.80，实际是{line_right_len_new}");
+        assert!(
+            (line_right_len_new - 111.80).abs() < 0.1,
+            "移动后右线长度应该≈111.80，实际是{line_right_len_new}"
+        );
 
         // 长度确实变了（从 141.42 变到 111.80）
         assert!(line_left_len_new < line_left_len, "左线长度应该变短了");
@@ -843,15 +864,27 @@ mod tests {
         // 验证中点自动更新
         let mid_left_new = ctx.get_point(mid_left_id).unwrap();
         // 新中点应该在 ((100+0)/2, (50+100)/2) = (50, 75)
-        assert!((mid_left_new.x - 50.0).abs() < 0.01, "移动后左中点x应该还是50");
-        assert!((mid_left_new.y - 75.0).abs() < 0.01,
-            "移动后左中点y应该是75，实际是{}", mid_left_new.y);
+        assert!(
+            (mid_left_new.x - 50.0).abs() < 0.01,
+            "移动后左中点x应该还是50"
+        );
+        assert!(
+            (mid_left_new.y - 75.0).abs() < 0.01,
+            "移动后左中点y应该是75，实际是{}",
+            mid_left_new.y
+        );
 
         let mid_right_new = ctx.get_point(mid_right_id).unwrap();
         // 新中点应该在 ((100+200)/2, (50+100)/2) = (150, 75)
-        assert!((mid_right_new.x - 150.0).abs() < 0.01, "移动后右中点x应该还是150");
-        assert!((mid_right_new.y - 75.0).abs() < 0.01,
-            "移动后右中点y应该是75，实际是{}", mid_right_new.y);
+        assert!(
+            (mid_right_new.x - 150.0).abs() < 0.01,
+            "移动后右中点x应该还是150"
+        );
+        assert!(
+            (mid_right_new.y - 75.0).abs() < 0.01,
+            "移动后右中点y应该是75，实际是{}",
+            mid_right_new.y
+        );
 
         println!("✅ 动态几何测试通过！");
         println!("   移动Top点后，两条线的长度自动更新，中点也自动跟随。");

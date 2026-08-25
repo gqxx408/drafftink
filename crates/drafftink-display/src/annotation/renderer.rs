@@ -136,9 +136,7 @@ impl AnnotationRenderer {
         // 粗线补端点圆，保留原先的圆头观感；细线省略（肉眼无差）。
         if thickness >= ROUND_CAP_MIN_THICKNESS {
             let r = thickness * 0.5;
-            if let (Some(&first), Some(&last)) =
-                (self.point_buf.first(), self.point_buf.last())
-            {
+            if let (Some(&first), Some(&last)) = (self.point_buf.first(), self.point_buf.last()) {
                 self.shape_buf.push(Shape::circle_filled(first, r, color));
                 self.shape_buf.push(Shape::circle_filled(last, r, color));
             }
@@ -156,10 +154,8 @@ impl AnnotationRenderer {
         }
         let pos = ctx.input(|i| i.pointer.hover_pos());
         if let Some(p) = pos {
-            let preview = ctx.layer_painter(LayerId::new(
-                Order::Foreground,
-                Id::new("cursor_preview"),
-            ));
+            let preview =
+                ctx.layer_painter(LayerId::new(Order::Foreground, Id::new("cursor_preview")));
             let radius = thickness.max(5.0);
             preview.circle_stroke(
                 p,

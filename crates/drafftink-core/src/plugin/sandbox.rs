@@ -18,10 +18,8 @@ impl PermissionStore {
 
     pub fn grant(&mut self, plugin_name: &str, perms: &[Permission]) {
         self.grants.retain(|(n, _)| n != plugin_name);
-        self.grants.push((
-            plugin_name.to_string(),
-            perms.iter().cloned().collect(),
-        ));
+        self.grants
+            .push((plugin_name.to_string(), perms.iter().cloned().collect()));
     }
 
     pub fn revoke(&mut self, plugin_name: &str) {
@@ -64,10 +62,7 @@ where
 {
     let result = isolate_plugin_call(f);
     if let Err(ref msg) = result {
-        eprintln!(
-            "[plugin:{plugin_name}] PANIC during '{operation}' — isolated: {msg}"
-        );
+        eprintln!("[plugin:{plugin_name}] PANIC during '{operation}' — isolated: {msg}");
     }
     result
 }
-

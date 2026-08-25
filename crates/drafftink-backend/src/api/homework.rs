@@ -6,15 +6,14 @@
 //! - `POST /api/homework/submit` — 学生提交 drftx 文件
 //! - `POST /api/homework/grade` — 老师批改提交
 
-use axum::Json;
 use axum::extract::{Multipart, Path, State};
+use axum::Json;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use drafftink_core::{
-    DrftxFile, Homework, HomeworkStatus, HomeworkSubmission, SubmissionStatus,
-    TeacherAnnotation,
+    DrftxFile, Homework, HomeworkStatus, HomeworkSubmission, SubmissionStatus, TeacherAnnotation,
 };
 
 use drafftink_core::Role;
@@ -250,9 +249,10 @@ pub async fn submit(
                     .text()
                     .await
                     .map_err(|e| AppError::BadRequest(format!("读取 homework_id 失败: {e}")))?;
-                homework_id = Some(Uuid::parse_str(&text).map_err(|e| {
-                    AppError::BadRequest(format!("homework_id 格式错误: {e}"))
-                })?);
+                homework_id = Some(
+                    Uuid::parse_str(&text)
+                        .map_err(|e| AppError::BadRequest(format!("homework_id 格式错误: {e}")))?,
+                );
             }
             "file" => {
                 let bytes = field
@@ -267,10 +267,9 @@ pub async fn submit(
         }
     }
 
-    let homework_id = homework_id
-        .ok_or_else(|| AppError::BadRequest("缺少 homework_id 字段".to_string()))?;
-    let file_data =
-        file_data.ok_or_else(|| AppError::BadRequest("缺少 file 字段".to_string()))?;
+    let homework_id =
+        homework_id.ok_or_else(|| AppError::BadRequest("缺少 homework_id 字段".to_string()))?;
+    let file_data = file_data.ok_or_else(|| AppError::BadRequest("缺少 file 字段".to_string()))?;
 
     // 验证学生有权提交该作业
     rbac::check_student_owns_homework(state.db.as_ref(), student_id, homework_id)?;
@@ -293,9 +292,7 @@ pub async fn submit(
 
     // 存储文件
     let submission_id = Uuid::new_v4();
-    let storage_path = format!(
-        "submissions/{homework_id}/{student_id}/{submission_id}.drftx"
-    );
+    let storage_path = format!("submissions/{homework_id}/{student_id}/{submission_id}.drftx");
     state.storage.save(&storage_path, file_data)?;
 
     // 计算内容哈希（十六进制）

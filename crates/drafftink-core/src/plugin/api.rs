@@ -96,7 +96,9 @@ pub trait FileImporter: Send + Sync {
 ///   `pub extern "C" fn drafftink_plugin_entry() -> *mut dyn Plugin`.
 pub trait Plugin: Send + Sync {
     fn manifest(&self) -> &PluginManifest;
-    fn file_importer(&self) -> Option<&dyn FileImporter> { None }
+    fn file_importer(&self) -> Option<&dyn FileImporter> {
+        None
+    }
     fn on_load(&self, _ctx: &dyn PluginContext) {}
     fn on_unload(&self) {}
 }

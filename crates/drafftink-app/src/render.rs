@@ -1,7 +1,7 @@
 //! Canvas rendering — grid, elements, selection handles, preview.
 //!
 //! All coordinate transforms go through `Camera`.  Never do manual
-#![allow(dead_code)] 
+#![allow(dead_code)]
 //! world → screen math outside of this module.
 
 use drafftink_core::model::{CoursewareDoc, Element, ShapeType};
@@ -83,7 +83,9 @@ pub fn render_canvas(
     }
 
     // 5. Drawing preview (when drawing a new shape)
-    if interaction.is_drawing && matches!(interaction.mode, crate::interaction::ToolMode::DrawShape(_)) {
+    if interaction.is_drawing
+        && matches!(interaction.mode, crate::interaction::ToolMode::DrawShape(_))
+    {
         if let Some(rect) = interaction.draw_rect() {
             let st = interaction.mode;
             draw_drag_preview(painter, camera, &rect, st);
@@ -188,7 +190,10 @@ fn draw_element(painter: &Painter, camera: &Camera, elem: &Element) {
             // Image rendering requires texture handle — handled in app.rs
             // Draw a placeholder rect for now
             let tl = camera.world_to_screen(base.position);
-            let br = camera.world_to_screen([base.position[0] + base.size[0], base.position[1] + base.size[1]]);
+            let br = camera.world_to_screen([
+                base.position[0] + base.size[0],
+                base.position[1] + base.size[1],
+            ]);
             let rect = Rect::from_min_max(tl, br);
             painter.rect_filled(rect, 4.0, Color32::from_rgb(0xE0, 0xE0, 0xE0));
             painter.rect_stroke(rect, 4.0, Stroke::new(1.0, Color32::from_gray(180)));
@@ -251,7 +256,13 @@ fn draw_shape(
             ]);
             painter.line_segment([tl, end], stroke);
             // Arrow head
-            draw_arrow_head(painter, tl, end, stroke_color, base.stroke_width * camera.zoom);
+            draw_arrow_head(
+                painter,
+                tl,
+                end,
+                stroke_color,
+                base.stroke_width * camera.zoom,
+            );
         }
         ShapeType::Bracket => {
             draw_bracket(painter, rect, stroke);
@@ -330,10 +341,7 @@ fn draw_path(
     }
 
     if path.is_closed && screen_pts.len() >= 3 {
-        painter.line_segment(
-            [screen_pts[screen_pts.len() - 1], screen_pts[0]],
-            stroke,
-        );
+        painter.line_segment([screen_pts[screen_pts.len() - 1], screen_pts[0]], stroke);
     }
 }
 
@@ -386,22 +394,18 @@ fn draw_selection(painter: &Painter, camera: &Camera, elem: &Element) {
 
     // Selection rect
     let rect = Rect::from_min_max(tl, br);
-    painter.rect_stroke(
-        rect.expand(2.0),
-        0.0,
-        Stroke::new(1.5, SELECTION_STROKE),
-    );
+    painter.rect_stroke(rect.expand(2.0), 0.0, Stroke::new(1.5, SELECTION_STROKE));
 
     // 8 resize handles (corners + edges)
     let handles = [
-        tl,                                             // top-left
-        Pos2::new((tl.x + br.x) * 0.5, tl.y),          // top-center
-        Pos2::new(br.x, tl.y),                          // top-right
-        Pos2::new(br.x, (tl.y + br.y) * 0.5),          // right-center
-        br,                                             // bottom-right
-        Pos2::new((tl.x + br.x) * 0.5, br.y),          // bottom-center
-        Pos2::new(tl.x, br.y),                          // bottom-left
-        Pos2::new(tl.x, (tl.y + br.y) * 0.5),          // left-center
+        tl,                                   // top-left
+        Pos2::new((tl.x + br.x) * 0.5, tl.y), // top-center
+        Pos2::new(br.x, tl.y),                // top-right
+        Pos2::new(br.x, (tl.y + br.y) * 0.5), // right-center
+        br,                                   // bottom-right
+        Pos2::new((tl.x + br.x) * 0.5, br.y), // bottom-center
+        Pos2::new(tl.x, br.y),                // bottom-left
+        Pos2::new(tl.x, (tl.y + br.y) * 0.5), // left-center
     ];
 
     for handle in &handles {
@@ -443,9 +447,15 @@ fn draw_bracket(painter: &Painter, rect: Rect, stroke: Stroke) {
     painter.line_segment([Pos2::new(left, top), Pos2::new(left, bottom)], stroke);
     // Top tick
     let tick_len = (right - left).max(6.0);
-    painter.line_segment([Pos2::new(left, top), Pos2::new(left + tick_len, top)], stroke);
+    painter.line_segment(
+        [Pos2::new(left, top), Pos2::new(left + tick_len, top)],
+        stroke,
+    );
     // Bottom tick
-    painter.line_segment([Pos2::new(left, bottom), Pos2::new(left + tick_len, bottom)], stroke);
+    painter.line_segment(
+        [Pos2::new(left, bottom), Pos2::new(left + tick_len, bottom)],
+        stroke,
+    );
 }
 
 /// Draw a curly brace `{` opening to the right using cubic Bézier curves.

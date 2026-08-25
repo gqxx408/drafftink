@@ -205,20 +205,26 @@ impl GeometrySolver {
                 // dep 可以是点 ID 或线/圆 ID
                 // 如果 dep 是一个点，直接加边
                 if self.doc.points.contains_key(&dep) {
-                    if let Some(v) = adj.get_mut(&dep) { v.push(id) }
+                    if let Some(v) = adj.get_mut(&dep) {
+                        v.push(id)
+                    }
                     *in_degree.get_mut(&id).unwrap_or(&mut 0) += 1;
                 }
                 // 如果 dep 是线/圆，我们需要找到线/圆引用的点
                 else if let Some(line) = self.doc.lines.get(&dep) {
                     for &ref_id in &[line.start, line.end] {
                         if ref_id != id && self.doc.points.contains_key(&ref_id) {
-                            if let Some(v) = adj.get_mut(&ref_id) { v.push(id) }
+                            if let Some(v) = adj.get_mut(&ref_id) {
+                                v.push(id)
+                            }
                             *in_degree.get_mut(&id).unwrap_or(&mut 0) += 1;
                         }
                     }
                 } else if let Some(circle) = self.doc.circles.get(&dep) {
                     if circle.center != id && self.doc.points.contains_key(&circle.center) {
-                        if let Some(v) = adj.get_mut(&circle.center) { v.push(id) }
+                        if let Some(v) = adj.get_mut(&circle.center) {
+                            v.push(id)
+                        }
                         *in_degree.get_mut(&id).unwrap_or(&mut 0) += 1;
                     }
                 }
@@ -267,12 +273,7 @@ impl GeometrySolver {
     }
 
     /// 求解单个点
-    fn solve_point(
-        &self,
-        id: Uuid,
-        def: &PointDef,
-        ctx: &mut SolverContext,
-    ) -> anyhow::Result<()> {
+    fn solve_point(&self, id: Uuid, def: &PointDef, ctx: &mut SolverContext) -> anyhow::Result<()> {
         match def {
             PointDef::Free { pos } => {
                 ctx.points_2d.insert(id, *pos);
@@ -281,8 +282,12 @@ impl GeometrySolver {
                 ctx.points_3d.insert(id, *pos);
             }
             PointDef::Midpoint { a, b } => {
-                let pa = ctx.get_2d(*a).ok_or_else(|| anyhow::anyhow!("依赖点 {a} 未求解"))?;
-                let pb = ctx.get_2d(*b).ok_or_else(|| anyhow::anyhow!("依赖点 {b} 未求解"))?;
+                let pa = ctx
+                    .get_2d(*a)
+                    .ok_or_else(|| anyhow::anyhow!("依赖点 {a} 未求解"))?;
+                let pb = ctx
+                    .get_2d(*b)
+                    .ok_or_else(|| anyhow::anyhow!("依赖点 {b} 未求解"))?;
                 let mid = (pa + pb) * 0.5;
                 ctx.points_2d.insert(id, mid);
             }
@@ -317,17 +322,29 @@ impl GeometrySolver {
                 ctx.points_2d.insert(id, center + offset);
             }
             PointDef::Intersection { line_a, line_b } => {
-                let la = self.doc.lines.get(line_a).ok_or_else(|| {
-                    anyhow::anyhow!("线 {line_a} 不存在")
-                })?;
-                let lb = self.doc.lines.get(line_b).ok_or_else(|| {
-                    anyhow::anyhow!("线 {line_b} 不存在")
-                })?;
+                let la = self
+                    .doc
+                    .lines
+                    .get(line_a)
+                    .ok_or_else(|| anyhow::anyhow!("线 {line_a} 不存在"))?;
+                let lb = self
+                    .doc
+                    .lines
+                    .get(line_b)
+                    .ok_or_else(|| anyhow::anyhow!("线 {line_b} 不存在"))?;
 
-                let p1 = ctx.get_2d(la.start).ok_or_else(|| anyhow::anyhow!("线A起点未求解"))?;
-                let p2 = ctx.get_2d(la.end).ok_or_else(|| anyhow::anyhow!("线A终点未求解"))?;
-                let p3 = ctx.get_2d(lb.start).ok_or_else(|| anyhow::anyhow!("线B起点未求解"))?;
-                let p4 = ctx.get_2d(lb.end).ok_or_else(|| anyhow::anyhow!("线B终点未求解"))?;
+                let p1 = ctx
+                    .get_2d(la.start)
+                    .ok_or_else(|| anyhow::anyhow!("线A起点未求解"))?;
+                let p2 = ctx
+                    .get_2d(la.end)
+                    .ok_or_else(|| anyhow::anyhow!("线A终点未求解"))?;
+                let p3 = ctx
+                    .get_2d(lb.start)
+                    .ok_or_else(|| anyhow::anyhow!("线B起点未求解"))?;
+                let p4 = ctx
+                    .get_2d(lb.end)
+                    .ok_or_else(|| anyhow::anyhow!("线B终点未求解"))?;
 
                 if let Some(pt) = line_line_intersection(p1, p2, p3, p4) {
                     ctx.points_2d.insert(id, pt);
@@ -335,7 +352,11 @@ impl GeometrySolver {
                     log::warn!("线 {line_a} 和 {line_b} 平行，无交点");
                 }
             }
-            PointDef::LineCircleIntersection { line, circle, which } => {
+            PointDef::LineCircleIntersection {
+                line,
+                circle,
+                which,
+            } => {
                 let line_def = self
                     .doc
                     .lines
@@ -347,8 +368,12 @@ impl GeometrySolver {
                     .get(circle)
                     .ok_or_else(|| anyhow::anyhow!("圆 {circle} 不存在"))?;
 
-                let p1 = ctx.get_2d(line_def.start).ok_or_else(|| anyhow::anyhow!("线起点未求解"))?;
-                let p2 = ctx.get_2d(line_def.end).ok_or_else(|| anyhow::anyhow!("线终点未求解"))?;
+                let p1 = ctx
+                    .get_2d(line_def.start)
+                    .ok_or_else(|| anyhow::anyhow!("线起点未求解"))?;
+                let p2 = ctx
+                    .get_2d(line_def.end)
+                    .ok_or_else(|| anyhow::anyhow!("线终点未求解"))?;
                 let center = ctx
                     .get_2d(circle_def.center)
                     .ok_or_else(|| anyhow::anyhow!("圆心未求解"))?;

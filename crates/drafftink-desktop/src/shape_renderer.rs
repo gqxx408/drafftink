@@ -153,18 +153,33 @@ pub fn angle_point(center: Pos2, radius: f32, deg: f32) -> Pos2 {
 }
 
 /// 圆弧的采样线段（供 Arc/Sector 描边）：返回 `(p0, p1)` 序列。
-pub fn arc_segments(center: Pos2, radius: f32, start_deg: f32, end_deg: f32, steps: usize) -> Vec<(Pos2, Pos2)> {
+pub fn arc_segments(
+    center: Pos2,
+    radius: f32,
+    start_deg: f32,
+    end_deg: f32,
+    steps: usize,
+) -> Vec<(Pos2, Pos2)> {
     let mut segs = Vec::with_capacity(steps);
     for i in 0..steps {
         let a0 = start_deg + (end_deg - start_deg) * (i as f32 / steps as f32);
         let a1 = start_deg + (end_deg - start_deg) * ((i + 1) as f32 / steps as f32);
-        segs.push((angle_point(center, radius, a0), angle_point(center, radius, a1)));
+        segs.push((
+            angle_point(center, radius, a0),
+            angle_point(center, radius, a1),
+        ));
     }
     segs
 }
 
 /// 扇形顶点序列（圆心 + 弧上采样点，凸多边形，供填充）。
-pub fn sector_points(center: Pos2, radius: f32, start_deg: f32, end_deg: f32, steps: usize) -> Vec<Pos2> {
+pub fn sector_points(
+    center: Pos2,
+    radius: f32,
+    start_deg: f32,
+    end_deg: f32,
+    steps: usize,
+) -> Vec<Pos2> {
     let mut pts = Vec::with_capacity(steps + 2);
     pts.push(center);
     for i in 0..=steps {
@@ -204,7 +219,11 @@ pub fn number_line_geometry(rect: Rect, step: f32) -> (Pos2, Pos2, i32) {
             Pos2::new(rect.center().x, rect.bottom()),
         )
     };
-    let span = if horizontal { rect.width() } else { rect.height() };
+    let span = if horizontal {
+        rect.width()
+    } else {
+        rect.height()
+    };
     let major_count = (span / step.max(1.0)).floor() as i32;
     (a, b, major_count)
 }
@@ -373,13 +392,7 @@ pub fn arrow_head(from: Pos2, to: Pos2, width: f32) -> [Pos2; 3] {
 ///
 /// - `double = false`：仅右端 `→`。
 /// - `double = true`：两端各一个箭头 `⇌`。
-fn draw_arrow(
-    painter: &Painter,
-    rect: Rect,
-    stroke: Stroke,
-    fill: Option<Color32>,
-    double: bool,
-) {
+fn draw_arrow(painter: &Painter, rect: Rect, stroke: Stroke, fill: Option<Color32>, double: bool) {
     let start = Pos2::new(rect.left(), rect.center().y);
     let end = Pos2::new(rect.right(), rect.center().y);
     painter.line_segment([start, end], stroke);
@@ -472,7 +485,10 @@ mod tests {
         let rect = Rect::from_min_size(Pos2::new(100.0, 100.0), Vec2::new(200.0, 50.0));
         let (a, b, major_count) = number_line_geometry(rect, 40.0);
         assert_eq!(major_count, 5, "200/40=5 个主刻度");
-        assert!((a.x - 100.0).abs() < 1e-4 && (b.x - 300.0).abs() < 1e-4, "水平主线左→右");
+        assert!(
+            (a.x - 100.0).abs() < 1e-4 && (b.x - 300.0).abs() < 1e-4,
+            "水平主线左→右"
+        );
         // 不足一步截断：step=30 → 200/30=6.67 → 6 个主刻度。
         let (_, _, c2) = number_line_geometry(rect, 30.0);
         assert_eq!(c2, 6, "200/30 下取整=6");
@@ -525,7 +541,10 @@ mod tests {
         assert_eq!(pts.len(), 6);
         for p in &pts {
             let d = p.distance(Pos2::ZERO);
-            assert!((d - r).abs() < 1e-3, "顶点 {p:?} 到中心距离应等于半径 {r}，实际 {d}");
+            assert!(
+                (d - r).abs() < 1e-3,
+                "顶点 {p:?} 到中心距离应等于半径 {r}，实际 {d}"
+            );
         }
     }
 }

@@ -233,12 +233,9 @@ impl fmt::Display for EmgiError {
                 expected,
                 got,
             } => write!(f, "数据类型不符: {name} ({id}) 期望 {expected} 实际 {got}"),
-            EmgiError::ExceedsLength {
-                id,
-                name,
-                max,
-                got,
-            } => write!(f, "超出最大长度: {name} ({id}) 上限 {max} 实际 {got}"),
+            EmgiError::ExceedsLength { id, name, max, got } => {
+                write!(f, "超出最大长度: {name} ({id}) 上限 {max} 实际 {got}")
+            }
             EmgiError::InvalidCode {
                 id,
                 name,
@@ -296,7 +293,10 @@ pub fn is_valid_time6(s: &str) -> bool {
 pub fn now_emgi_datetime() -> (String, String) {
     use chrono::Utc;
     let now = Utc::now();
-    (now.format("%Y%m%d").to_string(), now.format("%H%M%S").to_string())
+    (
+        now.format("%Y%m%d").to_string(),
+        now.format("%H%M%S").to_string(),
+    )
 }
 
 /// 数据类 trait：任何符合 JY/T 1002-2012 的数据类都应实现。

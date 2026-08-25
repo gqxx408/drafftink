@@ -340,7 +340,9 @@ pub async fn workflow_get(
         .get_workflow(id)
         .ok_or_else(|| AppError::NotFound("审批实例不存在".to_string()))?;
     if instance.tenant_id != tenant {
-        return Err(AppError::Forbidden("无权访问其他租户的审批数据".to_string()));
+        return Err(AppError::Forbidden(
+            "无权访问其他租户的审批数据".to_string(),
+        ));
     }
     Ok(Json(instance))
 }
@@ -360,20 +362,24 @@ pub async fn workflow_approve(
         .get_workflow(req.workflow_id)
         .ok_or_else(|| AppError::NotFound("审批实例不存在".to_string()))?;
     if instance.tenant_id != tenant {
-        return Err(AppError::Forbidden("无权操作其他租户的审批数据".to_string()));
+        return Err(AppError::Forbidden(
+            "无权操作其他租户的审批数据".to_string(),
+        ));
     }
 
     // RBAC：当前角色必须属于当前节点
     if !WorkflowEngine::can_approve(&instance, role) {
-        return Err(AppError::Forbidden(
-            "当前角色无权审批该节点".to_string(),
-        ));
+        return Err(AppError::Forbidden("当前角色无权审批该节点".to_string()));
     }
 
     let decision = match req.decision.as_str() {
         "approve" => ApprovalDecision::Approve,
         "reject" => ApprovalDecision::Reject,
-        _ => return Err(AppError::BadRequest("decision 必须为 approve/reject".to_string())),
+        _ => {
+            return Err(AppError::BadRequest(
+                "decision 必须为 approve/reject".to_string(),
+            ))
+        }
     };
 
     WorkflowEngine::apply_decision(
@@ -525,9 +531,8 @@ pub async fn messages(
         .list_messages(tenant, user_id)
         .into_iter()
         .map(|m| {
-            let encrypted_body =
-                encrypt_json(&auth.0.device_fp, &state.config.jwt.secret, &m.body)
-                    .unwrap_or_default();
+            let encrypted_body = encrypt_json(&auth.0.device_fp, &state.config.jwt.secret, &m.body)
+                .unwrap_or_default();
             MessageView {
                 id: m.id,
                 title: m.title,
@@ -561,13 +566,7 @@ fn parse_dt(s: &str) -> Result<chrono::DateTime<chrono::Utc>, AppError> {
         .map_err(|_| AppError::BadRequest(format!("时间格式应为 RFC3339: {s}")))
 }
 
-fn push_broadcast(
-    store: &WorkflowStore,
-    tenant: Uuid,
-    title: &str,
-    body: &str,
-    channel: &str,
-) {
+fn push_broadcast(store: &WorkflowStore, tenant: Uuid, title: &str, body: &str, channel: &str) {
     store.push_message(Message {
         id: Uuid::new_v4(),
         tenant_id: tenant,

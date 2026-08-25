@@ -9,8 +9,8 @@ use mimalloc::MiMalloc;
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
 
-mod annotation;
 mod animation_player;
+mod annotation;
 mod app;
 mod interaction;
 mod io;

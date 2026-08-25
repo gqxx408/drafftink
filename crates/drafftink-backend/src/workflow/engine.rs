@@ -211,10 +211,11 @@ impl WorkflowEngine {
             ApprovalMode::OrSign => node_approvals
                 .iter()
                 .any(|a| a.decision == ApprovalDecision::Approve),
-            ApprovalMode::CounterSign => node
-                .roles
-                .iter()
-                .all(|r| node_approvals.iter().any(|a| a.approver_role == *r && a.decision == ApprovalDecision::Approve)),
+            ApprovalMode::CounterSign => node.roles.iter().all(|r| {
+                node_approvals
+                    .iter()
+                    .any(|a| a.approver_role == *r && a.decision == ApprovalDecision::Approve)
+            }),
         };
 
         if satisfied {

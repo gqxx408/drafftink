@@ -15,9 +15,9 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use drafftink_core::{
-    DEGREE_CODE, EDUCATION_LEVEL_CODE, ETHNIC_CODE, GenderCode, INDUSTRY_CLASS, INDUSTRY_DIVISION,
-    INDUSTRY_SECTION, LANGUAGE_CODE, MARITAL_STATUS_CODE, PROVINCE_CODE, SCHOOL_TYPE_CODE,
-    TECH_POSITION_CODE, URBAN_RURAL_CODE, YesNoCode,
+    GenderCode, YesNoCode, DEGREE_CODE, EDUCATION_LEVEL_CODE, ETHNIC_CODE, INDUSTRY_CLASS,
+    INDUSTRY_DIVISION, INDUSTRY_SECTION, LANGUAGE_CODE, MARITAL_STATUS_CODE, PROVINCE_CODE,
+    SCHOOL_TYPE_CODE, TECH_POSITION_CODE, URBAN_RURAL_CODE,
 };
 
 /// 数据来源状态。
@@ -229,10 +229,26 @@ fn build_sections() -> Vec<Section> {
             status: Status::DefinedInCode,
             note: "代码内 repr(u8) 枚举定义",
             rows: vec![
-                [GenderCode::Unknown.code().to_string(), GenderCode::Unknown.name().to_string(), "0".into()],
-                [GenderCode::Male.code().to_string(), GenderCode::Male.name().to_string(), "1".into()],
-                [GenderCode::Female.code().to_string(), GenderCode::Female.name().to_string(), "2".into()],
-                [GenderCode::Unspecified.code().to_string(), GenderCode::Unspecified.name().to_string(), "9".into()],
+                [
+                    GenderCode::Unknown.code().to_string(),
+                    GenderCode::Unknown.name().to_string(),
+                    "0".into(),
+                ],
+                [
+                    GenderCode::Male.code().to_string(),
+                    GenderCode::Male.name().to_string(),
+                    "1".into(),
+                ],
+                [
+                    GenderCode::Female.code().to_string(),
+                    GenderCode::Female.name().to_string(),
+                    "2".into(),
+                ],
+                [
+                    GenderCode::Unspecified.code().to_string(),
+                    GenderCode::Unspecified.name().to_string(),
+                    "9".into(),
+                ],
             ],
         },
         Section {
@@ -241,8 +257,16 @@ fn build_sections() -> Vec<Section> {
             status: Status::DefinedInCode,
             note: "0=否, 1=是；系统内部约定，非某特定 GB/T 标准",
             rows: vec![
-                [YesNoCode::No.code().to_string(), YesNoCode::No.name().to_string(), "0".into()],
-                [YesNoCode::Yes.code().to_string(), YesNoCode::Yes.name().to_string(), "1".into()],
+                [
+                    YesNoCode::No.code().to_string(),
+                    YesNoCode::No.name().to_string(),
+                    "0".into(),
+                ],
+                [
+                    YesNoCode::Yes.code().to_string(),
+                    YesNoCode::Yes.name().to_string(),
+                    "1".into(),
+                ],
             ],
         },
     ]

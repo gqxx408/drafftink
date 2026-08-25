@@ -47,7 +47,10 @@ pub fn deserialize_draft(s: &str) -> Option<Vec<u8>> {
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_impl {
-    use super::{deserialize_draft, draft_key, pending_key, serialize_draft, DRAFT_KEY_PREFIX, PENDING_KEY_PREFIX};
+    use super::{
+        deserialize_draft, draft_key, pending_key, serialize_draft, DRAFT_KEY_PREFIX,
+        PENDING_KEY_PREFIX,
+    };
     use uuid::Uuid;
 
     /// Save draft answer data to LocalStorage.
@@ -213,7 +216,10 @@ mod tests {
     fn test_pending_key_format() {
         let hw_id = Uuid::parse_str("550e8400-e29b-41d4-a716-446655440000").unwrap();
         let key = pending_key(hw_id);
-        assert_eq!(key, "drafftink:pending:550e8400-e29b-41d4-a716-446655440000");
+        assert_eq!(
+            key,
+            "drafftink:pending:550e8400-e29b-41d4-a716-446655440000"
+        );
     }
 
     #[test]

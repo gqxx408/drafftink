@@ -658,10 +658,7 @@ impl Element for ElementData {
 impl ElementData {
     /// Create a new `GeometryElement` with the given base and definitions.
     pub fn geometry(base: BaseElement, definitions: serde_json::Value) -> Self {
-        ElementData::Geometry(GeometryElement {
-            base,
-            definitions,
-        })
+        ElementData::Geometry(GeometryElement { base, definitions })
     }
 
     /// Create a new `FormulaElement` with the given expression.

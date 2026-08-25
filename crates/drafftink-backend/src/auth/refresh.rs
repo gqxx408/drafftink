@@ -119,7 +119,9 @@ fn sweep_expired(db: &sled::Db) -> usize {
 impl RefreshTokenStore for SledRefreshTokenStore {
     fn store(&self, jti: &str, expires_at: i64) {
         // 记录刷新令牌的存活信息（独立于吊销命名空间），供登出 / 轮换时吊销。
-        let _ = self.db.insert(tok_key(jti), expires_at.to_be_bytes().to_vec());
+        let _ = self
+            .db
+            .insert(tok_key(jti), expires_at.to_be_bytes().to_vec());
     }
     fn is_revoked(&self, jti: &str) -> bool {
         // 仅检查吊销命名空间，避免与 store 写入冲突
@@ -164,7 +166,8 @@ mod tests {
 
     #[test]
     fn test_sled_store_revoke() {
-        let dir = std::env::temp_dir().join(format!("drafftink_refresh_test_{}", uuid::Uuid::new_v4()));
+        let dir =
+            std::env::temp_dir().join(format!("drafftink_refresh_test_{}", uuid::Uuid::new_v4()));
         let s = SledRefreshTokenStore::open(&dir).unwrap();
         s.store("j2", 0);
         assert!(!s.is_revoked("j2"));
@@ -175,7 +178,8 @@ mod tests {
 
     #[test]
     fn test_sweep_removes_expired_tokens() {
-        let dir = std::env::temp_dir().join(format!("drafftink_refresh_sweep_{}", uuid::Uuid::new_v4()));
+        let dir =
+            std::env::temp_dir().join(format!("drafftink_refresh_sweep_{}", uuid::Uuid::new_v4()));
         let s = SledRefreshTokenStore::open(&dir).unwrap();
 
         // 过期的 tok: 记录应被清理
@@ -188,8 +192,7 @@ mod tests {
         );
 
         // revoke 后 rev: 记录携带过期时间，过期后同样应被清理
-        s.db
-            .insert(rev_key("rev_jti"), past.to_be_bytes().to_vec())
+        s.db.insert(rev_key("rev_jti"), past.to_be_bytes().to_vec())
             .unwrap();
         assert_eq!(s.sweep_once(), 1, "过期的 rev: 记录应被清理");
         assert!(

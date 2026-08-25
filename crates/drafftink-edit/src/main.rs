@@ -1,7 +1,7 @@
 #![windows_subsystem = "windows"]
 
-mod app;
 mod annotation;
+mod app;
 mod interaction;
 mod multi_page;
 mod render;
@@ -17,8 +17,14 @@ fn load_cjk_font() -> Option<(Vec<u8>, &'static str)> {
         ("C:\\Windows\\Fonts\\simsun.ttc", "SimSun"),
         ("C:\\Windows\\Fonts\\msyhbd.ttc", "Microsoft YaHei Bold"),
         // Linux
-        ("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", "Noto CJK"),
-        ("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc", "WenQuanYi"),
+        (
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "Noto CJK",
+        ),
+        (
+            "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+            "WenQuanYi",
+        ),
         ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "DejaVu"),
         // macOS
         ("/System/Library/Fonts/PingFang.ttc", "PingFang"),
@@ -47,11 +53,13 @@ fn install_cjk_fonts(ctx: &egui::Context) {
         egui::FontData::from_owned(font_data).into(),
     );
     // Make it a fallback for the default proportional family
-    fonts.families
+    fonts
+        .families
         .entry(egui::FontFamily::Proportional)
         .or_default()
         .push("cjk".to_owned());
-    fonts.families
+    fonts
+        .families
         .entry(egui::FontFamily::Monospace)
         .or_default()
         .push("cjk".to_owned());

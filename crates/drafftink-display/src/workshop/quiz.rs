@@ -229,9 +229,12 @@ pub fn draw_question(ui: &mut Ui, question: &QuestionData, state: &mut QuizState
                 .strong(),
         );
         ui.label(
-            RichText::new(format!("难度：{}", "⭐".repeat(question.difficulty as usize)))
-                .color(Color32::from_rgb(255, 180, 0))
-                .small(),
+            RichText::new(format!(
+                "难度：{}",
+                "⭐".repeat(question.difficulty as usize)
+            ))
+            .color(Color32::from_rgb(255, 180, 0))
+            .small(),
         );
     });
 
@@ -420,7 +423,11 @@ pub fn draw_question(ui: &mut Ui, question: &QuestionData, state: &mut QuizState
     if !question.knowledge_points.is_empty() {
         ui.add_space(8.0);
         ui.horizontal_wrapped(|ui| {
-            ui.label(RichText::new("知识点：").small().color(Color32::from_rgb(120, 120, 120)));
+            ui.label(
+                RichText::new("知识点：")
+                    .small()
+                    .color(Color32::from_rgb(120, 120, 120)),
+            );
             for kp in &question.knowledge_points {
                 ui.label(
                     RichText::new(format!("#{}", kp))

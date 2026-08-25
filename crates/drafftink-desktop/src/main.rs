@@ -19,15 +19,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod app;
-mod stroke_conv;
-mod video_player;
-mod interactive_rect;
-mod shape_renderer;
-mod save;
 mod audio_player;
-mod undo;
-mod tools;
 mod function_parser;
+mod interactive_rect;
+mod save;
+mod shape_renderer;
+mod stroke_conv;
+mod tools;
+mod undo;
+mod video_player;
 
 use app::IntegratedApp;
 

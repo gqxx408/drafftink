@@ -14,8 +14,7 @@ use sysinfo::{Pid, System};
 use uuid::Uuid;
 
 use crate::physics::elements::{
-    BatteryData, BulbData, LensData, MirrorData, PhysicsElement, ResistorData,
-    draw_element,
+    draw_element, BatteryData, BulbData, LensData, MirrorData, PhysicsElement, ResistorData,
 };
 
 /// 物理编辑器状态。
@@ -89,19 +88,22 @@ impl PhysicsEditor {
                 ui.vertical(|ui| {
                     ui.add_space(4.0);
                     if ui.add(tool_button("🔌  电阻")).clicked() {
-                        add_command = Some(PhysicsElement::Resistor(ResistorData::new(
-                            Pos2::new(0.0, 0.0),
-                        )));
+                        add_command = Some(PhysicsElement::Resistor(ResistorData::new(Pos2::new(
+                            0.0, 0.0,
+                        ))));
                     }
                     if ui.add(tool_button("💡  灯泡")).clicked() {
-                        add_command = Some(PhysicsElement::Bulb(BulbData::new(Pos2::new(0.0, 0.0))));
+                        add_command =
+                            Some(PhysicsElement::Bulb(BulbData::new(Pos2::new(0.0, 0.0))));
                     }
                     if ui.add(tool_button("🔋  电源")).clicked() {
-                        add_command =
-                            Some(PhysicsElement::Battery(BatteryData::new(Pos2::new(0.0, 0.0))));
+                        add_command = Some(PhysicsElement::Battery(BatteryData::new(Pos2::new(
+                            0.0, 0.0,
+                        ))));
                     }
                     if ui.add(tool_button("🔍  透镜")).clicked() {
-                        add_command = Some(PhysicsElement::Lens(LensData::new(Pos2::new(0.0, 0.0))));
+                        add_command =
+                            Some(PhysicsElement::Lens(LensData::new(Pos2::new(0.0, 0.0))));
                     }
                     if ui.add(tool_button("🪞  平面镜")).clicked() {
                         add_command =
@@ -211,7 +213,9 @@ impl PhysicsEditor {
             Sense::click_and_drag(),
         );
 
-        let mouse_pos = response.hover_pos().or_else(|| response.interact_pointer_pos());
+        let mouse_pos = response
+            .hover_pos()
+            .or_else(|| response.interact_pointer_pos());
 
         // ── 处理点击 ──
         if response.clicked() {
@@ -285,9 +289,8 @@ impl PhysicsEditor {
         }
 
         // ── 处理键盘删除 ──
-        let delete_pressed = ui.input(|i| {
-            i.key_pressed(egui::Key::Delete) || i.key_pressed(egui::Key::Backspace)
-        });
+        let delete_pressed =
+            ui.input(|i| i.key_pressed(egui::Key::Delete) || i.key_pressed(egui::Key::Backspace));
         if delete_pressed {
             self.elements.retain(|e| !e.base().selected);
         }
@@ -322,11 +325,7 @@ impl PhysicsEditor {
         let text_color = Color32::from_rgb(80, 80, 80);
         let bg_color = Color32::from_rgba_unmultiplied(255, 255, 255, 220);
 
-        let galley = painter.layout_no_wrap(
-            label,
-            egui::FontId::monospace(12.0),
-            text_color,
-        );
+        let galley = painter.layout_no_wrap(label, egui::FontId::monospace(12.0), text_color);
 
         let padding = Vec2::new(10.0, 6.0);
         let label_rect = Rect::from_min_size(

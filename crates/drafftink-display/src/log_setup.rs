@@ -8,9 +8,7 @@ use simplelog::{CombinedLogger, ConfigBuilder, WriteLogger};
 
 /// Initialise file-based logging: `./logs/display_YYYY-MM-DD.log`.
 pub fn init_logger() -> PathBuf {
-    let log_dir = std::env::current_dir()
-        .unwrap_or_default()
-        .join("logs");
+    let log_dir = std::env::current_dir().unwrap_or_default().join("logs");
     let _ = fs::create_dir_all(&log_dir);
 
     let today = chrono::Utc::now().format("%Y-%m-%d");
@@ -24,22 +22,17 @@ pub fn init_logger() -> PathBuf {
         Ok(f) => f,
         Err(_) => {
             // Fallback: terminal-only via env_logger
-            let _ = env_logger::Builder::from_env(
-                env_logger::Env::default().default_filter_or("info"),
-            )
-            .try_init();
+            let _ =
+                env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
+                    .try_init();
             return log_path;
         }
     };
 
-    let config = ConfigBuilder::new()
-        .set_time_format_rfc3339()
-        .build();
+    let config = ConfigBuilder::new().set_time_format_rfc3339().build();
 
     // File logger — all log::info!/warn!/error! go here
-    let _ = CombinedLogger::init(vec![
-        WriteLogger::new(LevelFilter::Info, config, file),
-    ]);
+    let _ = CombinedLogger::init(vec![WriteLogger::new(LevelFilter::Info, config, file)]);
 
     log::info!("Log started → {:?}", log_path);
     log_path

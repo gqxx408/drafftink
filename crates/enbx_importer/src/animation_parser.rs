@@ -6,8 +6,8 @@
 //! All missing / malformed fields default silently.
 
 use drafftink_core::animation::{
-    AnimationCategory, AnimationTrigger, Direction, Easing, EffectType,
-    ElementAnimation, SlideAnimationSequence, SLIDE_BACKGROUND_ID,
+    AnimationCategory, AnimationTrigger, Direction, Easing, EffectType, ElementAnimation,
+    SlideAnimationSequence, SLIDE_BACKGROUND_ID,
 };
 use std::collections::HashMap;
 use std::time::Duration;
@@ -29,7 +29,10 @@ pub fn parse_slide_animations(
     slide_xml: &str,
     package_root: &std::path::Path,
     page_size: [f32; 2],
-) -> (HashMap<Uuid, ElementAnimation>, Option<SlideAnimationSequence>) {
+) -> (
+    HashMap<Uuid, ElementAnimation>,
+    Option<SlideAnimationSequence>,
+) {
     let anim_map = parse_animations(slide_xml, package_root, page_size);
     let sequence = parse_animation_orders(slide_xml, &anim_map);
     (anim_map, sequence)
@@ -111,13 +114,11 @@ fn parse_one_animation(
     };
 
     // --- Trigger source (for Click) ---------------------------------------
-    let trigger_source_id: Option<Uuid> = xml_str(xml, "TriggerSource")
-        .and_then(|s| s.parse().ok());
+    let trigger_source_id: Option<Uuid> =
+        xml_str(xml, "TriggerSource").and_then(|s| s.parse().ok());
 
     // --- Effect type ------------------------------------------------------
-    let effect = parse_effect_type(
-        xml_str(xml, "EffectType").as_deref().unwrap_or("FadeIn"),
-    );
+    let effect = parse_effect_type(xml_str(xml, "EffectType").as_deref().unwrap_or("FadeIn"));
 
     // --- Easing -----------------------------------------------------------
     let easing = match xml_str(xml, "Easing").as_deref().unwrap_or("Linear") {
@@ -172,8 +173,7 @@ fn parse_one_animation(
     // --- Distance ---------------------------------------------------------
     let distance = xml_val(xml, "Distance").or_else(|| {
         // Percentage form: <DistancePercent>25</DistancePercent>
-        xml_val(xml, "DistancePercent")
-            .map(|pct| page_size[0].max(page_size[1]) * pct / 100.0)
+        xml_val(xml, "DistancePercent").map(|pct| page_size[0].max(page_size[1]) * pct / 100.0)
     });
 
     Some(ElementAnimation {
@@ -298,9 +298,7 @@ fn parse_animation_orders(
                 AnimationTrigger::Before => before_queue.push(id),
                 AnimationTrigger::After => after_queue.push(id),
                 AnimationTrigger::Click => {
-                    let source = anim
-                        .trigger_source_id
-                        .unwrap_or(SLIDE_BACKGROUND_ID);
+                    let source = anim.trigger_source_id.unwrap_or(SLIDE_BACKGROUND_ID);
                     click_map.entry(source).or_default().push(id);
                 }
             }
@@ -333,9 +331,15 @@ fn find_close_depth(xml: &str, tag: &str) -> usize {
     while pos < bytes.len() {
         if bytes[pos..].starts_with(open_pat.as_bytes()) {
             let after = pos + open_pat.len();
-            if after < bytes.len() && matches!(bytes[after], b'>' | b' ' | b'\n' | b'\r' | b'\t' | b'/') {
+            if after < bytes.len()
+                && matches!(bytes[after], b'>' | b' ' | b'\n' | b'\r' | b'\t' | b'/')
+            {
                 depth += 1;
-                if after < bytes.len() && bytes[after] == b'/' && after + 1 < bytes.len() && bytes[after + 1] == b'>' {
+                if after < bytes.len()
+                    && bytes[after] == b'/'
+                    && after + 1 < bytes.len()
+                    && bytes[after + 1] == b'>'
+                {
                     depth -= 1;
                     if depth == 0 {
                         return pos + open_pat.len() + 2;

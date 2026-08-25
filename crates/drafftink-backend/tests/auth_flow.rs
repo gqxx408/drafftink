@@ -8,11 +8,11 @@
 use std::collections::{BTreeMap, HashMap};
 use std::sync::{Arc, Mutex};
 
-use axum::body::{Body, to_bytes};
-use axum::http::{Request, StatusCode, header};
+use axum::body::{to_bytes, Body};
+use axum::http::{header, Request, StatusCode};
 use drafftink_backend::api::router;
-use drafftink_backend::auth::password::hash_password;
 use drafftink_backend::auth::mobile::MobileAuth;
+use drafftink_backend::auth::password::hash_password;
 use drafftink_backend::auth::ratelimit::LoginRateLimiter;
 use drafftink_backend::auth::refresh::MemoryRefreshTokenStore;
 use drafftink_backend::config::BackendConfig;
@@ -28,10 +28,8 @@ use uuid::Uuid;
 
 fn make_state() -> AppState {
     let db: Arc<dyn Database> = Arc::new(
-        SledDb::open(
-            &std::env::temp_dir().join(format!("drafftink_af_test_{}", Uuid::new_v4())),
-        )
-        .unwrap(),
+        SledDb::open(&std::env::temp_dir().join(format!("drafftink_af_test_{}", Uuid::new_v4())))
+            .unwrap(),
     );
     let storage: Arc<dyn drafftink_backend::storage::Storage> = Arc::new(
         LocalStorage::new(
@@ -44,7 +42,10 @@ fn make_state() -> AppState {
         storage,
         config: BackendConfig::default(),
         sessions: Arc::new(Mutex::new(HashMap::new())),
-        login_ratelimit: Arc::new(LoginRateLimiter::new(10, std::time::Duration::from_secs(60))),
+        login_ratelimit: Arc::new(LoginRateLimiter::new(
+            10,
+            std::time::Duration::from_secs(60),
+        )),
         refresh_store: Arc::new(MemoryRefreshTokenStore::new()),
         workflow: WorkflowStore::new(),
         mobile_auth: MobileAuth::new(),
@@ -69,7 +70,8 @@ fn seed_user(state: &AppState, username: &str, role: Role, tenant: Uuid, pwd: &s
 }
 
 async fn login(state: &AppState, username: &str, pwd: &str) -> (StatusCode, Option<String>) {
-    let body = serde_json::json!({ "username": username, "password": pwd, "device_fp": "fp" }).to_string();
+    let body =
+        serde_json::json!({ "username": username, "password": pwd, "device_fp": "fp" }).to_string();
     let req = Request::builder()
         .method("POST")
         .uri("/api/auth/login")
@@ -84,7 +86,9 @@ async fn login(state: &AppState, username: &str, pwd: &str) -> (StatusCode, Opti
         struct LR {
             access_token: String,
         }
-        let token = serde_json::from_slice::<LR>(&bytes).ok().map(|l| l.access_token);
+        let token = serde_json::from_slice::<LR>(&bytes)
+            .ok()
+            .map(|l| l.access_token);
         (status, token)
     } else {
         (status, None)
@@ -182,16 +186,22 @@ async fn test_tenant_isolation() {
 #[tokio::test]
 async fn test_forged_token_rejected() {
     // 用错误密钥伪造一个篡改了 tenant_id 的令牌，应被签名校验拒绝
-    use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
     use chrono::Utc;
+    use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 
     let mut claims = BTreeMap::new();
     claims.insert("sub".to_string(), "fake".to_string());
     claims.insert("role".to_string(), "admin".to_string());
-    claims.insert("tenant_id".to_string(), "11111111-1111-1111-1111-111111111111".to_string());
+    claims.insert(
+        "tenant_id".to_string(),
+        "11111111-1111-1111-1111-111111111111".to_string(),
+    );
     claims.insert("typ".to_string(), "access".to_string());
     claims.insert("iat".to_string(), Utc::now().timestamp().to_string());
-    claims.insert("exp".to_string(), (Utc::now().timestamp() + 3600).to_string());
+    claims.insert(
+        "exp".to_string(),
+        (Utc::now().timestamp() + 3600).to_string(),
+    );
     claims.insert("jti".to_string(), Uuid::new_v4().to_string());
     let bad = encode(
         &Header::new(Algorithm::HS256),

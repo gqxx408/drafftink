@@ -14,9 +14,9 @@ use egui::{Color32, Pos2, Rect, Stroke, Vec2};
 use uuid::Uuid;
 
 use crate::workshop::cards::{CardElement, Subject, SubjectCard};
-use crate::workshop::experiment::SimpleCircuitState;
-use crate::workshop::quiz::{QuizState, draw_question, sample_quiz_card};
 use crate::workshop::experiment::sample_experiment_card;
+use crate::workshop::experiment::SimpleCircuitState;
+use crate::workshop::quiz::{draw_question, sample_quiz_card, QuizState};
 
 /// 工坊主状态。
 pub struct Workshop {
@@ -179,10 +179,7 @@ impl Workshop {
 
                 // "全部" 选项
                 let all_selected = self.current_subject.is_none();
-                if ui
-                    .selectable_label(all_selected, "📦  全部")
-                    .clicked()
-                {
+                if ui.selectable_label(all_selected, "📦  全部").clicked() {
                     self.current_subject = None;
                 }
 
@@ -190,11 +187,7 @@ impl Workshop {
 
                 // 各学科
                 for subject in Subject::all() {
-                    let count = self
-                        .cards
-                        .iter()
-                        .filter(|c| c.subject == *subject)
-                        .count();
+                    let count = self.cards.iter().filter(|c| c.subject == *subject).count();
                     if count == 0 {
                         continue; // 没有卡片的学科不显示
                     }
@@ -292,10 +285,8 @@ impl Workshop {
 
     /// 绘制一张卡片。返回 `true` 表示卡片被点击。
     fn draw_card(&self, ui: &mut egui::Ui, card: &CardElement, width: f32, height: f32) -> bool {
-        let (rect, response) = ui.allocate_exact_size(
-            Vec2::new(width, height),
-            egui::Sense::click(),
-        );
+        let (rect, response) =
+            ui.allocate_exact_size(Vec2::new(width, height), egui::Sense::click());
 
         // 卡片背景和边框
         let painter = ui.painter_at(rect);
@@ -329,10 +320,7 @@ impl Workshop {
 
         // 卡片顶部色带（按学科着色）
         let accent_color = self.subject_color(card.subject);
-        let _accent_rect = Rect::from_min_max(
-            rect.min,
-            Pos2::new(rect.max.x, rect.min.y + 6.0),
-        );
+        let _accent_rect = Rect::from_min_max(rect.min, Pos2::new(rect.max.x, rect.min.y + 6.0));
         // 顶部圆角需要特殊处理，简单起见用矩形
         painter.rect_filled(
             Rect::from_min_max(
@@ -446,23 +434,21 @@ impl Workshop {
             .default_width(560.0)
             .default_height(500.0)
             .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
-            .show(ctx, |ui| {
-                match &card.data {
-                    SubjectCard::Quiz(quiz_data) => {
-                        self.show_quiz_detail(ui, card_id, quiz_data);
-                    }
-                    SubjectCard::Experiment(exp_data) => {
-                        self.show_experiment_detail(ui, card_id, exp_data);
-                    }
-                    SubjectCard::Homework(hw_data) => {
-                        self.show_homework_detail(ui, hw_data);
-                    }
-                    SubjectCard::Video(video_data) => {
-                        self.show_video_detail(ui, video_data);
-                    }
-                    SubjectCard::DrawingBoard(board_data) => {
-                        self.show_drawing_detail(ui, board_data);
-                    }
+            .show(ctx, |ui| match &card.data {
+                SubjectCard::Quiz(quiz_data) => {
+                    self.show_quiz_detail(ui, card_id, quiz_data);
+                }
+                SubjectCard::Experiment(exp_data) => {
+                    self.show_experiment_detail(ui, card_id, exp_data);
+                }
+                SubjectCard::Homework(hw_data) => {
+                    self.show_homework_detail(ui, hw_data);
+                }
+                SubjectCard::Video(video_data) => {
+                    self.show_video_detail(ui, video_data);
+                }
+                SubjectCard::DrawingBoard(board_data) => {
+                    self.show_drawing_detail(ui, board_data);
                 }
             });
 
@@ -486,16 +472,10 @@ impl Workshop {
         let progress = quiz_data.progress();
         let bar_width = ui.available_width();
         let bar_rect = Rect::from_min_size(ui.cursor().min, Vec2::new(bar_width, 8.0));
+        ui.painter()
+            .rect_filled(bar_rect, 4.0, Color32::from_rgb(230, 230, 230));
         ui.painter().rect_filled(
-            bar_rect,
-            4.0,
-            Color32::from_rgb(230, 230, 230),
-        );
-        ui.painter().rect_filled(
-            Rect::from_min_size(
-                bar_rect.min,
-                Vec2::new(bar_width * progress, 8.0),
-            ),
+            Rect::from_min_size(bar_rect.min, Vec2::new(bar_width * progress, 8.0)),
             4.0,
             Color32::from_rgb(76, 175, 80),
         );
@@ -516,14 +496,11 @@ impl Workshop {
         ui.add_space(8.0);
 
         // 获取或创建答题状态
-        let state = self
-            .quiz_states
-            .entry(card_id)
-            .or_insert_with(|| {
-                let mut s = crate::workshop::quiz::QuizState::default();
-                s.current_index = 0;
-                s
-            });
+        let state = self.quiz_states.entry(card_id).or_insert_with(|| {
+            let mut s = crate::workshop::quiz::QuizState::default();
+            s.current_index = 0;
+            s
+        });
 
         // 确保 current_index 在范围内
         if state.current_index >= quiz_data.questions.len() {
@@ -591,7 +568,8 @@ impl Workshop {
         ui.add_space(8.0);
 
         ui.label(
-            egui::RichText::new(format!("难度：{}  |  步骤：{} 步",
+            egui::RichText::new(format!(
+                "难度：{}  |  步骤：{} 步",
                 "⭐".repeat(exp_data.difficulty as usize),
                 exp_data.step_count
             ))
@@ -646,15 +624,16 @@ impl Workshop {
 
                 ui.add_space(8.0);
                 ui.label(
-                    egui::RichText::new(
-                        "💡 提示：点击开关，观察灯泡的变化和电流的大小。"
-                    )
-                    .small()
-                    .color(Color32::from_rgb(120, 120, 120)),
+                    egui::RichText::new("💡 提示：点击开关，观察灯泡的变化和电流的大小。")
+                        .small()
+                        .color(Color32::from_rgb(120, 120, 120)),
                 );
             }
             _ => {
-                ui.label(egui::RichText::new("🔬 实验模拟器开发中...").color(Color32::from_rgb(150, 150, 150)));
+                ui.label(
+                    egui::RichText::new("🔬 实验模拟器开发中...")
+                        .color(Color32::from_rgb(150, 150, 150)),
+                );
                 ui.add_space(4.0);
                 ui.label(egui::RichText::new("更多实验类型即将上线！").small());
             }
@@ -662,11 +641,7 @@ impl Workshop {
     }
 
     /// 绘制简单的串联电路示意图（直接在 egui painter 上画）。
-    fn draw_simple_circuit(
-        painter: &egui::Painter,
-        rect: Rect,
-        state: &SimpleCircuitState,
-    ) {
+    fn draw_simple_circuit(painter: &egui::Painter, rect: Rect, state: &SimpleCircuitState) {
         let stroke_color = if state.bulb_lit {
             Color32::from_rgb(255, 160, 0)
         } else {
@@ -696,17 +671,26 @@ impl Workshop {
             stroke,
         );
         painter.line_segment(
-            [Pos2::new(bat_x - 6.0, top - 5.0), Pos2::new(bat_x - 6.0, top + 5.0)],
+            [
+                Pos2::new(bat_x - 6.0, top - 5.0),
+                Pos2::new(bat_x - 6.0, top + 5.0),
+            ],
             stroke,
         );
 
         // 2. 开关
         let sw_x = left + spacing * 2.0;
         if state.switch_closed {
-            painter.line_segment([Pos2::new(sw_x - 10.0, top), Pos2::new(sw_x + 10.0, top)], stroke);
+            painter.line_segment(
+                [Pos2::new(sw_x - 10.0, top), Pos2::new(sw_x + 10.0, top)],
+                stroke,
+            );
         } else {
             painter.line_segment(
-                [Pos2::new(sw_x - 10.0, top), Pos2::new(sw_x + 8.0, top - 12.0)],
+                [
+                    Pos2::new(sw_x - 10.0, top),
+                    Pos2::new(sw_x + 8.0, top - 12.0),
+                ],
                 stroke,
             );
         }
@@ -731,11 +715,17 @@ impl Workshop {
         painter.circle_stroke(bulb_center, bulb_r, stroke);
         // 灯丝十字
         painter.line_segment(
-            [Pos2::new(bulb_x - bulb_r * 0.5, top), Pos2::new(bulb_x + bulb_r * 0.5, top)],
+            [
+                Pos2::new(bulb_x - bulb_r * 0.5, top),
+                Pos2::new(bulb_x + bulb_r * 0.5, top),
+            ],
             stroke,
         );
         painter.line_segment(
-            [Pos2::new(bulb_x, top - bulb_r * 0.5), Pos2::new(bulb_x, top + bulb_r * 0.5)],
+            [
+                Pos2::new(bulb_x, top - bulb_r * 0.5),
+                Pos2::new(bulb_x, top + bulb_r * 0.5),
+            ],
             stroke,
         );
 
@@ -748,11 +738,17 @@ impl Workshop {
         for i in 0..teeth {
             let x_start = res_x - res_w / 2.0 + i as f32 * tooth_w;
             painter.line_segment(
-                [Pos2::new(x_start, top), Pos2::new(x_start + tooth_w * 0.5, top - res_h)],
+                [
+                    Pos2::new(x_start, top),
+                    Pos2::new(x_start + tooth_w * 0.5, top - res_h),
+                ],
                 stroke,
             );
             painter.line_segment(
-                [Pos2::new(x_start + tooth_w * 0.5, top - res_h), Pos2::new(x_start + tooth_w, top)],
+                [
+                    Pos2::new(x_start + tooth_w * 0.5, top - res_h),
+                    Pos2::new(x_start + tooth_w, top),
+                ],
                 stroke,
             );
         }
@@ -791,12 +787,18 @@ impl Workshop {
         if let Some(dur) = video_data.duration_sec {
             ui.label(format!("时长：{} 分 {} 秒", dur / 60, dur % 60));
         }
-        ui.label(format!("状态：{}", if video_data.downloaded { "已下载" } else { "未下载" }));
+        ui.label(format!(
+            "状态：{}",
+            if video_data.downloaded {
+                "已下载"
+            } else {
+                "未下载"
+            }
+        ));
 
         ui.add_space(16.0);
         ui.label(
-            egui::RichText::new("🎥 视频播放器开发中...")
-                .color(Color32::from_rgb(150, 150, 150)),
+            egui::RichText::new("🎥 视频播放器开发中...").color(Color32::from_rgb(150, 150, 150)),
         );
     }
 

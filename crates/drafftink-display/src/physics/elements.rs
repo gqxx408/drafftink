@@ -366,7 +366,10 @@ fn draw_battery(painter: &Painter, base: &ElementBase, stroke: Stroke) {
     let short_top = rect.center().y - short_len * 0.5;
     let short_bottom = rect.center().y + short_len * 0.5;
     painter.line_segment(
-        [Pos2::new(short_x, short_top), Pos2::new(short_x, short_bottom)],
+        [
+            Pos2::new(short_x, short_top),
+            Pos2::new(short_x, short_bottom),
+        ],
         stroke,
     );
 
@@ -469,7 +472,10 @@ fn draw_lens(painter: &Painter, base: &ElementBase, lens_type: &LensType, stroke
     let end_x = right + rect.width() * 0.3;
     while x < end_x {
         let seg_end = (x + dash_len).min(end_x);
-        painter.line_segment([Pos2::new(x, mid_y), Pos2::new(seg_end, mid_y)], axis_stroke);
+        painter.line_segment(
+            [Pos2::new(x, mid_y), Pos2::new(seg_end, mid_y)],
+            axis_stroke,
+        );
         x = seg_end + gap_len;
     }
 }
@@ -511,10 +517,7 @@ fn draw_mirror(painter: &Painter, base: &ElementBase, stroke: Stroke) {
 
     // 上下端的小横线（表示镜子的边界）
     let cap_w = 6.0;
-    painter.line_segment(
-        [Pos2::new(left, top), Pos2::new(left + cap_w, top)],
-        stroke,
-    );
+    painter.line_segment([Pos2::new(left, top), Pos2::new(left + cap_w, top)], stroke);
     painter.line_segment(
         [Pos2::new(left, bottom), Pos2::new(left + cap_w, bottom)],
         stroke,
@@ -527,13 +530,7 @@ fn draw_mirror(painter: &Painter, base: &ElementBase, stroke: Stroke) {
 ///
 /// egui 原生只提供了 CubicBezierShape，没有 QuadraticBezierShape，
 /// 我们把二次贝塞尔通过采样转成多段直线，效果一样顺滑。
-fn draw_quadratic_bezier(
-    painter: &Painter,
-    p0: Pos2,
-    p1: Pos2,
-    p2: Pos2,
-    stroke: Stroke,
-) {
+fn draw_quadratic_bezier(painter: &Painter, p0: Pos2, p1: Pos2, p2: Pos2, stroke: Stroke) {
     let segments = 20; // 采样数，越高越平滑
     let mut prev = p0;
 

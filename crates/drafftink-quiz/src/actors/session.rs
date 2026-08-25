@@ -135,10 +135,7 @@ impl QuizSession {
     }
 
     fn end_question(&mut self, question_id: &QuestionId) -> Result<QuestionStats, QuizError> {
-        let mut stats = self
-            .stats
-            .remove(question_id)
-            .unwrap_or_default();
+        let mut stats = self.stats.remove(question_id).unwrap_or_default();
         stats.set_unanswered(self.students.len() as u32);
         self.status = SessionStatus::Waiting;
         self.question_start_time = None;
@@ -309,10 +306,7 @@ impl QuizSession {
 /// // 将 session_tx 传给 IM Actor 和 USB Actor
 /// // 在 egui 线程中读取 ui_rx
 /// ```
-pub fn start_session_actor() -> (
-    mpsc::Sender<SessionCommand>,
-    mpsc::Receiver<UiEvent>,
-) {
+pub fn start_session_actor() -> (mpsc::Sender<SessionCommand>, mpsc::Receiver<UiEvent>) {
     let (cmd_tx, mut cmd_rx) = mpsc::channel::<SessionCommand>(1024);
     let (ui_tx, ui_rx) = mpsc::channel::<UiEvent>(256);
 
@@ -329,17 +323,17 @@ pub fn start_session_actor() -> (
                 } => {
                     session.student_join(student_id.clone(), student_name.clone(), device_id);
                     let _ = reply.send(Ok(()));
-                    let _ = ui_tx.send(UiEvent::StudentJoined {
-                        student_id,
-                        student_name,
-                    }).await;
+                    let _ = ui_tx
+                        .send(UiEvent::StudentJoined {
+                            student_id,
+                            student_name,
+                        })
+                        .await;
                 }
 
                 SessionCommand::StudentLeave { student_id } => {
                     session.student_leave(&student_id);
-                    let _ = ui_tx.send(UiEvent::StudentLeft {
-                        student_id,
-                    }).await;
+                    let _ = ui_tx.send(UiEvent::StudentLeft { student_id }).await;
                 }
 
                 SessionCommand::SubmitAnswer {
@@ -349,9 +343,8 @@ pub fn start_session_actor() -> (
                     timestamp_ns,
                     reply,
                 } => {
-                    let result = session.submit_answer(
-                        student_id, question_id, answer, timestamp_ns,
-                    );
+                    let result =
+                        session.submit_answer(student_id, question_id, answer, timestamp_ns);
                     let _ = reply.send(result.map_err(|e| e.to_string()));
                     // 推送统计更新
                     let snapshot = session.snapshot();
@@ -364,14 +357,10 @@ pub fn start_session_actor() -> (
                     timestamp_ns,
                     reply,
                 } => {
-                    let result = session.quick_answer_buzz(
-                        student_id, question_id, timestamp_ns,
-                    );
+                    let result = session.quick_answer_buzz(student_id, question_id, timestamp_ns);
                     // 抢答成功 → 推送 UI 事件
                     if let Ok(ref winner) = result {
-                        let _ = ui_tx.send(UiEvent::QuickAnswerWinner(
-                            winner.clone(),
-                        )).await;
+                        let _ = ui_tx.send(UiEvent::QuickAnswerWinner(winner.clone())).await;
                     }
                     // 通知客户端结果（无论成功失败）
                     let _ = reply.send(result.map_err(|e| e.to_string()));
@@ -404,9 +393,11 @@ pub fn start_session_actor() -> (
                         .collect();
                     let total = all_answers.len();
                     let _ = reply.send(Ok(all_answers));
-                    let _ = ui_tx.send(UiEvent::SessionEnded {
-                        total_answers: total,
-                    }).await;
+                    let _ = ui_tx
+                        .send(UiEvent::SessionEnded {
+                            total_answers: total,
+                        })
+                        .await;
                 }
 
                 SessionCommand::GetSnapshot { reply } => {
@@ -425,11 +416,16 @@ pub fn start_session_actor() -> (
                     };
                 }
 
-                SessionCommand::UsbEvent { device_id, connected } => {
-                    let _ = ui_tx.send(UiEvent::UsbDeviceChanged {
-                        device_id,
-                        connected,
-                    }).await;
+                SessionCommand::UsbEvent {
+                    device_id,
+                    connected,
+                } => {
+                    let _ = ui_tx
+                        .send(UiEvent::UsbDeviceChanged {
+                            device_id,
+                            connected,
+                        })
+                        .await;
                 }
 
                 SessionCommand::Heartbeat { student_id } => {

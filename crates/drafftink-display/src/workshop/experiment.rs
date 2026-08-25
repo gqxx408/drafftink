@@ -139,11 +139,7 @@ impl SimpleCircuitState {
 ///   └────────导线──────────┘
 /// ```
 #[allow(dead_code)]
-pub fn draw_circuit_diagram(
-    painter: &egui::Painter,
-    rect: Rect,
-    state: &SimpleCircuitState,
-) {
+pub fn draw_circuit_diagram(painter: &egui::Painter, rect: Rect, state: &SimpleCircuitState) {
     let stroke_color = if state.bulb_lit {
         Color32::from_rgb(255, 180, 0)
     } else {
@@ -183,7 +179,10 @@ pub fn draw_circuit_diagram(
     let bat_long = 14.0;
     let bat_short = 8.0;
     painter.line_segment(
-        [Pos2::new(bat_x, top - bat_long / 2.0), Pos2::new(bat_x, top + bat_long / 2.0)],
+        [
+            Pos2::new(bat_x, top - bat_long / 2.0),
+            Pos2::new(bat_x, top + bat_long / 2.0),
+        ],
         stroke,
     );
     painter.line_segment(
@@ -198,11 +197,17 @@ pub fn draw_circuit_diagram(
     let sw_x = comp_x[1];
     if state.switch_closed {
         // 闭合：直线
-        painter.line_segment([Pos2::new(sw_x - 10.0, top), Pos2::new(sw_x + 10.0, top)], stroke);
+        painter.line_segment(
+            [Pos2::new(sw_x - 10.0, top), Pos2::new(sw_x + 10.0, top)],
+            stroke,
+        );
     } else {
         // 断开：斜线
         painter.line_segment(
-            [Pos2::new(sw_x - 10.0, top), Pos2::new(sw_x + 8.0, top - 10.0)],
+            [
+                Pos2::new(sw_x - 10.0, top),
+                Pos2::new(sw_x + 8.0, top - 10.0),
+            ],
             stroke,
         );
     }
@@ -219,7 +224,11 @@ pub fn draw_circuit_diagram(
     if state.bulb_lit {
         // 发光效果：黄色填充 + 光晕
         painter.circle_filled(bulb_center, bulb_r, Color32::from_rgb(255, 230, 100));
-        painter.circle_stroke(bulb_center, bulb_r + 4.0, Stroke::new(2.0, Color32::from_rgba_unmultiplied(255, 200, 0, 120)));
+        painter.circle_stroke(
+            bulb_center,
+            bulb_r + 4.0,
+            Stroke::new(2.0, Color32::from_rgba_unmultiplied(255, 200, 0, 120)),
+        );
     } else {
         painter.circle_filled(bulb_center, bulb_r, Color32::WHITE);
     }
@@ -248,8 +257,20 @@ pub fn draw_circuit_diagram(
         let mid_y = top;
 
         // 画一个锯齿（从下到上到下）
-        painter.line_segment([Pos2::new(x_start, mid_y), Pos2::new(x_start + tooth_w * 0.5, y_top)], stroke);
-        painter.line_segment([Pos2::new(x_start + tooth_w * 0.5, y_top), Pos2::new(x_start + tooth_w, mid_y)], stroke);
+        painter.line_segment(
+            [
+                Pos2::new(x_start, mid_y),
+                Pos2::new(x_start + tooth_w * 0.5, y_top),
+            ],
+            stroke,
+        );
+        painter.line_segment(
+            [
+                Pos2::new(x_start + tooth_w * 0.5, y_top),
+                Pos2::new(x_start + tooth_w, mid_y),
+            ],
+            stroke,
+        );
     }
 
     // 返回一个空的 response（后续可以加点击交互）

@@ -5,9 +5,7 @@ use eframe::egui;
 fn main() -> eframe::Result<()> {
     eprintln!("[baseline] PID={}", std::process::id());
     eprintln!("[baseline] Starting minimal egui fullscreen window...");
-    eprintln!(
-        "[baseline] Open Task Manager → Details → baseline_mem.exe → Private Memory"
-    );
+    eprintln!("[baseline] Open Task Manager → Details → baseline_mem.exe → Private Memory");
     eprintln!("[baseline] Press ESC to exit.");
 
     let options = eframe::NativeOptions {

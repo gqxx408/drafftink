@@ -92,11 +92,17 @@ impl CacheHeader {
         r.read_exact(&mut buf)?;
         let magic = [buf[0], buf[1], buf[2], buf[3]];
         if &magic != CACHE_MAGIC {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "Not a CACH file"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Not a CACH file",
+            ));
         }
         let version = u16::from_le_bytes([buf[4], buf[5]]);
         if version != CACHE_VERSION {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Unsupported version {version}")));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Unsupported version {version}"),
+            ));
         }
         Ok(Self {
             crc32: u32::from_le_bytes([buf[6], buf[7], buf[8], buf[9]]),
@@ -160,7 +166,11 @@ pub fn load_cache_file(path: &Path) -> Option<Vec<InkStroke>> {
 
     match bincode::deserialize::<Vec<InkStroke>>(&payload) {
         Ok(strokes) => {
-            log::debug!("[cache] Loaded {} strokes from {}", strokes.len(), path.display());
+            log::debug!(
+                "[cache] Loaded {} strokes from {}",
+                strokes.len(),
+                path.display()
+            );
             Some(strokes)
         }
         Err(e) => {
@@ -176,8 +186,8 @@ pub fn load_cache_file(path: &Path) -> Option<Vec<InkStroke>> {
 /// 2. Flush OS buffers
 /// 3. Rename to `<path>`
 pub fn save_cache_file(path: &Path, strokes: &[InkStroke]) -> io::Result<()> {
-    let payload = bincode::serialize(strokes)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+    let payload =
+        bincode::serialize(strokes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
     let crc = crc32fast::hash(&payload);
 
     let tmp_path = path.with_extension(CACHE_TMP_EXT);
@@ -429,7 +439,10 @@ mod tests {
     fn dummy_strokes(n: usize) -> Vec<InkStroke> {
         (0..n)
             .map(|i| InkStroke {
-                segments: vec![vec![[i as f32, (i * 2) as f32], [(i + 1) as f32, (i * 3) as f32]]],
+                segments: vec![vec![
+                    [i as f32, (i * 2) as f32],
+                    [(i + 1) as f32, (i * 3) as f32],
+                ]],
                 color: [255, 0, 0, 255],
                 thickness: 3.0,
                 tool: 0,
@@ -516,7 +529,10 @@ mod tests {
 
         // scan_recoverable should clean the tmp and keep the main
         let recovered = scan_recoverable(&dir);
-        assert!(!tmp_path.exists(), "scan_recoverable should remove tmp files");
+        assert!(
+            !tmp_path.exists(),
+            "scan_recoverable should remove tmp files"
+        );
         // The valid main cache should be found
         let found = recovered.iter().any(|r| r.source_hash == "atomic");
         assert!(found, "Valid cache should be found after recovery scan");
@@ -539,12 +555,19 @@ mod tests {
         // Simulate program restart — scan_recoverable
         let recovered = scan_recoverable(&dir);
         let our_cache = recovered.iter().find(|r| r.source_hash == hash);
-        assert!(our_cache.is_some(), "scan_recoverable should find our cache");
+        assert!(
+            our_cache.is_some(),
+            "scan_recoverable should find our cache"
+        );
         assert_eq!(our_cache.unwrap().stroke_count, 7);
 
         // Now test InkCache::new_with_recovery
         let mut cache = InkCache::new_with_recovery(dir.clone(), hash);
-        assert_eq!(cache.stroke_count(), 7, "InkCache should load recovered strokes");
+        assert_eq!(
+            cache.stroke_count(),
+            7,
+            "InkCache should load recovered strokes"
+        );
 
         // Add more and flush
         cache.extend_strokes(dummy_strokes(3));

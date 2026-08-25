@@ -85,7 +85,8 @@ impl RectInteraction {
         let right = Rect::from_min_max(Pos2::new(inner.right(), r.top()), r.right_bottom());
         let cs = Vec2::new(Self::CORNER, Self::CORNER);
         let top_left_corner = Rect::from_min_size(r.left_top(), cs);
-        let top_right_corner = Rect::from_min_size(r.right_top() - Vec2::new(Self::CORNER, 0.0), cs);
+        let top_right_corner =
+            Rect::from_min_size(r.right_top() - Vec2::new(Self::CORNER, 0.0), cs);
         let bottom_left_corner =
             Rect::from_min_size(r.left_bottom() - Vec2::new(0.0, Self::CORNER), cs);
         let bottom_right_corner = Rect::from_min_size(r.right_bottom() - cs, cs);
@@ -162,11 +163,7 @@ impl RectInteraction {
     ///   本实例认领；若守卫已被其它实例持有，本实例不响应，保证跨实例互斥。
     /// - 返回 `Some(new_rect)` 表示本实例刚完成一帧拖拽，调用方应把它存为新的屏幕矩形
     ///   （视频存 `user_rect`，图片存 `user_rect`）；否则返回 `None`。
-    pub fn update(
-        &mut self,
-        ctx: &Context,
-        active: &mut Option<(Id, HitZone)>,
-    ) -> Option<Rect> {
+    pub fn update(&mut self, ctx: &Context, active: &mut Option<(Id, HitZone)>) -> Option<Rect> {
         let pos = ctx.pointer_interact_pos();
         let pressed = ctx.input(|i| i.pointer.primary_pressed());
         let down = ctx.input(|i| i.pointer.primary_down());

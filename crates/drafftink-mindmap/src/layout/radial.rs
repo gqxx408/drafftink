@@ -119,15 +119,7 @@ fn layout_grandchildren(
                     .as_ref()
                     .map(|cr| cr.radius)
                     .unwrap_or(radius * 0.6);
-                layout_grandchildren(
-                    doc,
-                    &child.children,
-                    pos,
-                    angle - 0.2,
-                    0.4,
-                    cr,
-                    positions,
-                );
+                layout_grandchildren(doc, &child.children, pos, angle - 0.2, 0.4, cr, positions);
             }
         }
     }
@@ -143,9 +135,12 @@ mod tests {
     fn create_radial_doc() -> MindMapDoc {
         let mut doc = MindMapDoc::new("中心主题");
         doc.map_type = MapType::Mindly;
-        doc.add_child(doc.root_id, "A", NodePosition::Right).unwrap();
-        doc.add_child(doc.root_id, "B", NodePosition::Right).unwrap();
-        doc.add_child(doc.root_id, "C", NodePosition::Right).unwrap();
+        doc.add_child(doc.root_id, "A", NodePosition::Right)
+            .unwrap();
+        doc.add_child(doc.root_id, "B", NodePosition::Right)
+            .unwrap();
+        doc.add_child(doc.root_id, "C", NodePosition::Right)
+            .unwrap();
         doc
     }
 

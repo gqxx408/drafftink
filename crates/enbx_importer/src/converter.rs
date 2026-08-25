@@ -7,13 +7,13 @@ use std::collections::HashMap;
 use std::io::Read;
 use uuid::Uuid;
 
-use drafftink_core::model::{
-    BaseElement, CoursewareDoc, Element, ImageElement, PageContent,
-    ShapeElement, ShapeType, SvgShapeElement, TextElement,
-};
 use crate::error::EnbxError;
 use crate::parser;
 use crate::ImportReport;
+use drafftink_core::model::{
+    BaseElement, CoursewareDoc, Element, ImageElement, PageContent, ShapeElement, ShapeType,
+    SvgShapeElement, TextElement,
+};
 
 /// Progress callback: (current_step, total_steps, description)
 pub type ProgressFn = Box<dyn Fn(usize, usize, &str)>;
@@ -50,13 +50,30 @@ pub fn convert_slides(
             if let Ok(elems) = parse_slide_stream(archive, c, ref_map) {
                 log::debug!(
                     "{}: {} elements ({} img {} shp {} txt)",
-                    c, elems.len(),
-                    elems.iter().filter(|e| matches!(e, Element::Image(_))).count(),
-                    elems.iter().filter(|e| matches!(e, Element::Shape(_))).count(),
-                    elems.iter().filter(|e| matches!(e, Element::Text(_))).count(),
+                    c,
+                    elems.len(),
+                    elems
+                        .iter()
+                        .filter(|e| matches!(e, Element::Image(_)))
+                        .count(),
+                    elems
+                        .iter()
+                        .filter(|e| matches!(e, Element::Shape(_)))
+                        .count(),
+                    elems
+                        .iter()
+                        .filter(|e| matches!(e, Element::Text(_)))
+                        .count(),
                 );
-                resources += elems.iter().filter(|e| matches!(e, Element::Image(_))).count();
-                pages.push(PageContent { elements: elems, annotations_data: Vec::new(), ..Default::default() });
+                resources += elems
+                    .iter()
+                    .filter(|e| matches!(e, Element::Image(_)))
+                    .count();
+                pages.push(PageContent {
+                    elements: elems,
+                    annotations_data: Vec::new(),
+                    ..Default::default()
+                });
                 ok += 1;
                 found = true;
                 break;
@@ -73,7 +90,10 @@ pub fn convert_slides(
         pages.push(PageContent::default());
     }
 
-    let first_elems = pages.first().map(|p| p.elements.clone()).unwrap_or_default();
+    let first_elems = pages
+        .first()
+        .map(|p| p.elements.clone())
+        .unwrap_or_default();
     let doc = CoursewareDoc {
         version: "2.0".into(),
         page_size: [canvas_w, canvas_h],
@@ -102,7 +122,8 @@ fn parse_slide_stream(
     entry: &str,
     ref_map: &HashMap<String, String>,
 ) -> Result<Vec<Element>, EnbxError> {
-    let f = archive.by_name(entry)
+    let f = archive
+        .by_name(entry)
         .map_err(|e| EnbxError::SlideError(format!("not found: {e}")))?;
     let size = f.size() as usize;
 
@@ -127,10 +148,30 @@ fn parse_slide_stream(
     log::debug!("{entry}");
     for e in &elements {
         match e {
-            Element::Text(t) => log::debug!("  TEXT  ({}pt) @ ({:.0},{:.0}): {:?}", t.font_size, t.base.position[0], t.base.position[1], &t.text[..t.text.len().min(80)]),
-            Element::Shape(s) => log::debug!("  SHAPE {:?} @ ({:.0},{:.0}) {}x{}", s.shape_type, s.base.position[0], s.base.position[1], s.base.size[0], s.base.size[1]),
-            Element::Image(i) => log::debug!("  IMAGE {} @ ({:.0},{:.0}) {}x{}", i.image_path, i.base.position[0], i.base.position[1], i.base.size[0], i.base.size[1]),
-            _ => {},
+            Element::Text(t) => log::debug!(
+                "  TEXT  ({}pt) @ ({:.0},{:.0}): {:?}",
+                t.font_size,
+                t.base.position[0],
+                t.base.position[1],
+                &t.text[..t.text.len().min(80)]
+            ),
+            Element::Shape(s) => log::debug!(
+                "  SHAPE {:?} @ ({:.0},{:.0}) {}x{}",
+                s.shape_type,
+                s.base.position[0],
+                s.base.position[1],
+                s.base.size[0],
+                s.base.size[1]
+            ),
+            Element::Image(i) => log::debug!(
+                "  IMAGE {} @ ({:.0},{:.0}) {}x{}",
+                i.image_path,
+                i.base.position[0],
+                i.base.position[1],
+                i.base.size[0],
+                i.base.size[1]
+            ),
+            _ => {}
         }
     }
 
@@ -160,7 +201,9 @@ fn parse_enbx_native(xml: &str, ref_map: &HashMap<String, String>) -> Vec<Elemen
     let mut iterations = 0u32;
     while let Some(pos) = rest.find('<') {
         iterations += 1;
-        if iterations > 10000 { break; } // safety valve
+        if iterations > 10000 {
+            break;
+        } // safety valve
 
         rest = &rest[pos..];
         let gt = rest.find('>').unwrap_or(rest.len());
@@ -252,12 +295,20 @@ fn find_close_robust(xml: &str, tag: &str) -> usize {
         // Check for opening tag
         if bytes[pos..].starts_with(open_pat.as_bytes()) {
             let after = pos + open_pat.len();
-            if after < bytes.len() && matches!(bytes[after], b'>' | b' ' | b'\n' | b'\r' | b'\t' | b'/') {
+            if after < bytes.len()
+                && matches!(bytes[after], b'>' | b' ' | b'\n' | b'\r' | b'\t' | b'/')
+            {
                 depth += 1;
                 // Find '>' to skip past the tag
-                if after < bytes.len() && bytes[after] == b'/' && after + 1 < bytes.len() && bytes[after + 1] == b'>' {
+                if after < bytes.len()
+                    && bytes[after] == b'/'
+                    && after + 1 < bytes.len()
+                    && bytes[after + 1] == b'>'
+                {
                     depth -= 1; // self-closing
-                    if depth == 0 { return pos + open_pat.len() + 2; }
+                    if depth == 0 {
+                        return pos + open_pat.len() + 2;
+                    }
                     pos = after + 2;
                     continue;
                 }
@@ -318,7 +369,9 @@ fn parse_enbx_text(xml: &str, z_order: i32) -> Option<Element> {
                     break;
                 }
                 rest = &rest[end..];
-            } else { break; }
+            } else {
+                break;
+            }
         }
         result
     }
@@ -326,11 +379,17 @@ fn parse_enbx_text(xml: &str, z_order: i32) -> Option<Element> {
     .or_else(|| xml_str(xml, "TextColor"))
     .unwrap_or_else(|| "#FF000000".to_string());
     let fill = parse_enbx_color(&color_hex);
-    log::debug!("text color: hex={:?} raw=[{},{},{},{}]", color_hex, fill[0], fill[1], fill[2], fill[3]);
+    log::debug!(
+        "text color: hex={:?} raw=[{},{},{},{}]",
+        color_hex,
+        fill[0],
+        fill[1],
+        fill[2],
+        fill[3]
+    );
 
     // Font family
-    let font_family = xml_str(xml, "Source")
-        .unwrap_or_else(|| "Microsoft YaHei".to_string());
+    let font_family = xml_str(xml, "Source").unwrap_or_else(|| "Microsoft YaHei".to_string());
 
     // Text content: priority order:
     // 1. <RichText><Text>HI,SEEWO</Text></RichText>  (simple short form)
@@ -346,17 +405,23 @@ fn parse_enbx_text(xml: &str, z_order: i32) -> Option<Element> {
             let Some(p) = r.find("<TextRun>") else { break };
             r = &r[p..];
             let close = find_close_robust(r, "TextRun");
-            if close == 0 || close > r.len() { break; }
+            if close == 0 || close > r.len() {
+                break;
+            }
             let block = &r[..close];
             if let Some(t) = xml_str(block, "Text") {
                 text.push_str(&t);
             }
-            if close >= r.len() { break; }
+            if close >= r.len() {
+                break;
+            }
             r = &r[close..];
         }
     }
 
-    if text.is_empty() { return None; }
+    if text.is_empty() {
+        return None;
+    }
 
     Some(Element::Text(TextElement {
         base: BaseElement {
@@ -405,7 +470,9 @@ fn parse_enbx_image(
         .or_else(|| xml_str(xml, "Src"))
         .or_else(|| xml_str(xml, "Path"))
         .unwrap_or_default();
-    if path.is_empty() { return None; }
+    if path.is_empty() {
+        return None;
+    }
 
     Some(Element::Image(ImageElement {
         base: BaseElement {
@@ -451,10 +518,12 @@ fn parse_enbx_shape(xml: &str, z_order: i32) -> Option<Element> {
 
     // --- Colors ---
     // Background > ColorBrush → fill  (default transparent)
-    let fill_hex = extract_color_brush(xml, "Background").unwrap_or_else(|| "#00000000".to_string());
+    let fill_hex =
+        extract_color_brush(xml, "Background").unwrap_or_else(|| "#00000000".to_string());
 
     // Foreground > ColorBrush → stroke (default black)
-    let stroke_hex = extract_color_brush(xml, "Foreground").unwrap_or_else(|| "#FF000000".to_string());
+    let stroke_hex =
+        extract_color_brush(xml, "Foreground").unwrap_or_else(|| "#FF000000".to_string());
 
     let fill = parse_enbx_color(&fill_hex);
     let stroke = parse_enbx_color(&stroke_hex);
@@ -466,12 +535,10 @@ fn parse_enbx_shape(xml: &str, z_order: i32) -> Option<Element> {
     let opacity = xml_val(xml, "Opacity").unwrap_or(1.0);
 
     // --- Geometry type ---
-    let geometry_type = xml_str(xml, "GeometryType")
-        .unwrap_or_else(|| "Rectangle".to_string());
+    let geometry_type = xml_str(xml, "GeometryType").unwrap_or_else(|| "Rectangle".to_string());
 
     // --- Path data (only for CustomGeometry / FreeLine) ---
-    let path_data = xml_str(xml, "Path")
-        .filter(|s| !s.is_empty() && s.len() > 3);
+    let path_data = xml_str(xml, "Path").filter(|s| !s.is_empty() && s.len() > 3);
 
     // --- Arrows ---
     let has_start_arrow = xml
@@ -506,7 +573,9 @@ fn parse_enbx_shape(xml: &str, z_order: i32) -> Option<Element> {
         stroke_color: rgba(stroke),
         stroke_width,
         opacity,
-        locked: xml_str(xml, "IsLocked").map(|s| s == "True").unwrap_or(false),
+        locked: xml_str(xml, "IsLocked")
+            .map(|s| s == "True")
+            .unwrap_or(false),
         visible: true,
         name: format!("{geometry_type}_shape"),
     };
@@ -562,12 +631,7 @@ mod diagnostic {
             eprintln!("[diag] {dir:?} not found, skipping");
             return;
         }
-        for name in [
-            "Slide_0.xml",
-            "Slide_2.xml",
-            "Slide_3.xml",
-            "Slide_4.xml",
-        ] {
+        for name in ["Slide_0.xml", "Slide_2.xml", "Slide_3.xml", "Slide_4.xml"] {
             let p = dir.join(name);
             let Ok(xml) = std::fs::read_to_string(&p) else {
                 continue;
@@ -649,7 +713,8 @@ fn xml_val_skip_bad(xml: &str, tag: &str) -> Option<f32> {
 }
 
 /// Extract a numeric value: <Name>123.4</Name>
-pub(crate) fn xml_val(xml: &str, tag: &str) -> Option<f32> {    let open = format!("<{tag}>");
+pub(crate) fn xml_val(xml: &str, tag: &str) -> Option<f32> {
+    let open = format!("<{tag}>");
     let close = format!("</{tag}>");
     let p = xml.find(&open)?;
     let rest = &xml[p + open.len()..];
@@ -676,7 +741,9 @@ pub(crate) fn xml_str(xml: &str, tag: &str) -> Option<String> {
         let rest = &xml[after..];
         if let Some(end) = rest.find(&close) {
             let s = rest[..end].trim().to_string();
-            if !s.is_empty() { return Some(s); }
+            if !s.is_empty() {
+                return Some(s);
+            }
         }
         search_from = abs + 1;
     }
@@ -711,7 +778,12 @@ fn parse_enbx_color(s: &str) -> [u8; 4] {
     match s.len() {
         8 => {
             let v = u32::from_str_radix(s, 16).unwrap_or(0xFF000000);
-            [((v >> 16) as u8), ((v >> 8) as u8), (v as u8), ((v >> 24) as u8)]
+            [
+                ((v >> 16) as u8),
+                ((v >> 8) as u8),
+                (v as u8),
+                ((v >> 24) as u8),
+            ]
         }
         6 => {
             let v = u32::from_str_radix(s, 16).unwrap_or(0x000000);
@@ -848,29 +920,29 @@ fn extract_images(xml: &str, ref_map: &HashMap<String, String>, z: &mut i32) -> 
             .or_else(|| r_id.clone());
 
         if let Some(path) = image_path {
-                let [x, y, w, h] = extract_rect_emu(block);
+            let [x, y, w, h] = extract_rect_emu(block);
 
-                out.push(Element::Image(ImageElement {
-                    base: BaseElement {
-                        id: Uuid::new_v4(),
-                        position: [x, y],
-                        size: [w, h],
-                        rotation: 0.0,
-                        z_order: *z,
-                        fill_color: rgba([255, 255, 255, 255]),
-                        stroke_color: rgba([0, 0, 0, 0]),
-                        stroke_width: 0.0,
-                        opacity: 1.0,
-                        locked: false,
-                        visible: true,
-                        name: String::new(),
-                    },
-                    image_path: path,
-                    image_data: None,
-                    keep_aspect: true,
-                }));
-                *z += 1;
-            }
+            out.push(Element::Image(ImageElement {
+                base: BaseElement {
+                    id: Uuid::new_v4(),
+                    position: [x, y],
+                    size: [w, h],
+                    rotation: 0.0,
+                    z_order: *z,
+                    fill_color: rgba([255, 255, 255, 255]),
+                    stroke_color: rgba([0, 0, 0, 0]),
+                    stroke_width: 0.0,
+                    opacity: 1.0,
+                    locked: false,
+                    visible: true,
+                    name: String::new(),
+                },
+                image_path: path,
+                image_data: None,
+                keep_aspect: true,
+            }));
+            *z += 1;
+        }
         rest = &rest[1..];
     }
     out

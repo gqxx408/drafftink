@@ -25,27 +25,63 @@ use crate::app::{
 pub(crate) enum UndoCmd {
     // ── 文档层：文本（Element::Text） ────────────────────────────────
     /// 插入了一个文档元素（撤销 = 删除；重做 = 重新插入）。
-    InsertElement { page: usize, elem: Element },
+    InsertElement {
+        page: usize,
+        elem: Element,
+    },
     /// 删除了一个文档元素（撤销 = 按索引插回；重做 = 再次删除）。
-    RemoveElement { page: usize, index: usize, elem: Element },
+    RemoveElement {
+        page: usize,
+        index: usize,
+        elem: Element,
+    },
     /// 修改了文档层文本（移动 / 缩放 / 内容编辑；撤销 = 回旧值，重做 = 应用新值）。
-    ModifyText { page: usize, elem_id: Uuid, old: Element, new: Element },
+    ModifyText {
+        page: usize,
+        elem_id: Uuid,
+        old: Element,
+        new: Element,
+    },
 
     // ── 宿主叠加层：形状 ────────────────────────────────────────────
-    InsertShape { id: String, inst: ShapeInstance },
-    RemoveShape { id: String, inst: ShapeInstance },
+    InsertShape {
+        id: String,
+        inst: ShapeInstance,
+    },
+    RemoveShape {
+        id: String,
+        inst: ShapeInstance,
+    },
 
     // ── 宿主叠加层：图片 ────────────────────────────────────────────
-    InsertImage { id: String, inst: ImageInstance },
-    RemoveImage { id: String, inst: ImageInstance },
+    InsertImage {
+        id: String,
+        inst: ImageInstance,
+    },
+    RemoveImage {
+        id: String,
+        inst: ImageInstance,
+    },
 
     // ── 宿主叠加层：视频（按记录重建播放器） ────────────────────────
-    InsertVideo { id: String, record: InsertedVideo },
-    RemoveVideo { id: String, record: InsertedVideo },
+    InsertVideo {
+        id: String,
+        record: InsertedVideo,
+    },
+    RemoveVideo {
+        id: String,
+        record: InsertedVideo,
+    },
 
     // ── 宿主叠加层：音频（按记录重建播放器） ────────────────────────
-    InsertAudio { id: String, record: InsertedAudio },
-    RemoveAudio { id: String, record: InsertedAudio },
+    InsertAudio {
+        id: String,
+        record: InsertedAudio,
+    },
+    RemoveAudio {
+        id: String,
+        record: InsertedAudio,
+    },
 
     // ── 宿主叠加层：移动 / 缩放（user_rect 变化，撤销 = 回旧矩形） ──
     ModifyRect {
@@ -55,8 +91,14 @@ pub(crate) enum UndoCmd {
     },
 
     // ── 宿主叠加层：函数绘图（坐标系 + 曲线实例） ────────────────────
-    InsertFunction { id: String, inst: FunctionPlotInstance },
-    RemoveFunction { id: String, inst: FunctionPlotInstance },
+    InsertFunction {
+        id: String,
+        inst: FunctionPlotInstance,
+    },
+    RemoveFunction {
+        id: String,
+        inst: FunctionPlotInstance,
+    },
 }
 
 /// 撤销栈上限。

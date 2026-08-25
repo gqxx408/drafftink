@@ -181,8 +181,7 @@ impl AnnotationSystem {
         encoded.extend_from_slice(&crc.to_le_bytes());
 
         let patch_path = doc_path.with_extension("drfp");
-        std::fs::write(&patch_path, &encoded)
-            .map_err(|e| format!("Write failed: {}", e))?;
+        std::fs::write(&patch_path, &encoded).map_err(|e| format!("Write failed: {}", e))?;
 
         eprintln!(
             "[annotation] Saved {} strokes to {:?}",

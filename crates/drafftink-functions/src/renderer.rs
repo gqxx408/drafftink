@@ -73,16 +73,8 @@ impl CurveRenderer {
         transform: &CoordTransform,
         rect: Rect,
     ) {
-        let x_interval = nice_grid_interval(
-            viewport.width(),
-            80.0,
-            transform.scale_x,
-        );
-        let y_interval = nice_grid_interval(
-            viewport.height(),
-            60.0,
-            transform.scale_y,
-        );
+        let x_interval = nice_grid_interval(viewport.width(), 80.0, transform.scale_x);
+        let y_interval = nice_grid_interval(viewport.height(), 60.0, transform.scale_y);
 
         let grid_stroke = Stroke::new(self.config.grid_width, self.config.grid_color);
         let axis_stroke = Stroke::new(self.config.axis_width, self.config.axis_color);
@@ -177,10 +169,7 @@ impl CurveRenderer {
             }
 
             // 提交到 Painter → egui_wgpu GPU 光栅化
-            painter.add(Shape::line(
-                self.screen_points.clone(),
-                stroke,
-            ));
+            painter.add(Shape::line(self.screen_points.clone(), stroke));
         }
     }
 

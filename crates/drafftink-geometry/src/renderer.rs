@@ -143,7 +143,6 @@ pub struct GeometryRenderer {
     pub viewport: Viewport,
 }
 
-
 impl GeometryRenderer {
     /// 创建新渲染器
     pub fn new() -> Self {
@@ -215,7 +214,9 @@ impl GeometryRenderer {
         }
 
         // 坐标轴标签（原点）
-        let origin = self.viewport.world_to_screen(Point2D::new(0.0, 0.0), canvas_center);
+        let origin = self
+            .viewport
+            .world_to_screen(Point2D::new(0.0, 0.0), canvas_center);
         if rect.contains(origin) {
             painter.text(
                 origin,
@@ -241,32 +242,22 @@ impl GeometryRenderer {
         let screen_radius = self.config.point_size * self.viewport.zoom.min(2.0);
 
         // 使用 lyon 三角化 → GPU 渲染
-        let mesh = triangulate_circle(
-            Point2D::new(screen_pos.x, screen_pos.y),
-            screen_radius,
-        );
+        let mesh = triangulate_circle(Point2D::new(screen_pos.x, screen_pos.y), screen_radius);
         mesh.add_to_painter(painter, color);
 
         // 外圈高光
         painter.circle_stroke(
             screen_pos,
             screen_radius + 1.0,
-            Stroke::new(1.5_f32, Color32::from_rgba_premultiplied(
-                color.r(),
-                color.g(),
-                color.b(),
-                120,
-            )),
+            Stroke::new(
+                1.5_f32,
+                Color32::from_rgba_premultiplied(color.r(), color.g(), color.b(), 120),
+            ),
         );
     }
 
     /// 绘制选中状态的点（带高亮环）
-    pub fn draw_point_selected(
-        &self,
-        painter: &Painter,
-        world_pos: Point2D,
-        canvas_center: Vec2,
-    ) {
+    pub fn draw_point_selected(&self, painter: &Painter, world_pos: Point2D, canvas_center: Vec2) {
         let screen_pos = self.viewport.world_to_screen(world_pos, canvas_center);
         let screen_radius = self.config.point_size * self.viewport.zoom.min(2.0);
 
@@ -278,20 +269,12 @@ impl GeometryRenderer {
         );
 
         // 内填充
-        let mesh = triangulate_circle(
-            Point2D::new(screen_pos.x, screen_pos.y),
-            screen_radius,
-        );
+        let mesh = triangulate_circle(Point2D::new(screen_pos.x, screen_pos.y), screen_radius);
         mesh.add_to_painter(painter, self.config.point_selected_color);
     }
 
     /// 绘制悬停状态的点
-    pub fn draw_point_hover(
-        &self,
-        painter: &Painter,
-        world_pos: Point2D,
-        canvas_center: Vec2,
-    ) {
+    pub fn draw_point_hover(&self, painter: &Painter, world_pos: Point2D, canvas_center: Vec2) {
         let screen_pos = self.viewport.world_to_screen(world_pos, canvas_center);
         let screen_radius = self.config.point_size * self.viewport.zoom.min(2.0);
 
@@ -353,31 +336,62 @@ impl GeometryRenderer {
     }
 
     /// 绘制多边形（描边）
-    pub fn draw_polygon(&self, painter: &Painter, points: &[Point2D], canvas_center: Vec2, color: Color32) {
-        if points.len() < 2 { return; }
-        let screen_pts: Vec<Point2D> = points.iter().map(|p| {
-            let s = self.viewport.world_to_screen(*p, canvas_center);
-            Point2D::new(s.x, s.y)
-        }).collect();
+    pub fn draw_polygon(
+        &self,
+        painter: &Painter,
+        points: &[Point2D],
+        canvas_center: Vec2,
+        color: Color32,
+    ) {
+        if points.len() < 2 {
+            return;
+        }
+        let screen_pts: Vec<Point2D> = points
+            .iter()
+            .map(|p| {
+                let s = self.viewport.world_to_screen(*p, canvas_center);
+                Point2D::new(s.x, s.y)
+            })
+            .collect();
         let width = self.config.polygon_stroke_width * self.viewport.zoom.min(2.0);
         let mesh = triangulate_polygon_stroke(&screen_pts, width);
         mesh.add_to_painter(painter, color);
     }
 
     /// 绘制多边形（填充）
-    pub fn draw_polygon_filled(&self, painter: &Painter, points: &[Point2D], canvas_center: Vec2, color: Color32) {
-        if points.len() < 3 { return; }
-        let screen_pts: Vec<Point2D> = points.iter().map(|p| {
-            let s = self.viewport.world_to_screen(*p, canvas_center);
-            Point2D::new(s.x, s.y)
-        }).collect();
+    pub fn draw_polygon_filled(
+        &self,
+        painter: &Painter,
+        points: &[Point2D],
+        canvas_center: Vec2,
+        color: Color32,
+    ) {
+        if points.len() < 3 {
+            return;
+        }
+        let screen_pts: Vec<Point2D> = points
+            .iter()
+            .map(|p| {
+                let s = self.viewport.world_to_screen(*p, canvas_center);
+                Point2D::new(s.x, s.y)
+            })
+            .collect();
         let mesh = triangulate_polygon_fill(&screen_pts);
         mesh.add_to_painter(painter, color);
     }
 
     /// 绘制正多边形（描边）
     #[allow(clippy::too_many_arguments)]
-    pub fn draw_regular_polygon(&self, painter: &Painter, center: Point2D, radius: f32, sides: u32, rotation: f32, canvas_center: Vec2, color: Color32) {
+    pub fn draw_regular_polygon(
+        &self,
+        painter: &Painter,
+        center: Point2D,
+        radius: f32,
+        sides: u32,
+        rotation: f32,
+        canvas_center: Vec2,
+        color: Color32,
+    ) {
         let screen_center = self.viewport.world_to_screen(center, canvas_center);
         let screen_radius = radius * self.viewport.zoom;
         let mut pts = Vec::with_capacity(sides as usize);
@@ -395,50 +409,117 @@ impl GeometryRenderer {
 
     /// 绘制圆弧
     #[allow(clippy::too_many_arguments)]
-    pub fn draw_arc(&self, painter: &Painter, center: Point2D, radius: f32, start_angle: f32, end_angle: f32, canvas_center: Vec2, color: Color32) {
+    pub fn draw_arc(
+        &self,
+        painter: &Painter,
+        center: Point2D,
+        radius: f32,
+        start_angle: f32,
+        end_angle: f32,
+        canvas_center: Vec2,
+        color: Color32,
+    ) {
         let screen_center = self.viewport.world_to_screen(center, canvas_center);
         let screen_radius = radius * self.viewport.zoom;
         let width = self.config.arc_stroke_width * self.viewport.zoom.min(2.0);
-        let mesh = triangulate_arc(Point2D::new(screen_center.x, screen_center.y), screen_radius, start_angle, end_angle, width);
+        let mesh = triangulate_arc(
+            Point2D::new(screen_center.x, screen_center.y),
+            screen_radius,
+            start_angle,
+            end_angle,
+            width,
+        );
         mesh.add_to_painter(painter, color);
     }
 
     /// 绘制扇形（填充）
     #[allow(clippy::too_many_arguments)]
-    pub fn draw_sector(&self, painter: &Painter, center: Point2D, radius: f32, start_angle: f32, end_angle: f32, canvas_center: Vec2, color: Color32) {
+    pub fn draw_sector(
+        &self,
+        painter: &Painter,
+        center: Point2D,
+        radius: f32,
+        start_angle: f32,
+        end_angle: f32,
+        canvas_center: Vec2,
+        color: Color32,
+    ) {
         let screen_center = self.viewport.world_to_screen(center, canvas_center);
         let screen_radius = radius * self.viewport.zoom;
-        let mesh = triangulate_sector(Point2D::new(screen_center.x, screen_center.y), screen_radius, start_angle, end_angle);
+        let mesh = triangulate_sector(
+            Point2D::new(screen_center.x, screen_center.y),
+            screen_radius,
+            start_angle,
+            end_angle,
+        );
         mesh.add_to_painter(painter, color);
     }
 
     /// 绘制椭圆（描边）
     #[allow(clippy::too_many_arguments)]
-    pub fn draw_ellipse(&self, painter: &Painter, center: Point2D, semi_a: f32, semi_b: f32, rotation: f32, canvas_center: Vec2, color: Color32) {
+    pub fn draw_ellipse(
+        &self,
+        painter: &Painter,
+        center: Point2D,
+        semi_a: f32,
+        semi_b: f32,
+        rotation: f32,
+        canvas_center: Vec2,
+        color: Color32,
+    ) {
         let screen_center = self.viewport.world_to_screen(center, canvas_center);
         let screen_a = semi_a * self.viewport.zoom;
         let screen_b = semi_b * self.viewport.zoom;
         let width = self.config.arc_stroke_width * self.viewport.zoom.min(2.0);
-        let mesh = triangulate_ellipse_stroke(Point2D::new(screen_center.x, screen_center.y), screen_a, screen_b, rotation, width);
+        let mesh = triangulate_ellipse_stroke(
+            Point2D::new(screen_center.x, screen_center.y),
+            screen_a,
+            screen_b,
+            rotation,
+            width,
+        );
         mesh.add_to_painter(painter, color);
     }
 
     /// 绘制圆环（填充）
-    pub fn draw_annulus(&self, painter: &Painter, center: Point2D, inner_radius: f32, outer_radius: f32, canvas_center: Vec2, color: Color32) {
+    pub fn draw_annulus(
+        &self,
+        painter: &Painter,
+        center: Point2D,
+        inner_radius: f32,
+        outer_radius: f32,
+        canvas_center: Vec2,
+        color: Color32,
+    ) {
         let screen_center = self.viewport.world_to_screen(center, canvas_center);
         let screen_inner = inner_radius * self.viewport.zoom;
         let screen_outer = outer_radius * self.viewport.zoom;
-        let mesh = triangulate_annulus(Point2D::new(screen_center.x, screen_center.y), screen_inner, screen_outer);
+        let mesh = triangulate_annulus(
+            Point2D::new(screen_center.x, screen_center.y),
+            screen_inner,
+            screen_outer,
+        );
         mesh.add_to_painter(painter, color);
     }
 
     /// 绘制贝塞尔曲线
-    pub fn draw_bezier(&self, painter: &Painter, control_points: &[Point2D], canvas_center: Vec2, color: Color32) {
-        if control_points.is_empty() { return; }
-        let screen_pts: Vec<Point2D> = control_points.iter().map(|p| {
-            let s = self.viewport.world_to_screen(*p, canvas_center);
-            Point2D::new(s.x, s.y)
-        }).collect();
+    pub fn draw_bezier(
+        &self,
+        painter: &Painter,
+        control_points: &[Point2D],
+        canvas_center: Vec2,
+        color: Color32,
+    ) {
+        if control_points.is_empty() {
+            return;
+        }
+        let screen_pts: Vec<Point2D> = control_points
+            .iter()
+            .map(|p| {
+                let s = self.viewport.world_to_screen(*p, canvas_center);
+                Point2D::new(s.x, s.y)
+            })
+            .collect();
 
         let segments = 64;
         let width = self.config.line_width * self.viewport.zoom.min(2.0);
@@ -465,7 +546,13 @@ impl GeometryRenderer {
                 let mut prev = screen_pts[0];
                 for i in 1..=segments {
                     let t = i as f32 / segments as f32;
-                    let p = cubic_bezier(screen_pts[0], screen_pts[1], screen_pts[2], screen_pts[3], t);
+                    let p = cubic_bezier(
+                        screen_pts[0],
+                        screen_pts[1],
+                        screen_pts[2],
+                        screen_pts[3],
+                        t,
+                    );
                     let mesh = triangulate_line(prev, p, width);
                     mesh.add_to_painter(painter, color);
                     prev = p;
@@ -482,29 +569,37 @@ impl GeometryRenderer {
     }
 
     /// 绘制角度标注
-    pub fn draw_angle_mark(&self, painter: &Painter, vertex: Point2D, point_a: Point2D, point_b: Point2D, canvas_center: Vec2, color: Color32) {
+    pub fn draw_angle_mark(
+        &self,
+        painter: &Painter,
+        vertex: Point2D,
+        point_a: Point2D,
+        point_b: Point2D,
+        canvas_center: Vec2,
+        color: Color32,
+    ) {
         let sv = self.viewport.world_to_screen(vertex, canvas_center);
         let sa = self.viewport.world_to_screen(point_a, canvas_center);
         let sb = self.viewport.world_to_screen(point_b, canvas_center);
 
         let angle_a = (sa - sv).angle();
         let angle_b = (sb - sv).angle();
-        let radius = 30.0_f32.min((sa - sv).length() * 0.4).min((sb - sv).length() * 0.4);
+        let radius = 30.0_f32
+            .min((sa - sv).length() * 0.4)
+            .min((sb - sv).length() * 0.4);
 
         // 绘制角度弧
-        let mesh = triangulate_arc(
-            Point2D::new(sv.x, sv.y),
-            radius,
-            angle_a,
-            angle_b,
-            1.5,
-        );
+        let mesh = triangulate_arc(Point2D::new(sv.x, sv.y), radius, angle_a, angle_b, 1.5);
         mesh.add_to_painter(painter, color);
 
         // 绘制角度值文本
         let mut angle_deg = (angle_b - angle_a).to_degrees();
-        if angle_deg < 0.0 { angle_deg += 360.0; }
-        if angle_deg > 180.0 { angle_deg = 360.0 - angle_deg; }
+        if angle_deg < 0.0 {
+            angle_deg += 360.0;
+        }
+        if angle_deg > 180.0 {
+            angle_deg = 360.0 - angle_deg;
+        }
         let mid_angle = (angle_a + angle_b) * 0.5;
         let label_pos = Pos2::new(
             sv.x + (radius + 15.0) * mid_angle.cos(),
@@ -520,7 +615,14 @@ impl GeometryRenderer {
     }
 
     /// 绘制长度标注
-    pub fn draw_length_mark(&self, painter: &Painter, start: Point2D, end: Point2D, canvas_center: Vec2, color: Color32) {
+    pub fn draw_length_mark(
+        &self,
+        painter: &Painter,
+        start: Point2D,
+        end: Point2D,
+        canvas_center: Vec2,
+        color: Color32,
+    ) {
         let ss = self.viewport.world_to_screen(start, canvas_center);
         let se = self.viewport.world_to_screen(end, canvas_center);
 
@@ -531,8 +633,14 @@ impl GeometryRenderer {
         let dir = (se - ss).normalized();
         let perp = Vec2::new(-dir.y, dir.x);
         let tick = 5.0;
-        painter.line_segment([ss + perp * tick, ss - perp * tick], Stroke::new(1.5_f32, color));
-        painter.line_segment([se + perp * tick, se - perp * tick], Stroke::new(1.5_f32, color));
+        painter.line_segment(
+            [ss + perp * tick, ss - perp * tick],
+            Stroke::new(1.5_f32, color),
+        );
+        painter.line_segment(
+            [se + perp * tick, se - perp * tick],
+            Stroke::new(1.5_f32, color),
+        );
 
         // 距离文本
         let dist = (end - start).norm();
@@ -570,9 +678,11 @@ impl GeometryRenderer {
         let axis_stroke = Stroke::new(2.0_f32, self.config.axis_color);
 
         // 计算可见范围
-        let x_start = screen_origin.x - ((screen_origin.x - clip_rect.min.x) / screen_spacing).floor() * screen_spacing;
+        let x_start = screen_origin.x
+            - ((screen_origin.x - clip_rect.min.x) / screen_spacing).floor() * screen_spacing;
         let x_end = clip_rect.max.x;
-        let y_start = screen_origin.y - ((screen_origin.y - clip_rect.min.y) / screen_spacing).floor() * screen_spacing;
+        let y_start = screen_origin.y
+            - ((screen_origin.y - clip_rect.min.y) / screen_spacing).floor() * screen_spacing;
         let y_end = clip_rect.max.y;
 
         // 垂直线
@@ -581,7 +691,13 @@ impl GeometryRenderer {
         while x <= x_end {
             let is_axis = (x - screen_origin.x).abs() < 0.5;
             let is_major = show_major && (idx.rem_euclid(major_every as i32) == 0);
-            let stroke = if is_axis { axis_stroke } else if is_major { major_stroke } else { grid_stroke };
+            let stroke = if is_axis {
+                axis_stroke
+            } else if is_major {
+                major_stroke
+            } else {
+                grid_stroke
+            };
             painter.line_segment(
                 [Pos2::new(x, clip_rect.min.y), Pos2::new(x, clip_rect.max.y)],
                 stroke,
@@ -606,7 +722,13 @@ impl GeometryRenderer {
         while y <= y_end {
             let is_axis = (y - screen_origin.y).abs() < 0.5;
             let is_major = show_major && (idy.rem_euclid(major_every as i32) == 0);
-            let stroke = if is_axis { axis_stroke } else if is_major { major_stroke } else { grid_stroke };
+            let stroke = if is_axis {
+                axis_stroke
+            } else if is_major {
+                major_stroke
+            } else {
+                grid_stroke
+            };
             painter.line_segment(
                 [Pos2::new(clip_rect.min.x, y), Pos2::new(clip_rect.max.x, y)],
                 stroke,
@@ -675,7 +797,13 @@ impl GeometryRenderer {
         // 先绘制圆（最底层）
         for &(_, center_id, radius) in circle_defs {
             if let Some(center) = ctx.get_2d(center_id) {
-                self.draw_circle(painter, center, radius, canvas_center, self.config.circle_color);
+                self.draw_circle(
+                    painter,
+                    center,
+                    radius,
+                    canvas_center,
+                    self.config.circle_color,
+                );
             }
         }
 

@@ -40,7 +40,10 @@ fn element_to_drftx(el: &WbElement) -> Value {
                 m.insert("type".to_string(), json!("shape"));
                 // 优先写入 SVG Path 指令（raw_path 或合成路径）。
                 m.insert("path".to_string(), json!(shape_path(s)));
-                m.insert("shape_type".to_string(), json!(shape_type_name(&s.shape_type)));
+                m.insert(
+                    "shape_type".to_string(),
+                    json!(shape_type_name(&s.shape_type)),
+                );
             }
             v
         }
@@ -98,9 +101,7 @@ pub fn shape_path(s: &WbShape) -> String {
             let cy = y + h / 2.0;
             let rx = w / 2.0;
             let ry = h / 2.0;
-            format!(
-                "M {cx} {cy} m -{rx} 0 a {rx} {ry} 0 1 0 {w} 0 a {rx} {ry} 0 1 0 -{w} 0 Z"
-            )
+            format!("M {cx} {cy} m -{rx} 0 a {rx} {ry} 0 1 0 {w} 0 a {rx} {ry} 0 1 0 -{w} 0 Z")
         }
         WbShapeType::Line => format!("M {x} {y} L {} {}", x + w, y + h),
         WbShapeType::Path(_) => String::new(),

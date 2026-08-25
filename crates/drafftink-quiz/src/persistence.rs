@@ -29,11 +29,7 @@ impl QuizStore {
     /// 保存答题记录
     ///
     /// 键格式: `answer:{session_id}:{question_id}:{student_id}`
-    pub fn save_answer(
-        &self,
-        session_id: &str,
-        record: &AnswerRecord,
-    ) -> Result<(), QuizError> {
+    pub fn save_answer(&self, session_id: &str, record: &AnswerRecord) -> Result<(), QuizError> {
         let key = format!(
             "answer:{}:{}:{}",
             session_id, record.question_id, record.student_id
@@ -44,10 +40,7 @@ impl QuizStore {
     }
 
     /// 加载指定会话的所有答题记录
-    pub fn load_answers(
-        &self,
-        session_id: &str,
-    ) -> Result<Vec<AnswerRecord>, QuizError> {
+    pub fn load_answers(&self, session_id: &str) -> Result<Vec<AnswerRecord>, QuizError> {
         let prefix = format!("answer:{}:", session_id);
         let mut records = Vec::new();
 

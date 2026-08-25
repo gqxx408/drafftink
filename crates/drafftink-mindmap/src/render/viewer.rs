@@ -80,10 +80,7 @@ impl MindMapViewer {
     pub fn ui(&mut self, ctx: &egui::Context) {
         // ── 重新布局（如果需要） ──
         if self.needs_layout {
-            let viewport = Vec2::new(
-                ctx.screen_rect().width(),
-                ctx.screen_rect().height(),
-            );
+            let viewport = Vec2::new(ctx.screen_rect().width(), ctx.screen_rect().height());
             self.layout_strategy = create_layout(&self.doc);
             self.positions = self.layout_strategy.layout(&self.doc, viewport);
             self.needs_layout = false;
@@ -92,10 +89,8 @@ impl MindMapViewer {
         let screen_rect = ctx.screen_rect();
 
         // ── 设置渲染器视口偏移（居中）──
-        self.renderer.viewport_offset = EguiVec2::new(
-            screen_rect.width() / 2.0,
-            screen_rect.height() / 2.0,
-        );
+        self.renderer.viewport_offset =
+            EguiVec2::new(screen_rect.width() / 2.0, screen_rect.height() / 2.0);
         self.renderer.zoom = self.zoom_level;
 
         // ── 背景绘制层（Order::Background，仅绘制，不消费交互）──
@@ -111,7 +106,8 @@ impl MindMapViewer {
         self.draw_grid(&bg_painter, screen_rect);
 
         // 渲染思维导图（节点 + 连线）
-        self.renderer.render(&bg_painter, &self.doc, &self.positions, &self.interaction);
+        self.renderer
+            .render(&bg_painter, &self.doc, &self.positions, &self.interaction);
 
         // ── 画布交互层（Order::Middle，低于工具栏的 Foreground）──
         // 工具栏 / 右键菜单在更高层 (Order::Foreground)，会优先获得点击
@@ -124,18 +120,18 @@ impl MindMapViewer {
 
                 // 悬停检测
                 if let Some(mouse_pos) = response.hover_pos() {
-                    let hit = self.renderer.hit_test(&self.doc, &self.positions, mouse_pos);
+                    let hit = self
+                        .renderer
+                        .hit_test(&self.doc, &self.positions, mouse_pos);
                     if hit != self.interaction.hovered_node {
                         if let Some(id) = hit {
-                            let _ = self.interaction.handle_event(
-                                MindMapEvent::Hover(id),
-                                &mut self.doc,
-                            );
+                            let _ = self
+                                .interaction
+                                .handle_event(MindMapEvent::Hover(id), &mut self.doc);
                         } else {
-                            let _ = self.interaction.handle_event(
-                                MindMapEvent::Unhover,
-                                &mut self.doc,
-                            );
+                            let _ = self
+                                .interaction
+                                .handle_event(MindMapEvent::Unhover, &mut self.doc);
                         }
                     }
                 }
@@ -143,7 +139,9 @@ impl MindMapViewer {
                 // 双击编辑
                 if response.double_clicked() {
                     if let Some(pos) = response.hover_pos() {
-                        if let Some(hit_id) = self.renderer.hit_test(&self.doc, &self.positions, pos) {
+                        if let Some(hit_id) =
+                            self.renderer.hit_test(&self.doc, &self.positions, pos)
+                        {
                             self.start_edit_node(hit_id);
                         }
                     }
@@ -152,7 +150,9 @@ impl MindMapViewer {
                 // 右键菜单
                 if response.secondary_clicked() {
                     if let Some(pos) = response.hover_pos() {
-                        if let Some(hit_id) = self.renderer.hit_test(&self.doc, &self.positions, pos) {
+                        if let Some(hit_id) =
+                            self.renderer.hit_test(&self.doc, &self.positions, pos)
+                        {
                             self.interaction.selected_node = Some(hit_id);
                             self.context_menu_target = Some(hit_id);
                         } else {
@@ -165,16 +165,16 @@ impl MindMapViewer {
                 if response.clicked() {
                     self.context_menu_target = None; // 点击空白处关闭菜单
                     if let Some(pos) = response.hover_pos() {
-                        if let Some(hit_id) = self.renderer.hit_test(&self.doc, &self.positions, pos) {
-                            let _ = self.interaction.handle_event(
-                                MindMapEvent::SelectNode(hit_id),
-                                &mut self.doc,
-                            );
+                        if let Some(hit_id) =
+                            self.renderer.hit_test(&self.doc, &self.positions, pos)
+                        {
+                            let _ = self
+                                .interaction
+                                .handle_event(MindMapEvent::SelectNode(hit_id), &mut self.doc);
                         } else {
-                            let _ = self.interaction.handle_event(
-                                MindMapEvent::Deselect,
-                                &mut self.doc,
-                            );
+                            let _ = self
+                                .interaction
+                                .handle_event(MindMapEvent::Deselect, &mut self.doc);
                         }
                     }
                 }
@@ -221,11 +221,7 @@ impl MindMapViewer {
                     .inner_margin(egui::Margin::symmetric(8.0, 4.0))
                     .show(ui, |ui| {
                         ui.horizontal(|ui| {
-                            ui.label(
-                                egui::RichText::new("🧠 思维导图")
-                                    .size(14.0)
-                                    .strong(),
-                            );
+                            ui.label(egui::RichText::new("🧠 思维导图").size(14.0).strong());
                             ui.separator();
 
                             // 添加子节点（未选中时默认对根节点操作）
@@ -234,7 +230,8 @@ impl MindMapViewer {
                             }
 
                             // 添加兄弟节点
-                            let sibling_enabled = selected.is_some() && selected != Some(doc.root_id);
+                            let sibling_enabled =
+                                selected.is_some() && selected != Some(doc.root_id);
                             ui.add_enabled_ui(sibling_enabled, |ui| {
                                 if ui.button("＋兄弟").clicked() {
                                     add_sibling_action = Some(selected.unwrap());
@@ -283,32 +280,35 @@ impl MindMapViewer {
         // ── 处理工具栏按钮动作（在 Area 之外，避免借用冲突）──
 
         if let Some(parent_id) = add_child_action {
-            let position = self.doc.nodes.get(&parent_id)
+            let position = self
+                .doc
+                .nodes
+                .get(&parent_id)
                 .map(|n| n.position)
                 .unwrap_or(NodePosition::Right);
-            let _ = self.interaction.handle_event(
-                MindMapEvent::AddChild(parent_id, position),
-                &mut self.doc,
-            );
+            let _ = self
+                .interaction
+                .handle_event(MindMapEvent::AddChild(parent_id, position), &mut self.doc);
             self.needs_layout = true;
         }
 
         if let Some(node_id) = add_sibling_action {
-            let position = self.doc.nodes.get(&node_id)
+            let position = self
+                .doc
+                .nodes
+                .get(&node_id)
                 .map(|n| n.position)
                 .unwrap_or(NodePosition::Right);
-            let _ = self.interaction.handle_event(
-                MindMapEvent::AddSibling(node_id, position),
-                &mut self.doc,
-            );
+            let _ = self
+                .interaction
+                .handle_event(MindMapEvent::AddSibling(node_id, position), &mut self.doc);
             self.needs_layout = true;
         }
 
         if let Some(new_type) = switch_type_action {
-            let _ = self.interaction.handle_event(
-                MindMapEvent::SwitchMapType(new_type),
-                &mut self.doc,
-            );
+            let _ = self
+                .interaction
+                .handle_event(MindMapEvent::SwitchMapType(new_type), &mut self.doc);
             self.needs_layout = true;
         }
 
@@ -341,10 +341,7 @@ impl MindMapViewer {
             .title_bar(false)
             .resizable(false)
             .collapsible(false)
-            .fixed_pos(Pos2::new(
-                screen_pos.x - 100.0,
-                screen_pos.y - 20.0,
-            ))
+            .fixed_pos(Pos2::new(screen_pos.x - 100.0, screen_pos.y - 20.0))
             .fixed_size(EguiVec2::new(200.0, 40.0))
             .show(ctx, |ui| {
                 let resp = ui.add_sized(
@@ -360,10 +357,9 @@ impl MindMapViewer {
                         let text = self.text_buffer.trim().to_string();
                         if !text.is_empty() {
                             // 需要先把 text_buffer 取出来避免借用冲突
-                            let _ = self.interaction.handle_event(
-                                MindMapEvent::EditText(node_id, text),
-                                &mut self.doc,
-                            );
+                            let _ = self
+                                .interaction
+                                .handle_event(MindMapEvent::EditText(node_id, text), &mut self.doc);
                             self.needs_layout = true;
                         }
                     }
@@ -395,13 +391,22 @@ impl MindMapViewer {
         };
         let screen_pos = self.renderer.transform_pos(pos);
         let is_root = node_id == self.doc.root_id;
-        let node_position = self.doc.nodes.get(&node_id)
+        let node_position = self
+            .doc
+            .nodes
+            .get(&node_id)
             .map(|n| n.position)
             .unwrap_or(NodePosition::Right);
-        let has_children = self.doc.nodes.get(&node_id)
+        let has_children = self
+            .doc
+            .nodes
+            .get(&node_id)
             .map(|n| !n.children.is_empty())
             .unwrap_or(false);
-        let is_collapsed = self.doc.nodes.get(&node_id)
+        let is_collapsed = self
+            .doc
+            .nodes
+            .get(&node_id)
             .map(|n| n.collapsed)
             .unwrap_or(false);
 
@@ -435,7 +440,11 @@ impl MindMapViewer {
                         }
                         if has_children {
                             ui.separator();
-                            let label = if is_collapsed { "▶ 展开" } else { "▼ 收起" };
+                            let label = if is_collapsed {
+                                "▶ 展开"
+                            } else {
+                                "▼ 收起"
+                            };
                             if ui.button(label).clicked() {
                                 action = ContextMenuAction::ToggleCollapse;
                             }
@@ -467,18 +476,16 @@ impl MindMapViewer {
                 self.context_menu_target = None;
             }
             ContextMenuAction::Delete => {
-                let _ = self.interaction.handle_event(
-                    MindMapEvent::DeleteNode(node_id),
-                    &mut self.doc,
-                );
+                let _ = self
+                    .interaction
+                    .handle_event(MindMapEvent::DeleteNode(node_id), &mut self.doc);
                 self.needs_layout = true;
                 self.context_menu_target = None;
             }
             ContextMenuAction::ToggleCollapse => {
-                let _ = self.interaction.handle_event(
-                    MindMapEvent::ToggleCollapse(node_id),
-                    &mut self.doc,
-                );
+                let _ = self
+                    .interaction
+                    .handle_event(MindMapEvent::ToggleCollapse(node_id), &mut self.doc);
                 self.needs_layout = true;
                 self.context_menu_target = None;
             }
@@ -497,19 +504,31 @@ impl MindMapViewer {
 
         if input.key_pressed(Key::Tab) {
             let event = MindMapEvent::KeyPress(KeyAction::Tab);
-            if self.interaction.handle_event(event, &mut self.doc).unwrap_or(false) {
+            if self
+                .interaction
+                .handle_event(event, &mut self.doc)
+                .unwrap_or(false)
+            {
                 self.needs_layout = true;
             }
         }
         if input.key_pressed(Key::Enter) {
             let event = MindMapEvent::KeyPress(KeyAction::Enter);
-            if self.interaction.handle_event(event, &mut self.doc).unwrap_or(false) {
+            if self
+                .interaction
+                .handle_event(event, &mut self.doc)
+                .unwrap_or(false)
+            {
                 self.needs_layout = true;
             }
         }
         if input.key_pressed(Key::Delete) || input.key_pressed(Key::Backspace) {
             let event = MindMapEvent::KeyPress(KeyAction::Delete);
-            if self.interaction.handle_event(event, &mut self.doc).unwrap_or(false) {
+            if self
+                .interaction
+                .handle_event(event, &mut self.doc)
+                .unwrap_or(false)
+            {
                 self.needs_layout = true;
             }
         }
@@ -517,10 +536,9 @@ impl MindMapViewer {
             self.editing_node = None;
             self.text_buffer.clear();
             self.context_menu_target = None;
-            let _ = self.interaction.handle_event(
-                MindMapEvent::KeyPress(KeyAction::Escape),
-                &mut self.doc,
-            );
+            let _ = self
+                .interaction
+                .handle_event(MindMapEvent::KeyPress(KeyAction::Escape), &mut self.doc);
         }
         if input.key_pressed(Key::F2) {
             if let Some(selected) = self.interaction.selected_node {

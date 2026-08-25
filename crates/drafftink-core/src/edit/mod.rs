@@ -2,13 +2,13 @@
 //! editing.  All state lives in `EditState` so that switching back to
 //! Display mode drops everything cleanly.
 
-use std::collections::{HashMap, HashSet};
 use egui::Pos2;
+use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 
 // Sub-modules
-pub mod selection;
 pub mod inspector;
+pub mod selection;
 
 // ---------------------------------------------------------------------------
 // AppMode
@@ -79,7 +79,12 @@ pub struct ResizeState {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ResizeHandle {
-    TopLeft,    TopCenter,    TopRight,
-    MidLeft,                   MidRight,
-    BottomLeft, BottomCenter,  BottomRight,
+    TopLeft,
+    TopCenter,
+    TopRight,
+    MidLeft,
+    MidRight,
+    BottomLeft,
+    BottomCenter,
+    BottomRight,
 }

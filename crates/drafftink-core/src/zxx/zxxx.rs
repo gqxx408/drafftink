@@ -54,11 +54,56 @@ impl EmgiRecordable for SchoolProfile {
 }
 
 // ── ZXXX02 年级 ──────────────────────────────────────────────────
-pub const ZXXX020101: FieldDef = FieldDef { id: "ZXXX020101", name: "年级标识", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: None, note: "" };
-pub const ZXXX020102: FieldDef = FieldDef { id: "ZXXX020102", name: "学校标识码", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: Some("JCXX0101"), note: "取用 JCXX0101 学校标识码" };
-pub const ZXXX020103: FieldDef = FieldDef { id: "ZXXX020103", name: "年级代码", data_type: DataType::C, length: 2, obligation: Obligation::M, code_ref: Some("JYT_1001_GRADE"), source: None, note: "" };
-pub const ZXXX020104: FieldDef = FieldDef { id: "ZXXX020104", name: "年级名称", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: None, note: "" };
-pub const ZXXX020105: FieldDef = FieldDef { id: "ZXXX020105", name: "入学年份", data_type: DataType::N, length: 4, obligation: Obligation::O, code_ref: None, source: None, note: "" };
+pub const ZXXX020101: FieldDef = FieldDef {
+    id: "ZXXX020101",
+    name: "年级标识",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
+pub const ZXXX020102: FieldDef = FieldDef {
+    id: "ZXXX020102",
+    name: "学校标识码",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: Some("JCXX0101"),
+    note: "取用 JCXX0101 学校标识码",
+};
+pub const ZXXX020103: FieldDef = FieldDef {
+    id: "ZXXX020103",
+    name: "年级代码",
+    data_type: DataType::C,
+    length: 2,
+    obligation: Obligation::M,
+    code_ref: Some("JYT_1001_GRADE"),
+    source: None,
+    note: "",
+};
+pub const ZXXX020104: FieldDef = FieldDef {
+    id: "ZXXX020104",
+    name: "年级名称",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
+pub const ZXXX020105: FieldDef = FieldDef {
+    id: "ZXXX020105",
+    name: "入学年份",
+    data_type: DataType::N,
+    length: 4,
+    obligation: Obligation::O,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 
 /// 年级（ZXXX02）。
 pub struct Grade {
@@ -85,7 +130,16 @@ impl EmgiRecordable for Grade {
 }
 
 // ── ZXXX03 班级（取用 JCXX02） ──────────────────────────────────
-pub const ZXXX030101: FieldDef = FieldDef { id: "ZXXX030101", name: "班级标识", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: None, note: "" };
+pub const ZXXX030101: FieldDef = FieldDef {
+    id: "ZXXX030101",
+    name: "班级标识",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 
 /// 班级（ZXXX03）——取用 JCXX02。
 pub struct ClassProfile {
@@ -108,7 +162,16 @@ impl EmgiRecordable for ClassProfile {
 }
 
 // ── ZXXX04 机构（取用 JCTB0103） ───────────────────────────────
-pub const ZXXX040101: FieldDef = FieldDef { id: "ZXXX040101", name: "机构标识", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: None, note: "" };
+pub const ZXXX040101: FieldDef = FieldDef {
+    id: "ZXXX040101",
+    name: "机构标识",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 
 /// 机构（ZXXX04）——取用 JCTB0103。
 pub struct Organization {
@@ -131,10 +194,46 @@ impl EmgiRecordable for Organization {
 }
 
 // ── ZXXX05 达标 ─────────────────────────────────────────────────
-pub const ZXXX050101: FieldDef = FieldDef { id: "ZXXX050101", name: "学校标识码", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: Some("JCXX0101"), note: "取用 JCXX0101 学校标识码" };
-pub const ZXXX050102: FieldDef = FieldDef { id: "ZXXX050102", name: "达标项目代码", data_type: DataType::C, length: 10, obligation: Obligation::M, code_ref: None, source: None, note: "" };
-pub const ZXXX050103: FieldDef = FieldDef { id: "ZXXX050103", name: "是否达标", data_type: DataType::L, length: 1, obligation: Obligation::M, code_ref: Some("JYT_1001_YES_NO"), source: None, note: "" };
-pub const ZXXX050104: FieldDef = FieldDef { id: "ZXXX050104", name: "达标日期", data_type: DataType::D, length: 8, obligation: Obligation::O, code_ref: None, source: None, note: "YYYYMMDD" };
+pub const ZXXX050101: FieldDef = FieldDef {
+    id: "ZXXX050101",
+    name: "学校标识码",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: Some("JCXX0101"),
+    note: "取用 JCXX0101 学校标识码",
+};
+pub const ZXXX050102: FieldDef = FieldDef {
+    id: "ZXXX050102",
+    name: "达标项目代码",
+    data_type: DataType::C,
+    length: 10,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
+pub const ZXXX050103: FieldDef = FieldDef {
+    id: "ZXXX050103",
+    name: "是否达标",
+    data_type: DataType::L,
+    length: 1,
+    obligation: Obligation::M,
+    code_ref: Some("JYT_1001_YES_NO"),
+    source: None,
+    note: "",
+};
+pub const ZXXX050104: FieldDef = FieldDef {
+    id: "ZXXX050104",
+    name: "达标日期",
+    data_type: DataType::D,
+    length: 8,
+    obligation: Obligation::O,
+    code_ref: None,
+    source: None,
+    note: "YYYYMMDD",
+};
 
 /// 学校达标情况（ZXXX05）。
 pub struct SchoolStandard {

@@ -7,7 +7,9 @@
 //! - 渲染缓存：仅当 `UiState.event_count` 变化时重新计算布局
 //! - 低延迟：统计更新通过 mpsc 推送，egui 被动读取
 
-use egui::{Align2, Button, Color32, Frame, Id, Layout, Pos2, Rect, RichText, Rounding, ScrollArea, Vec2};
+use egui::{
+    Align2, Button, Color32, Frame, Id, Layout, Pos2, Rect, RichText, Rounding, ScrollArea, Vec2,
+};
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 
@@ -84,7 +86,8 @@ impl QuizPanel {
         if has_changed {
             self.animation_timer = 0.0;
         }
-        self.animation_timer = (self.animation_timer + ui.input(|i| i.unstable_dt) as f64 * 3.0).min(1.0);
+        self.animation_timer =
+            (self.animation_timer + ui.input(|i| i.unstable_dt) as f64 * 3.0).min(1.0);
         self.bar_config.animation_progress = ease_out_cubic(self.animation_timer as f32);
 
         let snapshot = snapshot.unwrap_or_default();
@@ -111,7 +114,8 @@ impl QuizPanel {
             self.render_main_content(ui, &snapshot, last_quick_answer, session_tx);
         }
 
-        ui.ctx().request_repaint_after(std::time::Duration::from_millis(100));
+        ui.ctx()
+            .request_repaint_after(std::time::Duration::from_millis(100));
     }
 
     /// 渲染主内容区（根据状态切换）
@@ -183,7 +187,11 @@ impl QuizPanel {
                     let is_paused = snap.status == SessionStatus::Paused;
                     let is_active = snap.status == SessionStatus::Active;
                     if is_active || is_paused {
-                        let btn_text = if is_paused { "▶ 恢复" } else { "⏸ 暂停" };
+                        let btn_text = if is_paused {
+                            "▶ 恢复"
+                        } else {
+                            "⏸ 暂停"
+                        };
                         if ui.add_sized([70.0, 24.0], Button::new(btn_text)).clicked() {
                             let tx = session_tx.clone();
                             let paused = !is_paused;
@@ -233,15 +241,21 @@ impl QuizPanel {
             ui.label(format!(
                 "已连接学生: {} 人  |  等待答题: {}",
                 snapshot.online_students,
-                snapshot.total_students.saturating_sub(snapshot.total_answers),
+                snapshot
+                    .total_students
+                    .saturating_sub(snapshot.total_answers),
             ));
 
             ui.add_space(32.0);
 
             // 出题按钮
-            if ui.add_sized([200.0, 48.0], Button::new(
-                RichText::new("＋ 开始出题").size(18.0),
-            )).clicked() {
+            if ui
+                .add_sized(
+                    [200.0, 48.0],
+                    Button::new(RichText::new("＋ 开始出题").size(18.0)),
+                )
+                .clicked()
+            {
                 self.show_question_editor = true;
             }
         });
@@ -294,11 +308,7 @@ impl QuizPanel {
                 ui.add_space(4.0);
 
                 // 题干
-                ui.label(
-                    RichText::new(&question.content)
-                        .size(20.0)
-                        .strong(),
-                );
+                ui.label(RichText::new(&question.content).size(20.0).strong());
 
                 ui.add_space(12.0);
 
@@ -334,17 +344,24 @@ impl QuizPanel {
 
                 // 结束本题按钮
                 ui.horizontal(|ui| {
-                    if ui.add_sized([120.0, 32.0], Button::new(
-                        RichText::new("结束本题").color(Color32::WHITE),
-                    ).fill(Color32::from_rgb(231, 76, 60))).clicked() {
+                    if ui
+                        .add_sized(
+                            [120.0, 32.0],
+                            Button::new(RichText::new("结束本题").color(Color32::WHITE))
+                                .fill(Color32::from_rgb(231, 76, 60)),
+                        )
+                        .clicked()
+                    {
                         let tx = session_tx.clone();
                         let qid = question.id.clone();
                         tokio::spawn(async move {
                             let (reply_tx, _) = tokio::sync::oneshot::channel();
-                            let _ = tx.send(SessionCommand::EndQuestion {
-                                question_id: qid,
-                                reply: reply_tx,
-                            }).await;
+                            let _ = tx
+                                .send(SessionCommand::EndQuestion {
+                                    question_id: qid,
+                                    reply: reply_tx,
+                                })
+                                .await;
                         });
                     }
 
@@ -376,10 +393,7 @@ impl QuizPanel {
                             .color(Color32::from_rgb(46, 204, 113))
                             .strong(),
                     );
-                    ui.label(format!(
-                        "响应时间: {}ms",
-                        winner.response_time_ms
-                    ));
+                    ui.label(format!("响应时间: {}ms", winner.response_time_ms));
                 });
 
             ui.add_space(16.0);
@@ -396,23 +410,13 @@ impl QuizPanel {
             );
 
             let total = snapshot.total_students.max(1) as u32;
-            bar_chart::draw_bar_chart(
-                ui,
-                chart_rect,
-                stats,
-                total,
-                &self.bar_config,
-            );
+            bar_chart::draw_bar_chart(ui, chart_rect, stats, total, &self.bar_config);
         }
     }
 
     // ── 结束视图 ────────────────────────────────────────────────
 
-    fn render_ended_view(
-        &mut self,
-        ui: &mut egui::Ui,
-        snapshot: &SessionSnapshot,
-    ) {
+    fn render_ended_view(&mut self, ui: &mut egui::Ui, snapshot: &SessionSnapshot) {
         ui.vertical_centered(|ui| {
             ui.add_space(60.0);
 
@@ -443,11 +447,7 @@ impl QuizPanel {
 
     // ── 学生列表 ────────────────────────────────────────────────
 
-    fn render_student_list(
-        &mut self,
-        ui: &mut egui::Ui,
-        snapshot: &SessionSnapshot,
-    ) {
+    fn render_student_list(&mut self, ui: &mut egui::Ui, snapshot: &SessionSnapshot) {
         ui.heading("学生列表");
         ui.separator();
 
@@ -523,7 +523,10 @@ impl QuizPanel {
                 ui.separator();
 
                 // 选项（仅选择题）
-                if matches!(self.question_type_draft, QuestionType::SingleChoice | QuestionType::MultipleChoice) {
+                if matches!(
+                    self.question_type_draft,
+                    QuestionType::SingleChoice | QuestionType::MultipleChoice
+                ) {
                     ui.label("选项:");
                     ui.horizontal(|ui| {
                         if ui.button("＋").clicked() && self.option_count < 8 {
@@ -570,15 +573,20 @@ impl QuizPanel {
                         self.show_question_editor = false;
                     }
 
-                    if ui.add_sized([100.0, 28.0], Button::new("开始答题")).clicked() {
+                    if ui
+                        .add_sized([100.0, 28.0], Button::new("开始答题"))
+                        .clicked()
+                    {
                         let question = self.build_question();
                         let tx = session_tx.clone();
                         tokio::spawn(async move {
                             let (reply_tx, _) = tokio::sync::oneshot::channel();
-                            let _ = tx.send(SessionCommand::StartQuestion {
-                                question,
-                                reply: reply_tx,
-                            }).await;
+                            let _ = tx
+                                .send(SessionCommand::StartQuestion {
+                                    question,
+                                    reply: reply_tx,
+                                })
+                                .await;
                         });
                         self.show_question_editor = false;
                     }
@@ -589,23 +597,23 @@ impl QuizPanel {
     /// 从编辑器草稿构建 Question
     fn build_question(&self) -> Question {
         let correct_answer = match self.question_type_draft {
-            QuestionType::SingleChoice => {
-                self.correct_answer_draft
-                    .chars()
-                    .next()
-                    .and_then(|c| {
-                        if c.is_ascii_uppercase() {
-                            Some((c as u8 - b'A') as u8)
-                        } else if c.is_ascii_digit() {
-                            Some((c as u8 - b'0') as u8)
-                        } else {
-                            None
-                        }
-                    })
-                    .map(CorrectAnswer::Single)
-            }
+            QuestionType::SingleChoice => self
+                .correct_answer_draft
+                .chars()
+                .next()
+                .and_then(|c| {
+                    if c.is_ascii_uppercase() {
+                        Some((c as u8 - b'A') as u8)
+                    } else if c.is_ascii_digit() {
+                        Some((c as u8 - b'0') as u8)
+                    } else {
+                        None
+                    }
+                })
+                .map(CorrectAnswer::Single),
             QuestionType::MultipleChoice => {
-                let indices: Vec<u8> = self.correct_answer_draft
+                let indices: Vec<u8> = self
+                    .correct_answer_draft
                     .chars()
                     .filter_map(|c| {
                         if c.is_ascii_uppercase() {
@@ -623,18 +631,17 @@ impl QuizPanel {
                     Some(CorrectAnswer::Multiple(indices))
                 }
             }
-            QuestionType::TrueFalse => {
-                self.correct_answer_draft
-                    .to_lowercase()
-                    .starts_with('t')
-                    .then_some(CorrectAnswer::Bool(true))
-                    .or_else(|| {
-                        self.correct_answer_draft
-                            .to_lowercase()
-                            .starts_with('f')
-                            .then_some(CorrectAnswer::Bool(false))
-                    })
-            }
+            QuestionType::TrueFalse => self
+                .correct_answer_draft
+                .to_lowercase()
+                .starts_with('t')
+                .then_some(CorrectAnswer::Bool(true))
+                .or_else(|| {
+                    self.correct_answer_draft
+                        .to_lowercase()
+                        .starts_with('f')
+                        .then_some(CorrectAnswer::Bool(false))
+                }),
             QuestionType::Text => {
                 if self.correct_answer_draft.is_empty() {
                     None

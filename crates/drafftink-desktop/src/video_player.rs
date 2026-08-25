@@ -507,8 +507,9 @@ fn build_output_stream(
                     // Safety: i16 无内部不变量（任意位模式合法），`data` 是独占可变
                     // 借用，长度按 size_of_val 精确换算 → 字节视图与原切片同生命周期。
                     // 直接让 pop_slice 填进声卡缓冲，实现真正的零拷贝、零分配。
-                    let bytes =
-                        unsafe { std::slice::from_raw_parts_mut(data.as_mut_ptr().cast::<u8>(), n) };
+                    let bytes = unsafe {
+                        std::slice::from_raw_parts_mut(data.as_mut_ptr().cast::<u8>(), n)
+                    };
                     fill_pcm(bytes, &mut cons, &shared);
                 },
                 on_err,
@@ -522,8 +523,9 @@ fn build_output_stream(
                 move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
                     let n = std::mem::size_of_val(data);
                     // Safety: 同上。f32 的全 0 位模式即 0.0（静音），故欠载填 0 安全。
-                    let bytes =
-                        unsafe { std::slice::from_raw_parts_mut(data.as_mut_ptr().cast::<u8>(), n) };
+                    let bytes = unsafe {
+                        std::slice::from_raw_parts_mut(data.as_mut_ptr().cast::<u8>(), n)
+                    };
                     fill_pcm(bytes, &mut cons, &shared);
                 },
                 on_err,
@@ -1092,9 +1094,9 @@ impl VideoPlayer {
         // 音轨信息只探测一次并缓存（audio_src）：seek 重启音频管线时复用，
         // 杜绝每次跳转都在 UI 线程同步等待 ffprobe 子进程。
         let audio_src = probe_audio(&ffmpeg, path);
-        let audio = audio_src.as_ref().and_then(|src| {
-            AudioPipeline::try_new_with_src(&ffmpeg, path, is_loop, None, src)
-        });
+        let audio = audio_src
+            .as_ref()
+            .and_then(|src| AudioPipeline::try_new_with_src(&ffmpeg, path, is_loop, None, src));
         if audio.is_none() {
             log::warn!("[audio] 无可用音频管线（无音轨或设备不可用）— 静默播放 {path}");
         }
@@ -1568,11 +1570,7 @@ fn ffmpeg_decode_args(
     ss_sec: Option<f64>,
     realtime: bool,
 ) -> Vec<String> {
-    let mut args: Vec<String> = vec![
-        "-hide_banner".into(),
-        "-loglevel".into(),
-        "error".into(),
-    ];
+    let mut args: Vec<String> = vec!["-hide_banner".into(), "-loglevel".into(), "error".into()];
     // 仅实时播放路径需要 `-re`；探测首帧不要限速。
     if realtime {
         args.push("-re".into());
@@ -1601,7 +1599,7 @@ fn ffmpeg_decode_args(
     args.push("-i".into());
     args.push(path.into());
     args.push("-an".into()); // 只要视频帧
-    // 降维滤镜：仅当目标尺寸小于源尺寸时启用，保持比例、输出 RGBA。
+                             // 降维滤镜：仅当目标尺寸小于源尺寸时启用，保持比例、输出 RGBA。
     if dims.out_w != dims.src_w || dims.out_h != dims.src_h {
         args.push("-vf".into());
         args.push(format!("scale={}:{},format=rgba", dims.out_w, dims.out_h));
@@ -1658,11 +1656,7 @@ fn probe(ffmpeg: &Path, path: &str) -> Result<VideoInfo> {
     let fps = parse_fps(&s, "\"avg_frame_rate\"")
         .or_else(|| parse_fps(&s, "\"r_frame_rate\""))
         .unwrap_or(30.0);
-    Ok(VideoInfo {
-        width,
-        height,
-        fps,
-    })
+    Ok(VideoInfo { width, height, fps })
 }
 
 /// 从 ffprobe 的 JSON 文本中提取 `"key": <int>` 或 `"key": "<int>"` 形式的整数。
@@ -1839,7 +1833,10 @@ mod tests {
         let mut player = VideoPlayer::new(&path, false).expect("解码器应成功启动");
         // 优先采用本机可用的硬件加速（如 d3d11va/qsv），否则回退软件解码；二者皆有效。
         assert!(
-            matches!(player.hwaccel, HwAccel::Software | HwAccel::D3D11Va | HwAccel::Qsv | HwAccel::Dxva2),
+            matches!(
+                player.hwaccel,
+                HwAccel::Software | HwAccel::D3D11Va | HwAccel::Qsv | HwAccel::Dxva2
+            ),
             "应选定一个有效解码后端，实际: {:?}",
             player.hwaccel
         );
@@ -2032,7 +2029,11 @@ mod tests {
         );
 
         if let Some(f) = player.audio_format() {
-            assert!(f.sample_rate >= 8000, "采样率应合法，实际 {}", f.sample_rate);
+            assert!(
+                f.sample_rate >= 8000,
+                "采样率应合法，实际 {}",
+                f.sample_rate
+            );
             assert!(f.channels >= 1, "声道数应 ≥1，实际 {}", f.channels);
             assert!(f.frame_bytes() >= 2, "音频帧字节数应 ≥2");
             log::info!("[test] 音频管线已建立: {f:?}");
@@ -2157,7 +2158,15 @@ mod tests {
             !none.iter().any(|a| a == "-ss"),
             "无 seek 时不应含 -ss: {none:?}",
         );
-        let some = ffmpeg_decode_args("x.mp4", HwAccel::Software, &dims, false, None, Some(0.5), true);
+        let some = ffmpeg_decode_args(
+            "x.mp4",
+            HwAccel::Software,
+            &dims,
+            false,
+            None,
+            Some(0.5),
+            true,
+        );
         let joined = some.join(" ");
         assert!(joined.contains("-ss 0.500"), "-ss 应出现在参数中: {joined}");
         let i_pos = some.iter().position(|a| a == "-i").unwrap();
@@ -2176,12 +2185,21 @@ mod tests {
             out_w: 320,
             out_h: 240,
         };
-        let probe = ffmpeg_decode_args("x.mp4", HwAccel::Software, &dims, false, Some(1), None, false);
+        let probe = ffmpeg_decode_args(
+            "x.mp4",
+            HwAccel::Software,
+            &dims,
+            false,
+            Some(1),
+            None,
+            false,
+        );
         assert!(
             !probe.iter().any(|a| a == "-re"),
             "探测参数不应含 -re（否则首帧探测被限速、阻塞 new）: {probe:?}",
         );
-        let playback = ffmpeg_decode_args("x.mp4", HwAccel::Software, &dims, false, None, None, true);
+        let playback =
+            ffmpeg_decode_args("x.mp4", HwAccel::Software, &dims, false, None, None, true);
         assert!(
             playback.iter().any(|a| a == "-re"),
             "播放参数应含 -re（实时限速，与音视频同步节奏一致）: {playback:?}",
@@ -2268,8 +2286,10 @@ mod tests {
             }
             std::thread::sleep(Duration::from_millis(30));
         }
-        assert!(latest > 0, "播放期间进度应 > 0ms，实际恒为 {latest}（0:00 症状回归）");
+        assert!(
+            latest > 0,
+            "播放期间进度应 > 0ms，实际恒为 {latest}（0:00 症状回归）"
+        );
         let _ = std::fs::remove_file(&path);
     }
 }
-

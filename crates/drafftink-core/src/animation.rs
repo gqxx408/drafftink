@@ -218,7 +218,6 @@ pub struct ElementAnimation {
     pub audio_path: Option<String>,
 
     // ── Position targets (for translate / fly effects) ─────────────────────
-
     /// Absolute target X position.
     #[serde(default)]
     pub to_x: Option<f32>,
@@ -236,7 +235,6 @@ pub struct ElementAnimation {
     pub by_y: Option<f32>,
 
     // ── Translate distance ─────────────────────────────────────────────────
-
     /// Distance for translate animations.
     /// If absent, defaults to 25 % of the logical page width.
     #[serde(default)]
@@ -309,18 +307,13 @@ pub struct SlideAnimationSequence {
 impl SlideAnimationSequence {
     /// Returns `true` when there are no animations on this slide.
     pub fn is_empty(&self) -> bool {
-        self.before_queue.is_empty()
-            && self.after_queue.is_empty()
-            && self.click_map.is_empty()
+        self.before_queue.is_empty() && self.after_queue.is_empty() && self.click_map.is_empty()
     }
 
     /// Collects all `target_element_id`s from the `before_queue` and
     /// `after_queue`.  Used during `init_page` to pre-hide elements
     /// before their entrance animation plays.
-    pub fn all_target_ids(
-        &self,
-        anim_map: &HashMap<Uuid, ElementAnimation>,
-    ) -> Vec<Uuid> {
+    pub fn all_target_ids(&self, anim_map: &HashMap<Uuid, ElementAnimation>) -> Vec<Uuid> {
         let mut ids = Vec::new();
         for q in [&self.before_queue, &self.after_queue] {
             for id in q {

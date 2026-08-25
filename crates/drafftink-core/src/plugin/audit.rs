@@ -59,5 +59,13 @@ pub struct NullAudit;
 
 impl NullAudit {
     #[allow(unused)]
-    pub fn log_event(&mut self, _plugin: &str, _action: &str, _params: &str, _result: &str, _ok: bool) {}
+    pub fn log_event(
+        &mut self,
+        _plugin: &str,
+        _action: &str,
+        _params: &str,
+        _result: &str,
+        _ok: bool,
+    ) {
+    }
 }

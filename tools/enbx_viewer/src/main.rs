@@ -13,9 +13,15 @@ use drafftink_core::plugin::api::DummyContext;
 /// Wrapper so the generic lifetime is satisfied.
 struct Context(DummyContext);
 impl drafftink_core::plugin::api::PluginContext for Context {
-    fn log(&self, level: &str, msg: &str) { self.0.log(level, msg); }
-    fn read_file(&self, path: &str) -> Result<Vec<u8>, String> { self.0.read_file(path) }
-    fn system_info(&self) -> Vec<(String, String)> { self.0.system_info() }
+    fn log(&self, level: &str, msg: &str) {
+        self.0.log(level, msg);
+    }
+    fn read_file(&self, path: &str) -> Result<Vec<u8>, String> {
+        self.0.read_file(path)
+    }
+    fn system_info(&self) -> Vec<(String, String)> {
+        self.0.system_info()
+    }
 }
 
 fn main() -> eframe::Result<()> {
@@ -33,8 +39,7 @@ fn main() -> eframe::Result<()> {
     // Load .enbx
     let data = std::fs::read(&path).expect("read file");
     let ctx = Context(DummyContext);
-    let doc = format_enbx::loader::load_enbx(&data, &ctx)
-        .expect("load enbx");
+    let doc = format_enbx::loader::load_enbx(&data, &ctx).expect("load enbx");
 
     eprintln!("Loaded {} page(s)", doc.pages.len());
     for (i, p) in doc.pages.iter().enumerate() {
@@ -42,17 +47,17 @@ fn main() -> eframe::Result<()> {
     }
 
     let native_options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default()
-            .with_title(format!("enbx_viewer — {}", path.file_name().unwrap().to_string_lossy())),
+        viewport: egui::ViewportBuilder::default().with_title(format!(
+            "enbx_viewer — {}",
+            path.file_name().unwrap().to_string_lossy()
+        )),
         ..Default::default()
     };
 
     eframe::run_native(
         "enbx_viewer",
         native_options,
-        Box::new(move |_cc| {
-            Ok(Box::new(App { doc, page: 0 }))
-        }),
+        Box::new(move |_cc| Ok(Box::new(App { doc, page: 0 }))),
     )
 }
 
@@ -69,7 +74,11 @@ impl eframe::App for App {
                 if ui.button("◀ Prev").clicked() && self.page > 0 {
                     self.page -= 1;
                 }
-                ui.label(format!("Page {}/{}", self.page + 1, self.doc.pages.len().max(1)));
+                ui.label(format!(
+                    "Page {}/{}",
+                    self.page + 1,
+                    self.doc.pages.len().max(1)
+                ));
                 if ui.button("Next ▶").clicked() && self.page + 1 < self.doc.pages.len() {
                     self.page += 1;
                 }

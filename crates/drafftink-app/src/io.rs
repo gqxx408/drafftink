@@ -30,9 +30,7 @@ pub fn save_courseware(path: &Path, doc: &CoursewareDoc) -> Result<()> {
     for elem in &doc.elements {
         if let Element::Image(img) = elem {
             if let Some(ref data) = img.image_data {
-                let img_name = Path::new(&img.image_path)
-                    .file_name()
-                    .unwrap_or_default();
+                let img_name = Path::new(&img.image_path).file_name().unwrap_or_default();
                 let dest = assets_dir.join(img_name);
                 std::fs::write(&dest, data).ok();
             }
@@ -71,11 +69,8 @@ pub fn load_image_data(doc: &mut CoursewareDoc, courseware_path: &Path) -> Resul
 
     for elem in &mut doc.elements {
         if let Element::Image(img) = elem {
-            let img_path = assets_dir.join(
-                Path::new(&img.image_path)
-                    .file_name()
-                    .unwrap_or_default(),
-            );
+            let img_path =
+                assets_dir.join(Path::new(&img.image_path).file_name().unwrap_or_default());
             if img_path.exists() {
                 img.image_data = Some(std::fs::read(&img_path)?);
             }

@@ -114,7 +114,9 @@ pub struct LoadedTexture {
 /// # Returns
 /// A tuple of (scene, loaded_textures). Returns `Ok(None)` if the file
 /// does not contain a SolarSystem element.
-pub fn load_enbx_solar_system(path: &Path) -> Result<Option<(SolarSystemScene, Vec<LoadedTexture>)>> {
+pub fn load_enbx_solar_system(
+    path: &Path,
+) -> Result<Option<(SolarSystemScene, Vec<LoadedTexture>)>> {
     let file = std::fs::File::open(path)?;
     let mut archive = zip::ZipArchive::new(file)?;
 
@@ -355,10 +357,8 @@ fn parse_slide_xml(xml: &str) -> Result<Option<SolarSystemScene>> {
                             (current_texture_key.take(), current_texture_source.take())
                         {
                             // Extract resource ID from id:// URI
-                            let resource_id = source
-                                .strip_prefix("id://")
-                                .unwrap_or(&source)
-                                .to_string();
+                            let resource_id =
+                                source.strip_prefix("id://").unwrap_or(&source).to_string();
                             textures.push(TextureLayer {
                                 key,
                                 resource_id,
@@ -389,8 +389,12 @@ fn parse_slide_xml(xml: &str) -> Result<Option<SolarSystemScene>> {
                             "Texture2DMatrix" => {
                                 texture_matrix = parse_matrix6_str(&text);
                             }
-                            "X" if !in_look_dir && !in_up_dir => screen_x = text.parse().unwrap_or(0.0),
-                            "Y" if !in_look_dir && !in_up_dir => screen_y = text.parse().unwrap_or(0.0),
+                            "X" if !in_look_dir && !in_up_dir => {
+                                screen_x = text.parse().unwrap_or(0.0)
+                            }
+                            "Y" if !in_look_dir && !in_up_dir => {
+                                screen_y = text.parse().unwrap_or(0.0)
+                            }
                             "Width" if !in_look_dir && !in_up_dir => {
                                 screen_width = text.parse().unwrap_or(1280.0)
                             }
@@ -415,8 +419,7 @@ fn parse_slide_xml(xml: &str) -> Result<Option<SolarSystemScene>> {
                 if name == "ImageBrush" && in_image_brush {
                     for attr in e.attributes().flatten() {
                         if attr.key.as_ref() == b"Source" {
-                            current_texture_source =
-                                Some(attr.unescape_value()?.to_string());
+                            current_texture_source = Some(attr.unescape_value()?.to_string());
                         }
                     }
                 }
@@ -595,20 +598,33 @@ fn icosahedron_base() -> (Vec<[f32; 3]>, Vec<[u32; 3]>) {
         .collect();
 
     let faces = vec![
-        [0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
-        [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
-        [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
-        [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1],
+        [0, 11, 5],
+        [0, 5, 1],
+        [0, 1, 7],
+        [0, 7, 10],
+        [0, 10, 11],
+        [3, 9, 4],
+        [3, 4, 2],
+        [3, 2, 6],
+        [3, 6, 8],
+        [3, 8, 9],
+        [1, 5, 9],
+        [5, 11, 4],
+        [11, 10, 2],
+        [10, 7, 6],
+        [7, 1, 8],
+        [4, 9, 5],
+        [2, 4, 11],
+        [6, 2, 10],
+        [8, 6, 7],
+        [9, 8, 1],
     ];
 
     (vertices, faces)
 }
 
 /// Subdivide each triangle into 4 smaller triangles.
-fn subdivide(
-    vertices: &[[f32; 3]],
-    faces: &[[u32; 3]],
-) -> (Vec<[f32; 3]>, Vec<[u32; 3]>) {
+fn subdivide(vertices: &[[f32; 3]], faces: &[[u32; 3]]) -> (Vec<[f32; 3]>, Vec<[u32; 3]>) {
     let mut new_vertices = vertices.to_vec();
     let mut new_faces = Vec::with_capacity(faces.len() * 4);
     let mut midpoints: HashMap<(u32, u32), u32> = HashMap::new();
@@ -770,7 +786,11 @@ impl SolarSystemRenderer {
             cam.look_direction[1],
             cam.look_direction[2],
         );
-        let up = Vector3::new(cam.up_direction[0], cam.up_direction[1], cam.up_direction[2]);
+        let up = Vector3::new(
+            cam.up_direction[0],
+            cam.up_direction[1],
+            cam.up_direction[2],
+        );
 
         // Target = eye + look_dir (the point the camera looks at)
         self.camera.target = look + eye;
@@ -783,9 +803,15 @@ impl SolarSystemRenderer {
 
         // Camera3D rotation maps (0,0,1)→forward, (0,1,0)→up, (1,0,0)→right
         let rot_matrix = Matrix3::new(
-            right[0], up_corrected[0], forward[0],
-            right[1], up_corrected[1], forward[1],
-            right[2], up_corrected[2], forward[2],
+            right[0],
+            up_corrected[0],
+            forward[0],
+            right[1],
+            up_corrected[1],
+            forward[1],
+            right[2],
+            up_corrected[2],
+            forward[2],
         );
         self.camera.rotation =
             UnitQuaternion::from_rotation_matrix(&Rotation3::from_matrix_unchecked(rot_matrix));
@@ -802,11 +828,7 @@ impl SolarSystemRenderer {
     /// 3. Optional overlay texture blending
     pub fn render(&self, painter: &Painter, screen_size: (f32, f32), screen_rect: egui::Rect) {
         // Dark space background
-        painter.rect_filled(
-            screen_rect,
-            0.0,
-            Color32::from_rgb(8, 10, 20),
-        );
+        painter.rect_filled(screen_rect, 0.0, Color32::from_rgb(8, 10, 20));
 
         if self.textures.is_empty() {
             return;
@@ -954,7 +976,8 @@ impl SolarSystemRenderer {
             let brightness = ambient + (1.0 - ambient) * diffuse;
             let light_val = (brightness * 255.0).clamp(0.0, 255.0) as u8;
             let alpha_val = (alpha * 255.0).clamp(0.0, 255.0) as u8;
-            let vertex_color = Color32::from_rgba_unmultiplied(light_val, light_val, light_val, alpha_val);
+            let vertex_color =
+                Color32::from_rgba_unmultiplied(light_val, light_val, light_val, alpha_val);
 
             // Get UVs
             let uva = self.sphere.uvs[a as usize];
@@ -978,7 +1001,8 @@ impl SolarSystemRenderer {
                 uv: Pos2::new(uvc[0], uvc[1]),
                 color: vertex_color,
             });
-            mesh.indices.extend_from_slice(&[base_idx, base_idx + 1, base_idx + 2]);
+            mesh.indices
+                .extend_from_slice(&[base_idx, base_idx + 1, base_idx + 2]);
         }
 
         if !mesh.indices.is_empty() {
@@ -991,12 +1015,7 @@ impl SolarSystemRenderer {
     /// Renders a slightly larger transparent sphere where the alpha is
     /// proportional to the Fresnel factor (1 - dot(view, normal)),
     /// creating a blue glow at the silhouette edges.
-    fn render_atmosphere(
-        &self,
-        painter: &Painter,
-        screen_size: (f32, f32),
-        aspect: f32,
-    ) {
+    fn render_atmosphere(&self, painter: &Painter, screen_size: (f32, f32), aspect: f32) {
         let vp = self.camera.view_projection_matrix(aspect);
         let cam_pos = self.camera.position();
         let radius = self.sphere_radius * 1.04; // Slightly larger than the planet
@@ -1094,7 +1113,8 @@ impl SolarSystemRenderer {
                 uv: Pos2::ZERO,
                 color,
             });
-            mesh.indices.extend_from_slice(&[base_idx, base_idx + 1, base_idx + 2]);
+            mesh.indices
+                .extend_from_slice(&[base_idx, base_idx + 1, base_idx + 2]);
         }
 
         if !mesh.indices.is_empty() {
@@ -1160,7 +1180,10 @@ mod tests {
 
     #[test]
     fn test_parse_matrix6_str() {
-        assert_eq!(parse_matrix6_str("1,0,0,1,0,0"), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
+        assert_eq!(
+            parse_matrix6_str("1,0,0,1,0,0"),
+            [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        );
         assert_eq!(
             parse_matrix6_str("0.5, 0.1, 0.2, 0.8, 10, 20"),
             [0.5, 0.1, 0.2, 0.8, 10.0, 20.0]
@@ -1187,7 +1210,10 @@ mod tests {
 
         let map = parse_reference_xml(xml).unwrap();
         assert_eq!(map.id_to_path.len(), 2);
-        assert_eq!(map.id_to_path.get("abc123").unwrap(), "Resources/abc123.jpg");
+        assert_eq!(
+            map.id_to_path.get("abc123").unwrap(),
+            "Resources/abc123.jpg"
+        );
         assert_eq!(map.id_to_path.get("def456").unwrap(), "Resources/def456");
     }
 

@@ -1,6 +1,6 @@
 //! ZXX 数据集的 XML 导出（结构对齐 [`crate::emgi::xml::to_xml`]）。
 
-use crate::zxx::{SUBSET_NAMES, ZxxDataset};
+use crate::zxx::{ZxxDataset, SUBSET_NAMES};
 
 /// 转义 XML 特殊字符。
 fn escape_xml(s: &str) -> String {

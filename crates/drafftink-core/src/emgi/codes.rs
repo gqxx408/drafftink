@@ -60,7 +60,13 @@ pub const JYT_1001_EXAM_METHOD: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "考试方式代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "开卷"), ("2", "闭卷"), ("3", "口试"), ("4", "实操"), ("9", "其他")],
+    entries: &[
+        ("1", "开卷"),
+        ("2", "闭卷"),
+        ("3", "口试"),
+        ("4", "实操"),
+        ("9", "其他"),
+    ],
 };
 
 /// 是否标志代码（JY/T 1001，通用逻辑标志）。
@@ -87,7 +93,12 @@ pub const JYT_1001_TEXTBOOK_TYPE: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "教材类型代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "国家教材"), ("2", "地方教材"), ("3", "校本教材"), ("9", "其他")],
+    entries: &[
+        ("1", "国家教材"),
+        ("2", "地方教材"),
+        ("3", "校本教材"),
+        ("9", "其他"),
+    ],
 };
 
 /// 教学计划类型代码（JY/T 1001）。
@@ -96,7 +107,12 @@ pub const JYT_1001_TEACH_PLAN_TYPE: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "教学计划类型代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "学年计划"), ("2", "学期计划"), ("3", "单元计划"), ("9", "其他")],
+    entries: &[
+        ("1", "学年计划"),
+        ("2", "学期计划"),
+        ("3", "单元计划"),
+        ("9", "其他"),
+    ],
 };
 
 /// 星期代码（JY/T 1001 / GB/T 7408 周几）。
@@ -201,7 +217,13 @@ pub const JYT_1001_GRAD_CODE: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "毕结业代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "毕业"), ("2", "结业"), ("3", "肄业"), ("4", "休学"), ("9", "其他")],
+    entries: &[
+        ("1", "毕业"),
+        ("2", "结业"),
+        ("3", "肄业"),
+        ("4", "休学"),
+        ("9", "其他"),
+    ],
 };
 
 /// 岗位代码（JY/T 1001 / JY/T 1004 教职工类）。
@@ -210,7 +232,13 @@ pub const JYT_1001_POST_CODE: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "岗位代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "教学岗"), ("2", "管理岗"), ("3", "教辅岗"), ("4", "工勤岗"), ("9", "其他")],
+    entries: &[
+        ("1", "教学岗"),
+        ("2", "管理岗"),
+        ("3", "教辅岗"),
+        ("4", "工勤岗"),
+        ("9", "其他"),
+    ],
 };
 
 /// 职务代码（JY/T 1001 / JY/T 1004 教职工类）。
@@ -349,7 +377,12 @@ pub const GBT_2261_1_GENDER: CodeTable = CodeTable {
     standard: "GB/T 2261.1",
     name: "人的性别代码",
     kind: CodeKind::Enumerated,
-    entries: &[("0", "未知的性别"), ("1", "男性"), ("2", "女性"), ("9", "未说明的性别")],
+    entries: &[
+        ("0", "未知的性别"),
+        ("1", "男性"),
+        ("2", "女性"),
+        ("9", "未说明的性别"),
+    ],
 };
 
 /// GB/T 3304 民族代码（56 个民族）。
@@ -559,7 +592,12 @@ pub const JYT_1001_TERM: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "学期代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "第一学期"), ("2", "第二学期"), ("3", "第三学期"), ("9", "其他")],
+    entries: &[
+        ("1", "第一学期"),
+        ("2", "第二学期"),
+        ("3", "第三学期"),
+        ("9", "其他"),
+    ],
 };
 
 /// JY/T 1001 年级代码。
@@ -631,7 +669,13 @@ pub const JYT_1001_ENROLL_TYPE: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "入学（招生）方式代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "统一招生"), ("2", "保送"), ("3", "特长生"), ("4", "择校"), ("9", "其他")],
+    entries: &[
+        ("1", "统一招生"),
+        ("2", "保送"),
+        ("3", "特长生"),
+        ("4", "择校"),
+        ("9", "其他"),
+    ],
 };
 
 /// JY/T 1001 就读方式代码。
@@ -649,7 +693,12 @@ pub const JYT_1001_STUDENT_CATEGORY: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "学生类别代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "普通学生"), ("2", "留学生"), ("3", "函授生"), ("9", "其他")],
+    entries: &[
+        ("1", "普通学生"),
+        ("2", "留学生"),
+        ("3", "函授生"),
+        ("9", "其他"),
+    ],
 };
 
 /// JY/T 1001 学籍状态代码。
@@ -684,7 +733,12 @@ pub const JYT_1001_AWARD_TYPE: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "奖励类别代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "综合荣誉"), ("2", "学科竞赛"), ("3", "文体活动"), ("9", "其他")],
+    entries: &[
+        ("1", "综合荣誉"),
+        ("2", "学科竞赛"),
+        ("3", "文体活动"),
+        ("9", "其他"),
+    ],
 };
 
 /// JY/T 1001 奖励级别代码。
@@ -693,7 +747,14 @@ pub const JYT_1001_AWARD_LEVEL: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "奖励级别代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "国家级"), ("2", "省级"), ("3", "市级"), ("4", "区县级"), ("5", "校级"), ("9", "其他")],
+    entries: &[
+        ("1", "国家级"),
+        ("2", "省级"),
+        ("3", "市级"),
+        ("4", "区县级"),
+        ("5", "校级"),
+        ("9", "其他"),
+    ],
 };
 
 /// JY/T 1001 惩处类别代码。
@@ -702,7 +763,14 @@ pub const JYT_1001_PUNISH_TYPE: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "惩处类别代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "警告"), ("2", "严重警告"), ("3", "记过"), ("4", "留校察看"), ("5", "开除学籍"), ("9", "其他")],
+    entries: &[
+        ("1", "警告"),
+        ("2", "严重警告"),
+        ("3", "记过"),
+        ("4", "留校察看"),
+        ("5", "开除学籍"),
+        ("9", "其他"),
+    ],
 };
 
 /// JY/T 1001 惩处级别代码。
@@ -711,7 +779,13 @@ pub const JYT_1001_PUNISH_LEVEL: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "惩处级别代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "校级"), ("2", "区县级"), ("3", "地市级"), ("4", "省级"), ("9", "其他")],
+    entries: &[
+        ("1", "校级"),
+        ("2", "区县级"),
+        ("3", "地市级"),
+        ("4", "省级"),
+        ("9", "其他"),
+    ],
 };
 
 /// JY/T 1001 教职工类别代码。
@@ -735,7 +809,13 @@ pub const JYT_1001_STAFF_STATE: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "教职工当前状态代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "在岗"), ("2", "离休"), ("3", "退休"), ("4", "离岗"), ("9", "其他")],
+    entries: &[
+        ("1", "在岗"),
+        ("2", "离休"),
+        ("3", "退休"),
+        ("4", "离岗"),
+        ("9", "其他"),
+    ],
 };
 
 /// JY/T 1001 教职工来源代码。
@@ -744,7 +824,13 @@ pub const JYT_1001_STAFF_SOURCE: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "教职工来源代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "毕业生"), ("2", "调任"), ("3", "招聘"), ("4", "军转"), ("9", "其他")],
+    entries: &[
+        ("1", "毕业生"),
+        ("2", "调任"),
+        ("3", "招聘"),
+        ("4", "军转"),
+        ("9", "其他"),
+    ],
 };
 
 /// JY/T 1001 专业技术职务级别代码。
@@ -753,7 +839,13 @@ pub const JYT_1001_TITLE_LEVEL: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "专业技术职务级别代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "正高级"), ("2", "副高级"), ("3", "中级"), ("4", "初级"), ("9", "未定级")],
+    entries: &[
+        ("1", "正高级"),
+        ("2", "副高级"),
+        ("3", "中级"),
+        ("4", "初级"),
+        ("9", "未定级"),
+    ],
 };
 
 /// JY/T 1001 校舍场所类型代码。
@@ -777,7 +869,13 @@ pub const JYT_1001_EQUIP_TYPE: CodeTable = CodeTable {
     standard: "JY/T 1001",
     name: "仪器设备分类代码",
     kind: CodeKind::Enumerated,
-    entries: &[("1", "通用设备"), ("2", "专用设备"), ("3", "文物陈列品"), ("4", "图书"), ("9", "其他")],
+    entries: &[
+        ("1", "通用设备"),
+        ("2", "专用设备"),
+        ("3", "文物陈列品"),
+        ("4", "图书"),
+        ("9", "其他"),
+    ],
 };
 
 /// GB/T 4658 学历代码。
@@ -863,7 +961,11 @@ pub const GBT_CREDIT_CODE: CodeTable = CodeTable {
 /// 查找代码含义（双向：支持代码→含义）。返回 `None` 表示非法。
 pub fn lookup_meaning(table_id: &str, code: &str) -> Option<&'static str> {
     let table = ALL_CODE_TABLES.iter().find(|t| t.id == table_id)?;
-    table.entries.iter().find(|(c, _)| *c == code).map(|(_, m)| *m)
+    table
+        .entries
+        .iter()
+        .find(|(c, _)| *c == code)
+        .map(|(_, m)| *m)
 }
 
 /// 校验取值是否落在代码表内。

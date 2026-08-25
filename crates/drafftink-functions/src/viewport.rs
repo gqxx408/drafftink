@@ -34,11 +34,9 @@ impl CoordTransform {
 
     /// 世界坐标 → 屏幕坐标
     pub fn world_to_screen(&self, viewport: &Viewport, world_x: f64, world_y: f64) -> Pos2 {
-        let sx = self.screen_rect.min.x as f64
-            + (world_x - viewport.x_min) * self.scale_x;
+        let sx = self.screen_rect.min.x as f64 + (world_x - viewport.x_min) * self.scale_x;
         // Y 轴翻转: 世界坐标 y 向上, 屏幕坐标 y 向下
-        let sy = self.screen_rect.min.y as f64
-            + (viewport.y_max - world_y) * self.scale_y;
+        let sy = self.screen_rect.min.y as f64 + (viewport.y_max - world_y) * self.scale_y;
         Pos2::new(sx as f32, sy as f32)
     }
 
@@ -71,7 +69,11 @@ impl CoordTransform {
 /// 根据视口范围和目标像素间距，选择合适的网格刻度。
 pub fn nice_grid_interval(world_range: f64, target_pixels: f64, scale: f64) -> f64 {
     let target_world = world_range * target_pixels / (world_range * scale).max(1.0);
-    let target_world = if target_world <= 0.0 { 1.0 } else { target_world };
+    let target_world = if target_world <= 0.0 {
+        1.0
+    } else {
+        target_world
+    };
 
     let magnitude = 10f64.powi(target_world.log10().floor() as i32);
     let normalized = target_world / magnitude;

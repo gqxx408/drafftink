@@ -5,8 +5,8 @@ use quick_xml::events::Event;
 use quick_xml::Reader;
 
 use crate::elements::{
-    text::{ArgbColor, TextElement},
     shape::{GeometryKind, ShapeElementData, SlideElement},
+    text::{ArgbColor, TextElement},
 };
 
 /// Parse a Slide XML string into a list of slide elements (Text + Shape).
@@ -27,7 +27,7 @@ pub fn parse_slide_xml(xml: &str) -> Result<Vec<SlideElement>, String> {
     // ── Text parsing state ───────────────────────────────────────
     let mut text_elem: Option<TextElement> = None;
     let mut in_element_wrapper = false; // <Element> wrapper (texts)
-    let mut in_text_elem = false;        // <Text> directly under <Elements>
+    let mut in_text_elem = false; // <Text> directly under <Elements>
     let mut in_rich_text = false;
     let mut in_text_run = false;
     let mut in_background = false;
@@ -122,14 +122,30 @@ pub fn parse_slide_xml(xml: &str) -> Result<Vec<SlideElement>, String> {
                         in_color_brush = false;
                         color_brush_target = None;
                     }
-                    b"Geometry" if in_shape => { in_geometry = true; }
-                    b"PresetGeometry" if in_shape => { in_preset_geometry = true; }
-                    b"CustomGeometry" if in_shape => { in_custom_geometry = true; }
-                    b"Adjusts" if in_shape => { in_adjusts = true; }
-                    b"Adjust" if in_shape && in_adjusts => { in_adjust = true; }
-                    b"Line" if in_shape => { in_line = true; }
-                    b"HeadEnd" if in_shape && in_line => { in_head_end = true; }
-                    b"TailEnd" if in_shape && in_line => { in_tail_end = true; }
+                    b"Geometry" if in_shape => {
+                        in_geometry = true;
+                    }
+                    b"PresetGeometry" if in_shape => {
+                        in_preset_geometry = true;
+                    }
+                    b"CustomGeometry" if in_shape => {
+                        in_custom_geometry = true;
+                    }
+                    b"Adjusts" if in_shape => {
+                        in_adjusts = true;
+                    }
+                    b"Adjust" if in_shape && in_adjusts => {
+                        in_adjust = true;
+                    }
+                    b"Line" if in_shape => {
+                        in_line = true;
+                    }
+                    b"HeadEnd" if in_shape && in_line => {
+                        in_head_end = true;
+                    }
+                    b"TailEnd" if in_shape && in_line => {
+                        in_tail_end = true;
+                    }
                     b"Path" if in_shape => {
                         // <Path> holds SVG path data for FreeLine/Fan/Ellipse/Circle.
                         // Long paths may be split across multiple Text events by quick_xml.
@@ -148,7 +164,11 @@ pub fn parse_slide_xml(xml: &str) -> Result<Vec<SlideElement>, String> {
                                         svg_path.push_str(s);
                                     }
                                 }
-                                Ok(Event::End(ref end_e)) if end_e.local_name().as_ref() == b"Path" => break,
+                                Ok(Event::End(ref end_e))
+                                    if end_e.local_name().as_ref() == b"Path" =>
+                                {
+                                    break
+                                }
                                 Ok(Event::Eof) => break,
                                 Err(_) => break,
                                 _ => (),
@@ -160,30 +180,55 @@ pub fn parse_slide_xml(xml: &str) -> Result<Vec<SlideElement>, String> {
                                 s.svg_path.push_str(path_trimmed);
                             }
                         }
-                        eprintln!("[parser] Path captured: len={}, preview={:?}",
+                        eprintln!(
+                            "[parser] Path captured: len={}, preview={:?}",
                             svg_path.len(),
-                            &svg_path[..svg_path.len().min(60)]);
+                            &svg_path[..svg_path.len().min(60)]
+                        );
                     }
 
                     // ── Common sub-elements (work for both text & shape) ──
-                    b"GeometryType" if in_shape => { in_geometry_type = true; }
-                    b"ScaleY" if in_shape && in_adjust => { in_scale_y = true; }
-                    b"Type" if in_shape && (in_head_end || in_tail_end) => { in_end_type = true; }
+                    b"GeometryType" if in_shape => {
+                        in_geometry_type = true;
+                    }
+                    b"ScaleY" if in_shape && in_adjust => {
+                        in_scale_y = true;
+                    }
+                    b"Type" if in_shape && (in_head_end || in_tail_end) => {
+                        in_end_type = true;
+                    }
 
-                    b"Id" => { in_id = true; }
-                    b"X" => { in_x = true; }
-                    b"Y" => { in_y = true; }
-                    b"Width" => { in_width = true; }
-                    b"Height" => { in_height = true; }
-                    b"Rotation" => { in_rotation = true; }
-                    b"IsLocked" => { in_is_locked = true; }
-                    b"Thickness" if in_shape => { in_thickness = true; }
+                    b"Id" => {
+                        in_id = true;
+                    }
+                    b"X" => {
+                        in_x = true;
+                    }
+                    b"Y" => {
+                        in_y = true;
+                    }
+                    b"Width" => {
+                        in_width = true;
+                    }
+                    b"Height" => {
+                        in_height = true;
+                    }
+                    b"Rotation" => {
+                        in_rotation = true;
+                    }
+                    b"IsLocked" => {
+                        in_is_locked = true;
+                    }
+                    b"Thickness" if in_shape => {
+                        in_thickness = true;
+                    }
 
                     b"Background" => {
                         in_background = true;
                         if in_shape {
                             color_brush_target = Some("shape-fill");
-                        } else if !in_shape && (in_element_wrapper || in_text_elem) && !in_rich_text {
+                        } else if !in_shape && (in_element_wrapper || in_text_elem) && !in_rich_text
+                        {
                             // text background handled by old logic
                         }
                     }
@@ -200,10 +245,18 @@ pub fn parse_slide_xml(xml: &str) -> Result<Vec<SlideElement>, String> {
                     }
 
                     // ── Text-only sub-elements ───────────────────────
-                    b"FontSize" if in_text_run => { in_font_size = true; }
-                    b"FontWeight" if in_text_run => { in_font_weight = true; }
-                    b"FontFamily" if in_text_run => { in_font_family = true; }
-                    b"Source" if in_text_run || in_font_family => { in_source = true; }
+                    b"FontSize" if in_text_run => {
+                        in_font_size = true;
+                    }
+                    b"FontWeight" if in_text_run => {
+                        in_font_weight = true;
+                    }
+                    b"FontFamily" if in_text_run => {
+                        in_font_family = true;
+                    }
+                    b"Source" if in_text_run || in_font_family => {
+                        in_source = true;
+                    }
                     _ => {}
                 }
             }
@@ -222,8 +275,14 @@ pub fn parse_slide_xml(xml: &str) -> Result<Vec<SlideElement>, String> {
                     if let Some(s) = shape.as_mut() {
                         s.geometry = match trimmed {
                             "Line" => GeometryKind::Line,
-                            "LineArrowEnd" => { s.has_end_arrow = true; GeometryKind::LineArrowEnd }
-                            "LineArrowStart" => { s.has_start_arrow = true; GeometryKind::LineArrowStart }
+                            "LineArrowEnd" => {
+                                s.has_end_arrow = true;
+                                GeometryKind::LineArrowEnd
+                            }
+                            "LineArrowStart" => {
+                                s.has_start_arrow = true;
+                                GeometryKind::LineArrowStart
+                            }
                             "LineArrowStartEnd" => {
                                 s.has_start_arrow = true;
                                 s.has_end_arrow = true;
@@ -246,8 +305,12 @@ pub fn parse_slide_xml(xml: &str) -> Result<Vec<SlideElement>, String> {
                 if in_end_type {
                     if let Some(s) = shape.as_mut() {
                         if trimmed == "Arrow" {
-                            if in_head_end { s.has_start_arrow = true; }
-                            if in_tail_end { s.has_end_arrow = true; }
+                            if in_head_end {
+                                s.has_start_arrow = true;
+                            }
+                            if in_tail_end {
+                                s.has_end_arrow = true;
+                            }
                         }
                     }
                     continue;
@@ -339,10 +402,26 @@ pub fn parse_slide_xml(xml: &str) -> Result<Vec<SlideElement>, String> {
                 if in_color_brush {
                     if let Ok(color) = ArgbColor::from_hex(trimmed) {
                         match color_brush_target {
-                            Some("shape-stroke") => if let Some(s) = shape.as_mut() { s.stroke_color = color; },
-                            Some("shape-fill") => if let Some(s) = shape.as_mut() { s.fill_color = color; },
-                            Some("text-fg") => if let Some(t) = text_elem.as_mut() { t.foreground = color; },
-                            Some("text-bg") => if let Some(t) = text_elem.as_mut() { t.background = color; },
+                            Some("shape-stroke") => {
+                                if let Some(s) = shape.as_mut() {
+                                    s.stroke_color = color;
+                                }
+                            }
+                            Some("shape-fill") => {
+                                if let Some(s) = shape.as_mut() {
+                                    s.fill_color = color;
+                                }
+                            }
+                            Some("text-fg") => {
+                                if let Some(t) = text_elem.as_mut() {
+                                    t.foreground = color;
+                                }
+                            }
+                            Some("text-bg") => {
+                                if let Some(t) = text_elem.as_mut() {
+                                    t.background = color;
+                                }
+                            }
                             _ => {}
                         }
                     }
@@ -393,8 +472,12 @@ pub fn parse_slide_xml(xml: &str) -> Result<Vec<SlideElement>, String> {
                         text_depth -= 1;
                         if text_depth == 0 && in_text_elem {
                             if let Some(elem) = text_elem.take() {
-                                log::info!("[enbx] Parsed Text: '{}' at ({:.1},{:.1})",
-                                    elem.content, elem.x, elem.y);
+                                log::info!(
+                                    "[enbx] Parsed Text: '{}' at ({:.1},{:.1})",
+                                    elem.content,
+                                    elem.x,
+                                    elem.y
+                                );
                                 elements.push(SlideElement::Text(elem));
                             }
                             // Reset ALL text parsing state
@@ -420,14 +503,29 @@ pub fn parse_slide_xml(xml: &str) -> Result<Vec<SlideElement>, String> {
                             in_id = false;
                         }
                     }
-                    b"RichText" => { in_rich_text = false; }
-                    b"TextRun" => { in_text_run = false; text_content_captured = false; }
-                    b"Background" => { in_background = false; color_brush_target = None; }
-                    b"Foreground" => { in_foreground = false; color_brush_target = None; }
+                    b"RichText" => {
+                        in_rich_text = false;
+                    }
+                    b"TextRun" => {
+                        in_text_run = false;
+                        text_content_captured = false;
+                    }
+                    b"Background" => {
+                        in_background = false;
+                        color_brush_target = None;
+                    }
+                    b"Foreground" => {
+                        in_foreground = false;
+                        color_brush_target = None;
+                    }
                     b"Element" if !in_shape => {
                         if let Some(elem) = text_elem.take() {
-                            log::info!("[enbx] Parsed Text(wrap): '{}' at ({:.1},{:.1})",
-                                elem.content, elem.x, elem.y);
+                            log::info!(
+                                "[enbx] Parsed Text(wrap): '{}' at ({:.1},{:.1})",
+                                elem.content,
+                                elem.x,
+                                elem.y
+                            );
                             elements.push(SlideElement::Text(elem));
                         }
                         // Reset ALL text parsing state
@@ -490,34 +588,86 @@ pub fn parse_slide_xml(xml: &str) -> Result<Vec<SlideElement>, String> {
                         in_color_brush = false;
                         color_brush_target = None;
                     }
-                    b"Geometry" => { in_geometry = false; }
-                    b"PresetGeometry" => { in_preset_geometry = false; }
-                    b"CustomGeometry" => { in_custom_geometry = false; }
-                    b"Adjusts" => { in_adjusts = false; }
-                    b"Adjust" => { in_adjust = false; in_scale_y = false; }
-                    b"Line" => { in_line = false; }
-                    b"HeadEnd" => { in_head_end = false; in_end_type = false; }
-                    b"TailEnd" => { in_tail_end = false; in_end_type = false; }
+                    b"Geometry" => {
+                        in_geometry = false;
+                    }
+                    b"PresetGeometry" => {
+                        in_preset_geometry = false;
+                    }
+                    b"CustomGeometry" => {
+                        in_custom_geometry = false;
+                    }
+                    b"Adjusts" => {
+                        in_adjusts = false;
+                    }
+                    b"Adjust" => {
+                        in_adjust = false;
+                        in_scale_y = false;
+                    }
+                    b"Line" => {
+                        in_line = false;
+                    }
+                    b"HeadEnd" => {
+                        in_head_end = false;
+                        in_end_type = false;
+                    }
+                    b"TailEnd" => {
+                        in_tail_end = false;
+                        in_end_type = false;
+                    }
                     b"Path" => { /* Path consumed inline in Start handler */ }
 
-                    b"GeometryType" => { in_geometry_type = false; }
-                    b"ScaleY" => { in_scale_y = false; }
-                    b"Type" => { in_end_type = false; }
+                    b"GeometryType" => {
+                        in_geometry_type = false;
+                    }
+                    b"ScaleY" => {
+                        in_scale_y = false;
+                    }
+                    b"Type" => {
+                        in_end_type = false;
+                    }
 
-                    b"Id" => { in_id = false; }
-                    b"X" => { in_x = false; }
-                    b"Y" => { in_y = false; }
-                    b"Width" => { in_width = false; }
-                    b"Height" => { in_height = false; }
-                    b"Rotation" => { in_rotation = false; }
-                    b"IsLocked" => { in_is_locked = false; }
-                    b"Thickness" => { in_thickness = false; }
-                    b"ColorBrush" => { in_color_brush = false; color_brush_target = None; }
+                    b"Id" => {
+                        in_id = false;
+                    }
+                    b"X" => {
+                        in_x = false;
+                    }
+                    b"Y" => {
+                        in_y = false;
+                    }
+                    b"Width" => {
+                        in_width = false;
+                    }
+                    b"Height" => {
+                        in_height = false;
+                    }
+                    b"Rotation" => {
+                        in_rotation = false;
+                    }
+                    b"IsLocked" => {
+                        in_is_locked = false;
+                    }
+                    b"Thickness" => {
+                        in_thickness = false;
+                    }
+                    b"ColorBrush" => {
+                        in_color_brush = false;
+                        color_brush_target = None;
+                    }
 
-                    b"FontSize" => { in_font_size = false; }
-                    b"FontWeight" => { in_font_weight = false; }
-                    b"FontFamily" => { in_font_family = false; }
-                    b"Source" => { in_source = false; }
+                    b"FontSize" => {
+                        in_font_size = false;
+                    }
+                    b"FontWeight" => {
+                        in_font_weight = false;
+                    }
+                    b"FontFamily" => {
+                        in_font_family = false;
+                    }
+                    b"Source" => {
+                        in_source = false;
+                    }
                     _ => {}
                 }
             }
@@ -544,31 +694,31 @@ pub fn parse_board(xml: &str) -> Result<(f32, f32), String> {
 
     loop {
         match reader.read_event() {
-            Ok(Event::Start(ref e)) => {
-                match e.local_name().as_ref() {
-                    b"SlideWidth" => in_w = true,
-                    b"SlideHeight" => in_h = true,
-                    _ => {}
-                }
-            }
+            Ok(Event::Start(ref e)) => match e.local_name().as_ref() {
+                b"SlideWidth" => in_w = true,
+                b"SlideHeight" => in_h = true,
+                _ => {}
+            },
             Ok(Event::Text(ref e)) => {
                 if in_w {
                     if let Ok(s) = e.unescape() {
-                        if let Ok(v) = s.trim().parse::<f32>() { width = v; }
+                        if let Ok(v) = s.trim().parse::<f32>() {
+                            width = v;
+                        }
                     }
                 } else if in_h {
                     if let Ok(s) = e.unescape() {
-                        if let Ok(v) = s.trim().parse::<f32>() { height = v; }
+                        if let Ok(v) = s.trim().parse::<f32>() {
+                            height = v;
+                        }
                     }
                 }
             }
-            Ok(Event::End(ref e)) => {
-                match e.local_name().as_ref() {
-                    b"SlideWidth" => in_w = false,
-                    b"SlideHeight" => in_h = false,
-                    _ => {}
-                }
-            }
+            Ok(Event::End(ref e)) => match e.local_name().as_ref() {
+                b"SlideWidth" => in_w = false,
+                b"SlideHeight" => in_h = false,
+                _ => {}
+            },
             Ok(Event::Eof) => break,
             Err(e) => return Err(format!("Board.xml parse error: {}", e)),
             _ => {}
@@ -588,27 +738,27 @@ pub fn parse_document(xml: &str) -> (String, String) {
 
     loop {
         match reader.read_event() {
-            Ok(Event::Start(ref e)) => {
-                match e.local_name().as_ref() {
-                    b"Title" => in_title = true,
-                    b"Author" => in_author = true,
-                    _ => {}
-                }
-            }
+            Ok(Event::Start(ref e)) => match e.local_name().as_ref() {
+                b"Title" => in_title = true,
+                b"Author" => in_author = true,
+                _ => {}
+            },
             Ok(Event::Text(ref e)) => {
                 if in_title {
-                    if let Ok(s) = e.unescape() { title.push_str(s.trim()); }
+                    if let Ok(s) = e.unescape() {
+                        title.push_str(s.trim());
+                    }
                 } else if in_author {
-                    if let Ok(s) = e.unescape() { author.push_str(s.trim()); }
+                    if let Ok(s) = e.unescape() {
+                        author.push_str(s.trim());
+                    }
                 }
             }
-            Ok(Event::End(ref e)) => {
-                match e.local_name().as_ref() {
-                    b"Title" => in_title = false,
-                    b"Author" => in_author = false,
-                    _ => {}
-                }
-            }
+            Ok(Event::End(ref e)) => match e.local_name().as_ref() {
+                b"Title" => in_title = false,
+                b"Author" => in_author = false,
+                _ => {}
+            },
             Ok(Event::Eof) => break,
             Err(_) => break,
             _ => {}
@@ -680,14 +830,17 @@ mod tests {
     #[test]
     fn parse_free_line() {
         let svg = "M175.8,0Q-0.5,169.5,12,209.8C24.5,250.2,142.4,230.5,144.9,251.8";
-        let xml = format!(r#"<?xml version="1.0"?><Slide><Elements><Shape>
+        let xml = format!(
+            r#"<?xml version="1.0"?><Slide><Elements><Shape>
             <Geometry><CustomGeometry><GeometryType>FreeLine</GeometryType><Path>{}</Path></CustomGeometry></Geometry>
             <Path>{}</Path>
             <Foreground><ColorBrush>#FF166EE1</ColorBrush></Foreground>
             <Thickness>2</Thickness>
             <Line><TailEnd><Type>Arrow</Type></TailEnd></Line>
             <Id>s3</Id><X>500</X><Y>100</Y><Width>175</Width><Height>337</Height>
-        </Shape></Elements></Slide>"#, svg, svg);
+        </Shape></Elements></Slide>"#,
+            svg, svg
+        );
         let elems = parse_slide_xml(&xml).expect("parse ok");
         match &elems[0] {
             SlideElement::Shape(s) => {

@@ -386,7 +386,10 @@ pub const EDUCATION_LEVEL_CODE: [(&str, &str); 8] = [
 /// 按代码查询学历名称。Source: GB/T 4658-2006 表1。
 #[inline(always)]
 pub fn get_education_level_name(code: &str) -> Option<&'static str> {
-    EDUCATION_LEVEL_CODE.iter().find(|&&(c, _)| c == code).map(|&(_, n)| n)
+    EDUCATION_LEVEL_CODE
+        .iter()
+        .find(|&&(c, _)| c == code)
+        .map(|&(_, n)| n)
 }
 
 // ── GB/T 6864-2003 学位代码 ────────────────────────────────────────────────
@@ -407,7 +410,10 @@ pub const DEGREE_CODE: [(&str, &str); 4] = [
 /// 按代码查询学位名称。Source: GB/T 6864-2003。
 #[inline(always)]
 pub fn get_degree_name(code: &str) -> Option<&'static str> {
-    DEGREE_CODE.iter().find(|&&(c, _)| c == code).map(|&(_, n)| n)
+    DEGREE_CODE
+        .iter()
+        .find(|&&(c, _)| c == code)
+        .map(|&(_, n)| n)
 }
 
 // ── GB/T 8561-2001 专业技术职务代码（表1，系列级） ────────────────────────
@@ -448,7 +454,10 @@ pub const TECH_POSITION_CODE: [(&str, &str); 24] = [
 /// 按代码查询专业技术职务（系列）名称。Source: GB/T 8561-2001 表1。
 #[inline(always)]
 pub fn get_tech_position_name(code: &str) -> Option<&'static str> {
-    TECH_POSITION_CODE.iter().find(|&&(c, _)| c == code).map(|&(_, n)| n)
+    TECH_POSITION_CODE
+        .iter()
+        .find(|&&(c, _)| c == code)
+        .map(|&(_, n)| n)
 }
 
 // ── GB/T 3304-1991 中国各民族名称代码（表1） ──────────────────────────────
@@ -521,7 +530,10 @@ pub const ETHNIC_CODE: [(&str, &str); 56] = [
 /// 按代码查询民族名称。Source: GB/T 3304-1991 表1。
 #[inline(always)]
 pub fn get_ethnic_name(code: &str) -> Option<&'static str> {
-    ETHNIC_CODE.iter().find(|&&(c, _)| c == code).map(|&(_, n)| n)
+    ETHNIC_CODE
+        .iter()
+        .find(|&&(c, _)| c == code)
+        .map(|&(_, n)| n)
 }
 
 // ── GB/T 2261.2-2003 婚姻状况代码 ─────────────────────────────────────────
@@ -543,7 +555,10 @@ pub const MARITAL_STATUS_CODE: [(&str, &str); 5] = [
 /// 按代码查询婚姻状况名称。Source: GB/T 2261.2-2003。
 #[inline(always)]
 pub fn get_marital_status_name(code: &str) -> Option<&'static str> {
-    MARITAL_STATUS_CODE.iter().find(|&&(c, _)| c == code).map(|&(_, n)| n)
+    MARITAL_STATUS_CODE
+        .iter()
+        .find(|&&(c, _)| c == code)
+        .map(|&(_, n)| n)
 }
 
 #[cfg(test)]
@@ -589,7 +604,10 @@ mod tests {
     #[test]
     fn test_school_type_first_and_last() {
         assert_eq!(SCHOOL_TYPE_CODE[0], ("幼儿园", 111, "Kindergarten"));
-        assert_eq!(SCHOOL_TYPE_CODE[27], ("技工学校", 366, "SkilledWorkersSchool"));
+        assert_eq!(
+            SCHOOL_TYPE_CODE[27],
+            ("技工学校", 366, "SkilledWorkersSchool")
+        );
     }
 
     #[test]
@@ -634,13 +652,19 @@ mod tests {
         // 序列化为标准数字码，而非变体名
         assert_eq!(serde_json::to_string(&GenderCode::Male).unwrap(), "1");
         assert_eq!(serde_json::to_string(&GenderCode::Female).unwrap(), "2");
-        assert_eq!(serde_json::to_string(&GenderCode::Unspecified).unwrap(), "9");
+        assert_eq!(
+            serde_json::to_string(&GenderCode::Unspecified).unwrap(),
+            "9"
+        );
         // 从数字码反序列化
         assert_eq!(
             serde_json::from_str::<GenderCode>("1").unwrap(),
             GenderCode::Male
         );
-        assert_eq!(serde_json::from_str::<GenderCode>("9").unwrap(), GenderCode::Unspecified);
+        assert_eq!(
+            serde_json::from_str::<GenderCode>("9").unwrap(),
+            GenderCode::Unspecified
+        );
         // 非法码应返回错误
         assert!(serde_json::from_str::<GenderCode>("3").is_err());
     }
@@ -649,7 +673,10 @@ mod tests {
     fn test_yesno_serde_numeric() {
         assert_eq!(serde_json::to_string(&YesNoCode::Yes).unwrap(), "1");
         assert_eq!(serde_json::to_string(&YesNoCode::No).unwrap(), "0");
-        assert_eq!(serde_json::from_str::<YesNoCode>("1").unwrap(), YesNoCode::Yes);
+        assert_eq!(
+            serde_json::from_str::<YesNoCode>("1").unwrap(),
+            YesNoCode::Yes
+        );
         assert!(serde_json::from_str::<YesNoCode>("2").is_err());
     }
 

@@ -28,10 +28,7 @@ pub fn generate_keypair() -> ([u8; 32], [u8; 32]) {
     let mut csprng = OsRng;
     let signing_key = ed25519_dalek::SigningKey::generate(&mut csprng);
     let verifying_key = signing_key.verifying_key();
-    (
-        signing_key.to_bytes(),
-        verifying_key.to_bytes(),
-    )
+    (signing_key.to_bytes(), verifying_key.to_bytes())
 }
 
 /// Compute the SHA-512 hash of a file's contents.
@@ -93,7 +90,9 @@ pub fn verify_signature(
     match verifying_key.verify(&hash, &signature) {
         Ok(()) => {
             let is_self_signed = public_key_b64.is_some()
-                || trusted_key.map(|k| k.as_slice() != pubkey.as_slice()).unwrap_or(true);
+                || trusted_key
+                    .map(|k| k.as_slice() != pubkey.as_slice())
+                    .unwrap_or(true);
             if is_self_signed {
                 Ok(SigStatus::SelfSigned)
             } else {

@@ -36,20 +36,20 @@
 //! let ron_str = save_mindmap(&doc)?;
 //! ```
 
-pub mod types;
-pub mod rich_text;
-pub mod layout;
-pub mod render;
 pub mod interaction;
+pub mod layout;
 pub mod persistence;
+pub mod render;
+pub mod rich_text;
+pub mod types;
 
 // 核心类型 re-export
+pub use interaction::{DragState, KeyAction, MindMapEvent, MindMapInteraction, PanState};
+pub use layout::{create_layout, FishBoneLayout, LayoutStrategy, RadialLayout, TreeLayout, Vec2};
+pub use persistence::{load_from_file, load_mindmap, save_mindmap, save_to_file};
+pub use render::MindMapRenderer;
+pub use render::MindMapViewer;
+pub use rich_text::{RichText, RichTextSpan};
 pub use types::{
     ChildrenRotation, EmbeddedContent, MapType, MindMapDoc, MindNode, NodePosition, NodeStyle,
 };
-pub use rich_text::{RichText, RichTextSpan};
-pub use layout::{create_layout, LayoutStrategy, Vec2, TreeLayout, RadialLayout, FishBoneLayout};
-pub use render::MindMapRenderer;
-pub use render::MindMapViewer;
-pub use interaction::{MindMapEvent, MindMapInteraction, KeyAction, DragState, PanState};
-pub use persistence::{save_mindmap, load_mindmap, save_to_file, load_from_file};

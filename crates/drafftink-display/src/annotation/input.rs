@@ -45,10 +45,8 @@ impl AnnotationInput {
         }
 
         // Allocate interactive rect — exclude bottom 46px for toolbar
-        let input_rect = egui::Rect::from_min_max(
-            screen_rect.min,
-            screen_rect.max - egui::vec2(0.0, 46.0),
-        );
+        let input_rect =
+            egui::Rect::from_min_max(screen_rect.min, screen_rect.max - egui::vec2(0.0, 46.0));
         let response = {
             let layer = egui::LayerId::new(egui::Order::Foreground, egui::Id::new("annot_input"));
             let mut ui = egui::Ui::new(
@@ -115,12 +113,8 @@ impl AnnotationInput {
                     }
                 }
             } else {
-                let mut stroke = InkStroke::new(
-                    *tool,
-                    [color[0], color[1], color[2]],
-                    color[3],
-                    thickness,
-                );
+                let mut stroke =
+                    InkStroke::new(*tool, [color[0], color[1], color[2]], color[3], thickness);
                 stroke.points.push((pos.x, pos.y));
                 *current_stroke = Some(stroke);
                 self.last_point_time = now;

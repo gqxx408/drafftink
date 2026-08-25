@@ -32,11 +32,17 @@ impl Header {
         r.read_exact(&mut buf)?;
         let magic = [buf[0], buf[1], buf[2], buf[3]];
         if &magic != MAGIC {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "Not a DRFT file"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Not a DRFT file",
+            ));
         }
         let version = u16::from_le_bytes([buf[4], buf[5]]);
         if version > VERSION {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Unsupported version {version}")));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Unsupported version {version}"),
+            ));
         }
         Ok(Self {
             magic,
@@ -58,11 +64,14 @@ impl Header {
 
 /// Save a CoursewareDoc to a .drft file. Returns payload byte count.
 pub fn save_document<P: AsRef<Path>>(path: P, doc: &CoursewareDoc) -> io::Result<usize> {
-    let payload = bincode::serialize(doc)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+    let payload =
+        bincode::serialize(doc).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
     let crc = crc32fast::hash(&payload);
     let header = Header {
-        magic: *MAGIC, version: VERSION, crc32: crc, payload_len: payload.len() as u32,
+        magic: *MAGIC,
+        version: VERSION,
+        crc32: crc,
+        payload_len: payload.len() as u32,
     };
     let mut f = fs::File::create(path)?;
     header.write(&mut f)?;
@@ -79,12 +88,18 @@ pub fn load_document<P: AsRef<Path>>(path: P) -> io::Result<CoursewareDoc> {
     let mut f = fs::File::open(&path)?;
     let meta = f.metadata()?;
     if meta.len() < HEADER_SIZE as u64 {
-        return Err(io::Error::new(io::ErrorKind::UnexpectedEof, "File too small"));
+        return Err(io::Error::new(
+            io::ErrorKind::UnexpectedEof,
+            "File too small",
+        ));
     }
     let header = Header::read(&mut f)?;
     let expected = HEADER_SIZE as u64 + header.payload_len as u64;
     if meta.len() < expected {
-        return Err(io::Error::new(io::ErrorKind::UnexpectedEof, "Truncated file"));
+        return Err(io::Error::new(
+            io::ErrorKind::UnexpectedEof,
+            "Truncated file",
+        ));
     }
     let mut payload = vec![0u8; header.payload_len as usize];
     f.read_exact(&mut payload)?;
@@ -98,9 +113,7 @@ pub fn load_document<P: AsRef<Path>>(path: P) -> io::Result<CoursewareDoc> {
     match bincode::deserialize::<CoursewareDoc>(&payload) {
         Ok(doc) => Ok(doc),
         Err(e) => {
-            log::warn!(
-                "[document] File format upgrade needed: {e}. Opening as empty canvas."
-            );
+            log::warn!("[document] File format upgrade needed: {e}. Opening as empty canvas.");
             Ok(CoursewareDoc::empty())
         }
     }
@@ -118,8 +131,7 @@ pub fn load_document_slice(data: &[u8]) -> io::Result<CoursewareDoc> {
     if actual_crc != header.crc32 {
         return Err(io::Error::new(io::ErrorKind::InvalidData, "CRC mismatch"));
     }
-    bincode::deserialize(&payload)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
+    bincode::deserialize(&payload).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }
 
 // Patch format (.drfp) — annotation strokes only
@@ -138,15 +150,14 @@ pub struct StrokeData {
 }
 
 pub fn save_patch<P: AsRef<Path>>(path: P, patch: &AnnotationPatch) -> io::Result<()> {
-    let data = bincode::serialize(patch)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+    let data =
+        bincode::serialize(patch).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
     fs::write(path, &data)
 }
 
 pub fn load_patch<P: AsRef<Path>>(path: P) -> io::Result<AnnotationPatch> {
     let data = fs::read(path)?;
-    bincode::deserialize(&data)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
+    bincode::deserialize(&data).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }
 
 #[cfg(test)]

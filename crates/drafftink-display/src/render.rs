@@ -61,7 +61,10 @@ pub fn render_canvas(
 
     // 2. Elements (sorted by z-order) from current page
     let elements_vec: &Vec<Element> = if !doc.pages.is_empty() {
-        doc.pages.get(current_page).map(|p| &p.elements).unwrap_or(&doc.elements)
+        doc.pages
+            .get(current_page)
+            .map(|p| &p.elements)
+            .unwrap_or(&doc.elements)
     } else if !doc.elements.is_empty() {
         &doc.elements
     } else {
@@ -80,7 +83,9 @@ pub fn render_canvas(
     }
 
     // 3. Drawing preview (when dragging to create a new shape)
-    if interaction.is_drawing && matches!(interaction.mode, crate::interaction::ToolMode::DrawShape(_)) {
+    if interaction.is_drawing
+        && matches!(interaction.mode, crate::interaction::ToolMode::DrawShape(_))
+    {
         if let Some(rect) = interaction.draw_rect() {
             let st = interaction.mode;
             draw_drag_preview(painter, camera, &rect, st);
@@ -111,7 +116,10 @@ fn draw_element(painter: &Painter, camera: &Camera, elem: &Element) {
         Element::Text(text) => draw_text(painter, camera, text, opacity),
         Element::Image(_img) => {
             let tl = camera.world_to_screen(base.position);
-            let br = camera.world_to_screen([base.position[0] + base.size[0], base.position[1] + base.size[1]]);
+            let br = camera.world_to_screen([
+                base.position[0] + base.size[0],
+                base.position[1] + base.size[1],
+            ]);
             let rect = Rect::from_min_max(tl, br);
             painter.rect_filled(rect, 4.0, Color32::from_rgb(0xE0, 0xE0, 0xE0));
             painter.rect_stroke(rect, 4.0, Stroke::new(1.0, Color32::from_gray(180)));
@@ -220,9 +228,15 @@ fn draw_bracket(painter: &Painter, rect: Rect, stroke: Stroke) {
     painter.line_segment([Pos2::new(left, top), Pos2::new(left, bottom)], stroke);
     // Top tick (→)
     let tick_len = (right - left).max(6.0);
-    painter.line_segment([Pos2::new(left, top), Pos2::new(left + tick_len, top)], stroke);
+    painter.line_segment(
+        [Pos2::new(left, top), Pos2::new(left + tick_len, top)],
+        stroke,
+    );
     // Bottom tick (→)
-    painter.line_segment([Pos2::new(left, bottom), Pos2::new(left + tick_len, bottom)], stroke);
+    painter.line_segment(
+        [Pos2::new(left, bottom), Pos2::new(left + tick_len, bottom)],
+        stroke,
+    );
 }
 
 /// Draw a curly brace { opening to the RIGHT (cusp/point on the LEFT, tips on
@@ -230,8 +244,8 @@ fn draw_bracket(painter: &Painter, rect: Rect, stroke: Stroke) {
 /// Seewo's preset brace geometry. `scale_y` (0..1) controls how far the control
 /// points bulge toward the mouth (tip) side — Seewo's default is 0.2.
 fn draw_brace(painter: &Painter, rect: Rect, stroke: Stroke, scale_y: f32) {
-    let back = rect.left();                       // cusp side (left)
-    let mouth = rect.right().max(back + 4.0);    // tips side (right)
+    let back = rect.left(); // cusp side (left)
+    let mouth = rect.right().max(back + 4.0); // tips side (right)
     let top = rect.top();
     let bottom = rect.bottom();
     let mid_y = (top + bottom) * 0.5;
@@ -287,7 +301,11 @@ fn draw_svg_shape(
     let bez = match BezPath::from_svg(&path_str) {
         Ok(b) => b,
         Err(e) => {
-            log::warn!("SVG path parse error: {:?} (path starts with: {:?})", e, &path_str[..path_str.len().min(60)]);
+            log::warn!(
+                "SVG path parse error: {:?} (path starts with: {:?})",
+                e,
+                &path_str[..path_str.len().min(60)]
+            );
             return;
         }
     };
@@ -369,16 +387,15 @@ fn draw_svg_shape(
         let mut tess = FillTessellator::new();
         let mut buffers_builder = BuffersBuilder::new(&mut buffers, |v: FillVertex| v.position());
         if tess
-            .tessellate_path(
-                &lyon_path,
-                &fill_options,
-                &mut buffers_builder,
-            )
+            .tessellate_path(&lyon_path, &fill_options, &mut buffers_builder)
             .is_ok()
         {
             build_and_add_mesh(painter, &buffers, fill_color);
         } else {
-            log::warn!("lyon fill tessellation failed for SvgShape (path_len={})", path_str.len());
+            log::warn!(
+                "lyon fill tessellation failed for SvgShape (path_len={})",
+                path_str.len()
+            );
         }
     }
 
@@ -393,11 +410,7 @@ fn draw_svg_shape(
         let mut tess = StrokeTessellator::new();
         let mut buffers_builder = BuffersBuilder::new(&mut buffers, |v: StrokeVertex| v.position());
         if tess
-            .tessellate_path(
-                &lyon_path,
-                &stroke_opts,
-                &mut buffers_builder,
-            )
+            .tessellate_path(&lyon_path, &stroke_opts, &mut buffers_builder)
             .is_ok()
         {
             build_and_add_mesh(painter, &buffers, stroke_color);
@@ -422,11 +435,7 @@ fn draw_svg_shape(
 }
 
 /// Helper: build an egui Mesh from lyon vertex/index buffers and add it to the painter.
-fn build_and_add_mesh(
-    painter: &Painter,
-    buffers: &VertexBuffers<LyonPoint, u32>,
-    color: Color32,
-) {
+fn build_and_add_mesh(painter: &Painter, buffers: &VertexBuffers<LyonPoint, u32>, color: Color32) {
     let mut mesh = Mesh::default();
     mesh.reserve_vertices(buffers.vertices.len());
     mesh.indices.reserve(buffers.indices.len());
@@ -483,10 +492,7 @@ fn draw_path(
     }
 
     if path.is_closed && screen_pts.len() >= 3 {
-        painter.line_segment(
-            [screen_pts[screen_pts.len() - 1], screen_pts[0]],
-            stroke,
-        );
+        painter.line_segment([screen_pts[screen_pts.len() - 1], screen_pts[0]], stroke);
     }
 }
 
@@ -520,7 +526,10 @@ fn draw_drag_preview(
         crate::interaction::ToolMode::DrawShape(ShapeType::Line)
         | crate::interaction::ToolMode::DrawShape(ShapeType::Arrow) => {
             painter.line_segment([tl, br], preview_stroke);
-            if matches!(mode, crate::interaction::ToolMode::DrawShape(ShapeType::Arrow)) {
+            if matches!(
+                mode,
+                crate::interaction::ToolMode::DrawShape(ShapeType::Arrow)
+            ) {
                 draw_arrow_head(painter, br, tl, preview_stroke.color, preview_stroke.width);
             }
         }
@@ -541,11 +550,7 @@ fn draw_selection(painter: &Painter, camera: &Camera, elem: &Element) {
     ]);
 
     let rect = Rect::from_min_max(tl, br);
-    painter.rect_stroke(
-        rect.expand(2.0),
-        0.0,
-        Stroke::new(1.5, SELECTION_STROKE),
-    );
+    painter.rect_stroke(rect.expand(2.0), 0.0, Stroke::new(1.5, SELECTION_STROKE));
 
     let handles = [
         tl,

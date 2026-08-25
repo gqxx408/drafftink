@@ -6,15 +6,13 @@
 pub mod models;
 
 use anyhow::{anyhow, Result};
-use drafftink_core::{
-    AuditLog, Class, Homework, HomeworkSubmission, User,
-};
+use drafftink_core::{AuditLog, Class, Homework, HomeworkSubmission, User};
 use sled::Db;
 use uuid::Uuid;
 
 use models::{
-    PREFIX_AUDIT, PREFIX_CLASS, PREFIX_HW, PREFIX_HW_CLASS, PREFIX_HW_TEACHER, PREFIX_PWD,
-    PREFIX_SUB, PREFIX_SUB_HW, PREFIX_USER, PREFIX_USERNAME, UserCredentials,
+    UserCredentials, PREFIX_AUDIT, PREFIX_CLASS, PREFIX_HW, PREFIX_HW_CLASS, PREFIX_HW_TEACHER,
+    PREFIX_PWD, PREFIX_SUB, PREFIX_SUB_HW, PREFIX_USER, PREFIX_USERNAME,
 };
 
 /// 数据库访问 trait
@@ -246,8 +244,8 @@ impl Database for SledDb {
         match self.db.get(Self::username_key(username))? {
             None => Ok(None),
             Some(id_bytes) => {
-                let id = Uuid::from_slice(&id_bytes)
-                    .map_err(|e| anyhow!("无效的用户 ID 字节: {e}"))?;
+                let id =
+                    Uuid::from_slice(&id_bytes).map_err(|e| anyhow!("无效的用户 ID 字节: {e}"))?;
                 self.get_user(id)
             }
         }
@@ -266,9 +264,11 @@ impl Database for SledDb {
     fn save_homework(&self, hw: &Homework) -> Result<()> {
         self.put_bincode(&Self::hw_key(hw.id), hw)?;
         // 维护班级索引
-        self.db.insert(Self::hw_class_key(hw.class_id, hw.id), &[])?;
+        self.db
+            .insert(Self::hw_class_key(hw.class_id, hw.id), &[])?;
         // 维护老师索引
-        self.db.insert(Self::hw_teacher_key(hw.teacher_id, hw.id), &[])?;
+        self.db
+            .insert(Self::hw_teacher_key(hw.teacher_id, hw.id), &[])?;
         self.db.flush()?;
         Ok(())
     }
@@ -392,8 +392,8 @@ mod tests {
     use super::*;
     use chrono::Utc;
     use drafftink_core::{
-        AuditAction, Class, Homework, HomeworkStatus, HomeworkSubmission, Role,
-        SubmissionStatus, User,
+        AuditAction, Class, Homework, HomeworkStatus, HomeworkSubmission, Role, SubmissionStatus,
+        User,
     };
 
     fn temp_db() -> SledDb {

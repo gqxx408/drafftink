@@ -8,8 +8,8 @@
 
 use crate::drftx::TeacherAnnotation;
 use crate::emgi::StudentBasic;
-use crate::zxx::zxxs::{ExamRecord, StudentProfile};
 use crate::zxx::zxjx::Course;
+use crate::zxx::zxxs::{ExamRecord, StudentProfile};
 use crate::zxx::ZxxDataset;
 
 /// 由课程元数据（通常来自备课/授课流程）构建 ZXJX01 课程记录。
@@ -77,7 +77,11 @@ pub fn student_profile_from_snapshot(student: &StudentBasic, student_no: &str) -
 }
 
 /// 便捷组装：将课程、考试、学生三类记录合并为一个合规数据集。
-pub fn dataset_from_components(course: Course, exam: ExamRecord, student: StudentProfile) -> ZxxDataset {
+pub fn dataset_from_components(
+    course: Course,
+    exam: ExamRecord,
+    student: StudentProfile,
+) -> ZxxDataset {
     let mut ds = ZxxDataset::new();
     ds.add(&course);
     ds.add(&exam);

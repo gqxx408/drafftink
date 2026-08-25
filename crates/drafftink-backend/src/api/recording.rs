@@ -14,7 +14,6 @@ use axum::extract::{Path, Query, State};
 use axum::http::header;
 use axum::http::HeaderMap;
 use axum::response::Response;
-use std::collections::HashMap;
 use axum::Json;
 use base64::engine::general_purpose::STANDARD as B64;
 use base64::Engine;
@@ -25,13 +24,14 @@ use drafftink_core::recording::{
 use drafftink_core::{auth::claims_role, Role};
 use serde::Deserialize;
 use serde_json::{json, Value};
+use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::auth::jwt;
 use crate::auth::{require_role, AuthUser};
 use crate::error::AppError;
-use crate::recording::{live::handle_socket, LiveFrame, ResourceManager};
 use crate::recording::resource::{PublishResourceRequest, SearchQuery};
+use crate::recording::{live::handle_socket, LiveFrame, ResourceManager};
 use crate::state::AppState;
 
 /// 直播 WebSocket 接口：基于现有公网网关，B/S 架构，延时 ≤ 3 秒。
@@ -81,7 +81,9 @@ pub async fn publish_resource(
     Json(req): Json<PublishResourceRequest>,
 ) -> Result<Json<Value>, AppError> {
     require_role(&auth, &[Role::Teacher, Role::Admin])?;
-    let resource_id = req.resource_id.unwrap_or_else(|| Uuid::new_v4().to_string());
+    let resource_id = req
+        .resource_id
+        .unwrap_or_else(|| Uuid::new_v4().to_string());
     let storage_key = CoursewareResource::storage_key_for(&resource_id);
     let meta = CoursewareResource {
         resource_id: resource_id.clone(),
@@ -140,7 +142,9 @@ pub async fn get_resource_comments(
     if !meta.permission.can_comment(claims_role(&auth.0)) {
         return Err(AppError::Forbidden("无权查看该资源评语".to_string()));
     }
-    Ok(Json(json!({ "resource_id": resource_id, "comment_view": true })))
+    Ok(Json(
+        json!({ "resource_id": resource_id, "comment_view": true }),
+    ))
 }
 
 /// 提取直播访问令牌：优先 `Authorization: Bearer`，其次 `?token=`。

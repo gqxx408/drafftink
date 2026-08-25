@@ -123,10 +123,7 @@ fn icosahedron() -> (Vec<Point3<f32>>, Vec<[u32; 3]>) {
 ///
 /// 每条边的中点被投影到单位球面上。
 /// 使用 HashMap 去重，确保同一条边的中点只生成一次。
-fn subdivide(
-    vertices: &[Point3<f32>],
-    faces: &[[u32; 3]],
-) -> (Vec<Point3<f32>>, Vec<[u32; 3]>) {
+fn subdivide(vertices: &[Point3<f32>], faces: &[[u32; 3]]) -> (Vec<Point3<f32>>, Vec<[u32; 3]>) {
     let mut new_vertices = vertices.to_vec();
     let mut new_faces = Vec::with_capacity(faces.len() * 4);
 

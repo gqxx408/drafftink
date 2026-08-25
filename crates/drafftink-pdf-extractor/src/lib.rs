@@ -5,6 +5,4 @@
 
 pub mod pdf_extractor;
 
-pub use pdf_extractor::{
-    analyze, extract_text, is_cjk, parse_tounicode_cmap, PdfAnalysis,
-};
+pub use pdf_extractor::{analyze, extract_text, is_cjk, parse_tounicode_cmap, PdfAnalysis};

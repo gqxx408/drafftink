@@ -17,7 +17,7 @@
 //! editor.ui(ctx);
 //! ```
 
-pub mod elements;
 pub mod editor;
+pub mod elements;
 
 pub use editor::PhysicsEditor;

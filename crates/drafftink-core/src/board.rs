@@ -12,12 +12,12 @@
 //! The inactive board is held as a `StandbySnapshot` — lightweight
 //! enough to be discarded and re-hydrated from the doc on demand.
 
-use std::collections::{HashMap, HashSet};
+use crate::camera::Camera;
+use crate::model::{CoursewareDoc, Element, PageContent};
 use egui::Pos2;
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
-use crate::model::{CoursewareDoc, Element, PageContent};
-use crate::camera::Camera;
 
 // ---------------------------------------------------------------------------
 // Snapshot — pure-metadata bridge, no resource data
@@ -127,7 +127,9 @@ impl EditBoard {
 
         // ── 1. Mouse press ─────────────────────────────────────────────────
         if response.clicked() {
-            let screen_pos = ptr.press_origin().unwrap_or(ptr.hover_pos().unwrap_or(Pos2::ZERO));
+            let screen_pos = ptr
+                .press_origin()
+                .unwrap_or(ptr.hover_pos().unwrap_or(Pos2::ZERO));
             let world_pos = camera.screen_to_world(screen_pos);
 
             // Check resize-handle hit first (has higher priority than element hit)
@@ -232,11 +234,7 @@ impl EditBoard {
                 let tl = camera.world_to_screen([l, t]);
                 let br = camera.world_to_screen([r, b]);
                 let rect = egui::Rect::from_min_max(tl, br);
-                painter.rect_stroke(
-                    rect,
-                    0.0,
-                    egui::Stroke::new(1.5_f32, egui::Color32::WHITE),
-                );
+                painter.rect_stroke(rect, 0.0, egui::Stroke::new(1.5_f32, egui::Color32::WHITE));
                 // Draw dashed overlay with offset for marching-ants effect
                 painter.line_segment(
                     [rect.min, rect.max],
@@ -254,9 +252,14 @@ impl EditBoard {
                 for &(pos, _handle) in &handles {
                     let center = camera.world_to_screen(pos);
                     let half = 3.0;
-                    let rect = egui::Rect::from_center_size(center, egui::vec2(half * 2.0, half * 2.0));
+                    let rect =
+                        egui::Rect::from_center_size(center, egui::vec2(half * 2.0, half * 2.0));
                     painter.rect_filled(rect, 0.0, egui::Color32::WHITE);
-                    painter.rect_stroke(rect, 0.0, egui::Stroke::new(1.0_f32, egui::Color32::BLACK));
+                    painter.rect_stroke(
+                        rect,
+                        0.0,
+                        egui::Stroke::new(1.0_f32, egui::Color32::BLACK),
+                    );
                 }
             }
         }
@@ -275,7 +278,9 @@ impl EditBoard {
 
     pub fn selected_elements(&self) -> impl Iterator<Item = &Element> {
         let selected = &self.selected;
-        self.elements.iter().filter(move |e| selected.contains(&e.id()))
+        self.elements
+            .iter()
+            .filter(move |e| selected.contains(&e.id()))
     }
 
     pub fn selected_elements_mut(&mut self) -> Vec<&mut Element> {
@@ -343,12 +348,22 @@ impl EditBoard {
         let world_dx = screen_delta.x / camera.zoom;
         let world_dy = screen_delta.y / camera.zoom;
 
-        if let Some(e) = self.elements.iter_mut().find(|e| e.id() == resize.element_id) {
+        if let Some(e) = self
+            .elements
+            .iter_mut()
+            .find(|e| e.id() == resize.element_id)
+        {
             let b = e.base_mut();
             match resize.handle {
                 ResizeHandle::TopLeft => {
-                    b.position = [resize.start_pos[0] + world_dx, resize.start_pos[1] + world_dy];
-                    b.size = [resize.start_size[0] - world_dx, resize.start_size[1] - world_dy];
+                    b.position = [
+                        resize.start_pos[0] + world_dx,
+                        resize.start_pos[1] + world_dy,
+                    ];
+                    b.size = [
+                        resize.start_size[0] - world_dx,
+                        resize.start_size[1] - world_dy,
+                    ];
                 }
                 ResizeHandle::TopCenter => {
                     b.position[1] = resize.start_pos[1] + world_dy;
@@ -356,7 +371,10 @@ impl EditBoard {
                 }
                 ResizeHandle::TopRight => {
                     b.position[1] = resize.start_pos[1] + world_dy;
-                    b.size = [resize.start_size[0] + world_dx, resize.start_size[1] - world_dy];
+                    b.size = [
+                        resize.start_size[0] + world_dx,
+                        resize.start_size[1] - world_dy,
+                    ];
                 }
                 ResizeHandle::MidLeft => {
                     b.position[0] = resize.start_pos[0] + world_dx;
@@ -367,13 +385,19 @@ impl EditBoard {
                 }
                 ResizeHandle::BottomLeft => {
                     b.position[0] = resize.start_pos[0] + world_dx;
-                    b.size = [resize.start_size[0] - world_dx, resize.start_size[1] + world_dy];
+                    b.size = [
+                        resize.start_size[0] - world_dx,
+                        resize.start_size[1] + world_dy,
+                    ];
                 }
                 ResizeHandle::BottomCenter => {
                     b.size[1] = resize.start_size[1] + world_dy;
                 }
                 ResizeHandle::BottomRight => {
-                    b.size = [resize.start_size[0] + world_dx, resize.start_size[1] + world_dy];
+                    b.size = [
+                        resize.start_size[0] + world_dx,
+                        resize.start_size[1] + world_dy,
+                    ];
                 }
             }
             // Clamp minimum size
@@ -406,11 +430,7 @@ impl EditBoard {
 
     /// Check if a screen-space point hits a resize handle of the single
     /// selected element.  Returns (element_id, handle) if hit.
-    fn resize_handle_at(
-        &self,
-        camera: &Camera,
-        screen_pos: Pos2,
-    ) -> Option<(Uuid, ResizeHandle)> {
+    fn resize_handle_at(&self, camera: &Camera, screen_pos: Pos2) -> Option<(Uuid, ResizeHandle)> {
         if self.selected.len() != 1 {
             return None;
         }
@@ -458,9 +478,14 @@ pub struct ResizeState {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ResizeHandle {
-    TopLeft,    TopCenter,    TopRight,
-    MidLeft,                   MidRight,
-    BottomLeft, BottomCenter,  BottomRight,
+    TopLeft,
+    TopCenter,
+    TopRight,
+    MidLeft,
+    MidRight,
+    BottomLeft,
+    BottomCenter,
+    BottomRight,
 }
 
 // ---------------------------------------------------------------------------
@@ -523,15 +548,13 @@ impl Default for ActiveBoard {
 // StandbySnapshot — lightweight stand-by for the inactive board
 // ---------------------------------------------------------------------------
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub enum StandbySnapshot {
     Edit(Vec<Element>),
     Display(Vec<Element>),
     #[default]
     None,
 }
-
 
 // ---------------------------------------------------------------------------
 // Tests

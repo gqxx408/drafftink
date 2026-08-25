@@ -4,9 +4,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use drafftink_core::history::History;
-use drafftink_core::model::{
-    CoursewareDoc, ShapeType,
-};
+use drafftink_core::model::{CoursewareDoc, ShapeType};
 use drafftink_core::Camera;
 use egui::{Color32, Key, KeyboardShortcut, Modifiers, Sense, Ui};
 use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle, WindowHandle};
@@ -16,19 +14,19 @@ use drafftink_quiz::messages::SessionCommand;
 use drafftink_quiz::ui::QuizPanel;
 use drafftink_quiz::QuizConfig;
 
+use crate::animation_player::AnimationPlayer;
 use crate::annotation::{AnnotationState, AnnotationTool, ERASER_MAX_SIZE, ERASER_MIN_SIZE};
 use crate::interaction::{InteractionState, ToolMode};
 use crate::multi_page::MultiPageState;
-use crate::animation_player::AnimationPlayer;
-use drafftink_core::board::{ActiveBoard, DisplayBoard, EditBoard, Snapshot, StandbySnapshot};
 use crate::{io, render};
+use drafftink_core::board::{ActiveBoard, DisplayBoard, EditBoard, Snapshot, StandbySnapshot};
 
 // ── Colour constants ───────────────────────────────────────────────────────
-const TOOLBAR_BG: Color32     = Color32::from_rgb(0x3C, 0x3C, 0x3C);
-const SIDEBAR_BG: Color32     = Color32::from_rgb(0xF5, 0xF5, 0xF5);
-const CANVAS_BG: Color32      = Color32::from_rgb(0xE0, 0xE0, 0xE0);
-const PAGE_ACTIVE: Color32    = Color32::from_rgb(0x00, 0xC8, 0x00);
-const PAGE_INACTIVE: Color32  = Color32::from_rgb(0xD0, 0xD0, 0xD0);
+const TOOLBAR_BG: Color32 = Color32::from_rgb(0x3C, 0x3C, 0x3C);
+const SIDEBAR_BG: Color32 = Color32::from_rgb(0xF5, 0xF5, 0xF5);
+const CANVAS_BG: Color32 = Color32::from_rgb(0xE0, 0xE0, 0xE0);
+const PAGE_ACTIVE: Color32 = Color32::from_rgb(0x00, 0xC8, 0x00);
+const PAGE_INACTIVE: Color32 = Color32::from_rgb(0xD0, 0xD0, 0xD0);
 
 // ---------------------------------------------------------------------------
 // ParentWindow — 包装 RawWindowHandle 用于 rfd::FileDialog::set_parent()
@@ -147,8 +145,10 @@ impl SeewoClassApp {
             if i.consume_shortcut(&KeyboardShortcut::new(Modifiers::CTRL, Key::Z)) {
                 self.undo();
             }
-            if i.consume_shortcut(&KeyboardShortcut::new(Modifiers::CTRL.plus(Modifiers::SHIFT), Key::Z))
-                || i.consume_shortcut(&KeyboardShortcut::new(Modifiers::CTRL, Key::Y))
+            if i.consume_shortcut(&KeyboardShortcut::new(
+                Modifiers::CTRL.plus(Modifiers::SHIFT),
+                Key::Z,
+            )) || i.consume_shortcut(&KeyboardShortcut::new(Modifiers::CTRL, Key::Y))
             {
                 self.redo();
             }
@@ -232,7 +232,10 @@ impl SeewoClassApp {
         if let Some(page) = self.doc.pages.get_mut(idx) {
             if let Some(ref seq) = page.animation_sequence {
                 self.animation_player.init_page(
-                    seq.clone(), page.animations.clone(), size, &mut page.elements,
+                    seq.clone(),
+                    page.animations.clone(),
+                    size,
+                    &mut page.elements,
                 );
             }
         }
@@ -244,11 +247,14 @@ impl SeewoClassApp {
         let idx = self.multi_page.current_page;
         let size = self.doc.page_size;
         let anim_data = self.doc.pages.get(idx).and_then(|p| {
-            p.animation_sequence.as_ref().map(|seq| (seq.clone(), p.animations.clone()))
+            p.animation_sequence
+                .as_ref()
+                .map(|seq| (seq.clone(), p.animations.clone()))
         });
         if let Some((seq, map)) = anim_data {
             if let Some(page) = self.doc.pages.get_mut(idx) {
-                self.animation_player.init_page(seq, map, size, &mut page.elements);
+                self.animation_player
+                    .init_page(seq, map, size, &mut page.elements);
             }
         }
     }
@@ -291,8 +297,7 @@ impl SeewoClassApp {
     }
 
     fn export_action(&mut self) {
-        let mut dialog = rfd::FileDialog::new()
-            .add_filter("Drafftink", &["drft"]);
+        let mut dialog = rfd::FileDialog::new().add_filter("Drafftink", &["drft"]);
         // 绑定父窗口句柄，确保对话框始终显示在主窗口之上
         if let Some(ref parent) = self.parent_window {
             dialog = dialog.set_parent(parent);
@@ -352,8 +357,7 @@ impl SeewoClassApp {
                             ui.close_menu();
                         }
                         if ui.button("Open ENBX...").clicked() {
-                            let mut dialog = rfd::FileDialog::new()
-                                .add_filter("ENBX", &["enbx"]);
+                            let mut dialog = rfd::FileDialog::new().add_filter("ENBX", &["enbx"]);
                             if let Some(ref p) = parent {
                                 dialog = dialog.set_parent(p);
                             }
@@ -414,8 +418,11 @@ impl SeewoClassApp {
 
         // White canvas background
         ui.painter().rect_filled(canvas_rect, 0.0, Color32::WHITE);
-        ui.painter().rect_stroke(canvas_rect, 0.0,
-            egui::Stroke::new(1.0, Color32::from_rgb(0xD0, 0xD0, 0xD0)));
+        ui.painter().rect_stroke(
+            canvas_rect,
+            0.0,
+            egui::Stroke::new(1.0, Color32::from_rgb(0xD0, 0xD0, 0xD0)),
+        );
 
         self.camera.viewport = [canvas_w, canvas_h];
         self.camera.zoom = zoom;
@@ -439,8 +446,10 @@ impl SeewoClassApp {
             // Display mode: existing paths
             let annotation_active = matches!(
                 self.annotation.current_tool,
-                AnnotationTool::Pen | AnnotationTool::Highlighter
-                    | AnnotationTool::Eraser | AnnotationTool::LaserPointer
+                AnnotationTool::Pen
+                    | AnnotationTool::Highlighter
+                    | AnnotationTool::Eraser
+                    | AnnotationTool::LaserPointer
             );
             if response.clicked() {
                 if let Some(pos) = response.interact_pointer_pos() {
@@ -471,7 +480,13 @@ impl SeewoClassApp {
         }
 
         let painter = ui.painter();
-        render::render_canvas(painter, &self.doc, &self.camera, &self.interaction, self.multi_page.current_page);
+        render::render_canvas(
+            painter,
+            &self.doc,
+            &self.camera,
+            &self.interaction,
+            self.multi_page.current_page,
+        );
         self.annotation.paint(painter);
         self.annotation.paint_eraser_cursor(painter);
 
@@ -543,7 +558,10 @@ impl SeewoClassApp {
             .show(ctx, |ui| {
                 egui::Frame::none()
                     .fill(egui::Color32::from_rgb(0x1E, 0x1E, 0x1E))
-                    .stroke(egui::Stroke::new(1.0, egui::Color32::from_rgb(0x33, 0x33, 0x33)))
+                    .stroke(egui::Stroke::new(
+                        1.0,
+                        egui::Color32::from_rgb(0x33, 0x33, 0x33),
+                    ))
                     .rounding(egui::Rounding::same(12.0))
                     .shadow(egui::epaint::Shadow {
                         offset: egui::Vec2::new(0.0, 2.0),
@@ -560,14 +578,16 @@ impl SeewoClassApp {
                                 self.interaction.mode = ToolMode::Select;
                             }
                             ui.add_space(4.0);
-                            let pen_active = matches!(self.annotation.current_tool, AnnotationTool::Pen);
+                            let pen_active =
+                                matches!(self.annotation.current_tool, AnnotationTool::Pen);
                             if make_tool_button(ui, "笔", pen_active).clicked() {
                                 self.annotation.set_tool(AnnotationTool::Pen);
                                 self.show_color_panel = !self.show_color_panel;
                                 self.show_more_panel = false;
                             }
                             ui.add_space(4.0);
-                            let eraser_active = matches!(self.annotation.current_tool, AnnotationTool::Eraser);
+                            let eraser_active =
+                                matches!(self.annotation.current_tool, AnnotationTool::Eraser);
                             if make_tool_button(ui, "橡皮", eraser_active).clicked() {
                                 self.annotation.set_tool(AnnotationTool::Eraser);
                                 self.show_color_panel = false;
@@ -582,7 +602,8 @@ impl SeewoClassApp {
                                 self.set_status("Redo not yet supported");
                             }
                             ui.add_space(2.0);
-                            let clear_active = matches!(self.annotation.current_tool, AnnotationTool::ClearScreen);
+                            let clear_active =
+                                matches!(self.annotation.current_tool, AnnotationTool::ClearScreen);
                             if make_tool_button(ui, "清屏", clear_active).clicked() {
                                 self.annotation.set_tool(AnnotationTool::ClearScreen);
                                 self.annotation.clear_screen();
@@ -609,13 +630,20 @@ impl SeewoClassApp {
     }
 
     fn render_color_panel(&mut self, ctx: &egui::Context) {
-        if !self.show_color_panel { return; }
+        if !self.show_color_panel {
+            return;
+        }
         let open = self.show_color_panel;
         egui::Window::new("color_panel")
-            .title_bar(false).resizable(false).collapsible(false)
+            .title_bar(false)
+            .resizable(false)
+            .collapsible(false)
             .anchor(egui::Align2::CENTER_BOTTOM, [0.0, -76.0])
-            .frame(egui::Frame::window(&ctx.style()).rounding(egui::Rounding::same(8.0))
-                .inner_margin(egui::Margin::same(12.0)))
+            .frame(
+                egui::Frame::window(&ctx.style())
+                    .rounding(egui::Rounding::same(8.0))
+                    .inner_margin(egui::Margin::same(12.0)),
+            )
             .show(ctx, |ui| {
                 ui.label("Color picker placeholder");
             });
@@ -625,9 +653,13 @@ impl SeewoClassApp {
     fn render_eraser_panel(&mut self, ctx: &egui::Context) {
         if !matches!(self.annotation.current_tool, AnnotationTool::Eraser)
             || !self.annotation.show_eraser_panel
-        { return; }
+        {
+            return;
+        }
         egui::Window::new("eraser_panel")
-            .title_bar(false).resizable(false).collapsible(false)
+            .title_bar(false)
+            .resizable(false)
+            .collapsible(false)
             .anchor(egui::Align2::CENTER_BOTTOM, [0.0, -100.0])
             .show(ctx, |ui| {
                 ui.label("橡皮大小");
@@ -642,9 +674,13 @@ impl SeewoClassApp {
     }
 
     fn render_more_panel(&mut self, ctx: &egui::Context) {
-        if !self.show_more_panel { return; }
+        if !self.show_more_panel {
+            return;
+        }
         egui::Window::new("more_panel")
-            .title_bar(false).resizable(false).collapsible(false)
+            .title_bar(false)
+            .resizable(false)
+            .collapsible(false)
             .anchor(egui::Align2::CENTER_BOTTOM, [0.0, -76.0])
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
@@ -691,7 +727,9 @@ impl SeewoClassApp {
 
     /// 渲染 Quiz 面板（全屏覆盖模式）
     fn render_quiz_panel(&mut self, ctx: &egui::Context) {
-        if !self.show_quiz_panel { return; }
+        if !self.show_quiz_panel {
+            return;
+        }
 
         let ui_state = match &self.quiz_ui_state {
             Some(s) => s.clone(),
@@ -708,19 +746,14 @@ impl SeewoClassApp {
             .order(egui::Order::Foreground)
             .show(ctx, |ui| {
                 let screen_rect = ctx.screen_rect();
-                ui.allocate_new_ui(
-                    egui::UiBuilder::new().max_rect(screen_rect),
-                    |ui| {
+                ui.allocate_new_ui(egui::UiBuilder::new().max_rect(screen_rect), |ui| {
                     // 关闭按钮
                     ui.horizontal(|ui| {
-                        ui.with_layout(
-                            egui::Layout::right_to_left(egui::Align::TOP),
-                            |ui| {
-                                if ui.button("✕ 退出互动").clicked() {
-                                    self.show_quiz_panel = false;
-                                }
-                            },
-                        );
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
+                            if ui.button("✕ 退出互动").clicked() {
+                                self.show_quiz_panel = false;
+                            }
+                        });
                     });
                     // Quiz 主面板
                     self.quiz_panel.ui(ui, &ui_state, &session_tx);
@@ -743,7 +776,9 @@ impl SeewoClassApp {
     fn render_properties(&self, _ctx: &egui::Context) {}
 
     fn render_export_dialog(&mut self, ctx: &egui::Context) {
-        if !self.show_export_dialog { return; }
+        if !self.show_export_dialog {
+            return;
+        }
         egui::Window::new("Export PNG").show(ctx, |ui| {
             ui.label("Width:");
             ui.add(egui::DragValue::new(&mut self.export_width).range(1..=8192));
@@ -788,9 +823,12 @@ impl eframe::App for SeewoClassApp {
         } else {
             // Diagnostic
             let any_ctrl = ctx.input(|i| {
-                i.modifiers.ctrl && (i.key_pressed(egui::Key::Z) || i.key_pressed(egui::Key::Y)
-                    || i.key_pressed(egui::Key::S) || i.key_pressed(egui::Key::A)
-                    || i.key_pressed(egui::Key::E))
+                i.modifiers.ctrl
+                    && (i.key_pressed(egui::Key::Z)
+                        || i.key_pressed(egui::Key::Y)
+                        || i.key_pressed(egui::Key::S)
+                        || i.key_pressed(egui::Key::A)
+                        || i.key_pressed(egui::Key::E))
             });
             if any_ctrl {
                 log::info!("Ctrl+ key pressed but not E");
@@ -826,19 +864,23 @@ impl eframe::App for SeewoClassApp {
             // Top toolbar
             egui::TopBottomPanel::top("editor_toolbar")
                 .min_height(36.0)
-                .frame(egui::Frame::none()
-                    .fill(TOOLBAR_BG)
-                    .inner_margin(egui::Margin::symmetric(12.0, 4.0)))
+                .frame(
+                    egui::Frame::none()
+                        .fill(TOOLBAR_BG)
+                        .inner_margin(egui::Margin::symmetric(12.0, 4.0)),
+                )
                 .show(ctx, |ui| {
                     let v = ui.visuals_mut();
                     v.widgets.noninteractive.fg_stroke.color = Color32::from_rgb(0xE0, 0xE0, 0xE0);
                     v.widgets.inactive.fg_stroke.color = Color32::from_rgb(0xE0, 0xE0, 0xE0);
                     ui.horizontal(|ui| {
                         ui.menu_button(" 文件", |ui| {
-                            if ui.button("New").clicked() { ui.close_menu(); }
+                            if ui.button("New").clicked() {
+                                ui.close_menu();
+                            }
                             if ui.button("Open ENBX...").clicked() {
-                                let mut dialog = rfd::FileDialog::new()
-                                    .add_filter("ENBX", &["enbx"]);
+                                let mut dialog =
+                                    rfd::FileDialog::new().add_filter("ENBX", &["enbx"]);
                                 if let Some(ref p) = parent {
                                     dialog = dialog.set_parent(p);
                                 }
@@ -847,11 +889,18 @@ impl eframe::App for SeewoClassApp {
                                 }
                                 ui.close_menu();
                             }
-                            if ui.button("Save").clicked() { self.save_action(); ui.close_menu(); }
+                            if ui.button("Save").clicked() {
+                                self.save_action();
+                                ui.close_menu();
+                            }
                         });
                         if label_btn(ui, " 同步", TOOLBAR_BG).clicked() {}
-                        if label_btn(ui, " 撤销", TOOLBAR_BG).clicked() { self.undo(); }
-                        if label_btn(ui, " 恢复", TOOLBAR_BG).clicked() { self.redo(); }
+                        if label_btn(ui, " 撤销", TOOLBAR_BG).clicked() {
+                            self.undo();
+                        }
+                        if label_btn(ui, " 恢复", TOOLBAR_BG).clicked() {
+                            self.redo();
+                        }
                         ui.separator();
                         if label_btn(ui, "T 文本", TOOLBAR_BG).clicked() {
                             self.interaction.mode = ToolMode::Text;
@@ -867,11 +916,17 @@ impl eframe::App for SeewoClassApp {
                         ui.separator();
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             if label_btn(ui, " 分享", TOOLBAR_BG).clicked() {}
-                            if ui.add_sized([88.0, 24.0],
-                                egui::Button::new(egui::RichText::new(" 授课").color(Color32::WHITE).strong())
+                            if ui
+                                .add_sized(
+                                    [88.0, 24.0],
+                                    egui::Button::new(
+                                        egui::RichText::new(" 授课").color(Color32::WHITE).strong(),
+                                    )
                                     .fill(Color32::from_rgb(0x07, 0xC1, 0x60))
-                                    .rounding(egui::Rounding::same(6.0))
-                            ).clicked() {
+                                    .rounding(egui::Rounding::same(6.0)),
+                                )
+                                .clicked()
+                            {
                                 self.enter_display_mode();
                             }
                         });
@@ -894,7 +949,10 @@ impl eframe::App for SeewoClassApp {
                         let stroke_col = if active { PAGE_ACTIVE } else { PAGE_INACTIVE };
                         let f = egui::Frame::none()
                             .fill(Color32::WHITE)
-                            .stroke(egui::Stroke::new(if active { 2.0 } else { 1.0 }, stroke_col))
+                            .stroke(egui::Stroke::new(
+                                if active { 2.0 } else { 1.0 },
+                                stroke_col,
+                            ))
                             .inner_margin(egui::Margin::same(2.0));
                         let resp = f.show(ui, |ui| {
                             ui.set_width(60.0);
@@ -918,10 +976,12 @@ impl eframe::App for SeewoClassApp {
             egui::SidePanel::right("inspector")
                 .min_width(250.0)
                 .max_width(250.0)
-                .frame(egui::Frame::none()
-                    .fill(SIDEBAR_BG)
-                    .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0xC0, 0xC0, 0xC0)))
-                    .inner_margin(egui::Margin::same(10.0)))
+                .frame(
+                    egui::Frame::none()
+                        .fill(SIDEBAR_BG)
+                        .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0xC0, 0xC0, 0xC0)))
+                        .inner_margin(egui::Margin::same(10.0)),
+                )
                 .show(ctx, |ui| {
                     ui.add_space(4.0);
                     ui.label(egui::RichText::new("布局与背景").size(14.0).strong());
@@ -933,10 +993,14 @@ impl eframe::App for SeewoClassApp {
                         ui.label(egui::RichText::new("页面设置").size(12.0).strong());
                         ui.add_space(4.0);
                         // White thumbnail
-                        let thumb = egui::Rect::from_min_size(ui.cursor().min, egui::vec2(80.0, 48.0));
+                        let thumb =
+                            egui::Rect::from_min_size(ui.cursor().min, egui::vec2(80.0, 48.0));
                         ui.painter().rect_filled(thumb, 2.0, Color32::WHITE);
-                        ui.painter().rect_stroke(thumb, 2.0,
-                            egui::Stroke::new(1.0, Color32::from_rgb(0xD0, 0xD0, 0xD0)));
+                        ui.painter().rect_stroke(
+                            thumb,
+                            2.0,
+                            egui::Stroke::new(1.0, Color32::from_rgb(0xD0, 0xD0, 0xD0)),
+                        );
                         ui.advance_cursor_after_rect(thumb);
                         ui.add_space(6.0);
                         ui.horizontal(|ui| {
@@ -973,8 +1037,10 @@ impl eframe::App for SeewoClassApp {
                         } else if board.selected.len() > 1 {
                             ui.label(format!("{} 个元素已选中", board.selected.len()));
                         } else {
-                            ui.label(egui::RichText::new("未选中元素")
-                                .color(Color32::from_rgb(0x99, 0x99, 0x99)));
+                            ui.label(
+                                egui::RichText::new("未选中元素")
+                                    .color(Color32::from_rgb(0x99, 0x99, 0x99)),
+                            );
                         }
                     }
                 });
@@ -996,36 +1062,59 @@ impl eframe::App for SeewoClassApp {
             // Mode indicator (declared BEFORE CentralPanel so it's visible)
             egui::TopBottomPanel::top("mode_indicator")
                 .min_height(44.0)
-                .frame(egui::Frame::none()
-                    .fill(Color32::from_rgb(0xFF, 0xFF, 0xFF))
-                    .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0xCC, 0xCC, 0xCC)))
-                    .inner_margin(egui::Margin::symmetric(12.0, 6.0)))
+                .frame(
+                    egui::Frame::none()
+                        .fill(Color32::from_rgb(0xFF, 0xFF, 0xFF))
+                        .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0xCC, 0xCC, 0xCC)))
+                        .inner_margin(egui::Margin::symmetric(12.0, 6.0)),
+                )
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new("当前模式:").color(Color32::from_rgb(0x66, 0x66, 0x66)).size(13.0));
-                        if ui.add_sized([90.0, 30.0],
-                            egui::Button::new(
-                                egui::RichText::new("DISPLAY").color(Color32::WHITE).strong().size(14.0)
+                        ui.label(
+                            egui::RichText::new("当前模式:")
+                                .color(Color32::from_rgb(0x66, 0x66, 0x66))
+                                .size(13.0),
+                        );
+                        if ui
+                            .add_sized(
+                                [90.0, 30.0],
+                                egui::Button::new(
+                                    egui::RichText::new("DISPLAY")
+                                        .color(Color32::WHITE)
+                                        .strong()
+                                        .size(14.0),
+                                )
+                                .fill(Color32::from_rgb(0x66, 0x99, 0xCC))
+                                .rounding(egui::Rounding::same(6.0)),
                             )
-                            .fill(Color32::from_rgb(0x66, 0x99, 0xCC))
-                            .rounding(egui::Rounding::same(6.0))
-                        ).clicked() {
+                            .clicked()
+                        {
                             self.toggle_mode();
                         }
                         ui.add_space(12.0);
-                        if ui.add_sized([110.0, 30.0],
-                            egui::Button::new(
-                                egui::RichText::new(" 切到 EDIT").color(Color32::from_rgb(0x07, 0xC1, 0x60)).strong().size(13.0)
+                        if ui
+                            .add_sized(
+                                [110.0, 30.0],
+                                egui::Button::new(
+                                    egui::RichText::new(" 切到 EDIT")
+                                        .color(Color32::from_rgb(0x07, 0xC1, 0x60))
+                                        .strong()
+                                        .size(13.0),
+                                )
+                                .fill(Color32::TRANSPARENT)
+                                .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0x07, 0xC1, 0x60)))
+                                .rounding(egui::Rounding::same(6.0)),
                             )
-                            .fill(Color32::TRANSPARENT)
-                            .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0x07, 0xC1, 0x60)))
-                            .rounding(egui::Rounding::same(6.0))
-                        ).clicked() {
+                            .clicked()
+                        {
                             self.toggle_mode();
                         }
                         ui.add_space(20.0);
-                        ui.label(egui::RichText::new("快捷键: Ctrl+E")
-                            .color(Color32::from_rgb(0x99, 0x99, 0x99)).size(11.0));
+                        ui.label(
+                            egui::RichText::new("快捷键: Ctrl+E")
+                                .color(Color32::from_rgb(0x99, 0x99, 0x99))
+                                .size(11.0),
+                        );
                     });
                 });
             egui::CentralPanel::default().show(ctx, |ui| {
@@ -1072,7 +1161,9 @@ fn make_tool_button(ui: &mut Ui, label: &str, active: bool) -> egui::Response {
 
 fn label_btn(ui: &mut Ui, label: &str, bg: Color32) -> egui::Response {
     let btn = egui::Button::new(
-        egui::RichText::new(label).size(12.0).color(Color32::from_rgb(0xE0, 0xE0, 0xE0))
+        egui::RichText::new(label)
+            .size(12.0)
+            .color(Color32::from_rgb(0xE0, 0xE0, 0xE0)),
     )
     .fill(bg)
     .frame(false)
@@ -1092,8 +1183,11 @@ unsafe fn read_plugin_str(ptr: *const u8, len: u32) -> String {
 unsafe extern "C" fn plugin_log(level: u8, msg: *const u8, len: u32) {
     let msg = unsafe { read_plugin_str(msg, len) };
     let lvl = match level {
-        1 => log::Level::Error, 2 => log::Level::Warn, 3 => log::Level::Info,
-        4 => log::Level::Debug, _ => log::Level::Trace,
+        1 => log::Level::Error,
+        2 => log::Level::Warn,
+        3 => log::Level::Info,
+        4 => log::Level::Debug,
+        _ => log::Level::Trace,
     };
     log::log!(lvl, "[plugin] {}", msg);
 }

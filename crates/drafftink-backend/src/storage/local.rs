@@ -65,8 +65,7 @@ impl Storage for LocalStorage {
 
     fn load(&self, path: &str) -> Result<Vec<u8>> {
         let full = self.resolve_path(path)?;
-        let data = std::fs::read(&full)
-            .map_err(|e| anyhow!("读取文件失败 {path}: {e}"))?;
+        let data = std::fs::read(&full).map_err(|e| anyhow!("读取文件失败 {path}: {e}"))?;
         Ok(data)
     }
 
@@ -142,9 +141,7 @@ mod tests {
     fn test_nested_dirs() {
         let (storage, _dir) = temp_storage();
         let data = b"nested".to_vec();
-        storage
-            .save("a/b/c/deep.txt", data.clone())
-            .unwrap();
+        storage.save("a/b/c/deep.txt", data.clone()).unwrap();
 
         let loaded = storage.load("a/b/c/deep.txt").unwrap();
         assert_eq!(loaded, data);

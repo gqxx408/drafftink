@@ -20,9 +20,7 @@ pub fn check_teacher_owns_class(
 
     match class.teacher_id {
         Some(tid) if tid == teacher_id => Ok(()),
-        _ => Err(AppError::Forbidden(
-            "您不是该班级的任课老师".to_string(),
-        )),
+        _ => Err(AppError::Forbidden("您不是该班级的任课老师".to_string())),
     }
 }
 
@@ -38,9 +36,7 @@ pub fn check_student_in_class(
 
     match student.class_id {
         Some(cid) if cid == class_id => Ok(()),
-        _ => Err(AppError::Forbidden(
-            "该学生不属于此班级".to_string(),
-        )),
+        _ => Err(AppError::Forbidden("该学生不属于此班级".to_string())),
     }
 }
 
@@ -129,4 +125,3 @@ mod tests {
         assert!(!role_matches(Role::Student, &[Role::Teacher, Role::Admin]));
     }
 }
-

@@ -178,15 +178,17 @@ mod tests {
     #[test]
     fn test_ease_functions_boundaries() {
         // 所有缓动函数在 t=0 时应为 0，t=1 时应为 1
-        let fns: [fn(f32) -> f32; 4] = [
-            ease_linear,
-            ease_out_cubic,
-            ease_in_out_quad,
-            ease_out_back,
-        ];
+        let fns: [fn(f32) -> f32; 4] =
+            [ease_linear, ease_out_cubic, ease_in_out_quad, ease_out_back];
         for f in fns {
-            assert!(approx_eq(f(0.0), 0.0, 1e-6), "ease fn should return 0 at t=0");
-            assert!(approx_eq(f(1.0), 1.0, 1e-6), "ease fn should return 1 at t=1");
+            assert!(
+                approx_eq(f(0.0), 0.0, 1e-6),
+                "ease fn should return 0 at t=0"
+            );
+            assert!(
+                approx_eq(f(1.0), 1.0, 1e-6),
+                "ease fn should return 1 at t=1"
+            );
         }
     }
 
@@ -221,10 +223,10 @@ mod tests {
         anim.start(10.0);
         assert!(anim.playing);
 
-        assert!(approx_eq(anim.progress(10.0), 0.0, 1e-6));    // 刚开始
-        assert!(approx_eq(anim.progress(11.0), 0.5, 1e-6));    // 进行一半
-        assert!(approx_eq(anim.progress(12.0), 1.0, 1e-6));    // 刚好结束
-        assert!(approx_eq(anim.progress(13.0), 1.0, 1e-6));    // 已结束，钳位在 1
+        assert!(approx_eq(anim.progress(10.0), 0.0, 1e-6)); // 刚开始
+        assert!(approx_eq(anim.progress(11.0), 0.5, 1e-6)); // 进行一半
+        assert!(approx_eq(anim.progress(12.0), 1.0, 1e-6)); // 刚好结束
+        assert!(approx_eq(anim.progress(13.0), 1.0, 1e-6)); // 已结束，钳位在 1
 
         assert!(!anim.is_done(10.0));
         assert!(!anim.is_done(11.0));

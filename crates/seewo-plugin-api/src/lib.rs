@@ -48,7 +48,11 @@ pub const PLUGIN_API_VERSION: u32 = 1;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PluginResult { Ok = 0, Err = 1, NotSupported = 2 }
+pub enum PluginResult {
+    Ok = 0,
+    Err = 1,
+    NotSupported = 2,
+}
 
 // ----- Context passed from host to plugin --------------------------------
 
@@ -72,9 +76,12 @@ pub type PluginCreateFn = unsafe extern "C" fn(ctx: *const PluginContext) -> Plu
 pub type PluginDestroyFn = unsafe extern "C" fn(handle: PluginHandle);
 pub type PluginExecuteFn = unsafe extern "C" fn(
     handle: PluginHandle,
-    action: *const u8, action_len: u32,
-    input: *const u8, input_len: u32,
-    output: *mut u8, output_len: *mut u32,
+    action: *const u8,
+    action_len: u32,
+    input: *const u8,
+    input_len: u32,
+    output: *mut u8,
+    output_len: *mut u32,
 ) -> PluginResult;
 
 // ----- Helpers for plugin authors -----------------------------------------
@@ -96,11 +103,15 @@ pub fn install_host_logger(ctx: &PluginContext) {
     unsafe impl Sync for ProxyLogger {}
 
     impl log::Log for ProxyLogger {
-        fn enabled(&self, _: &log::Metadata) -> bool { true }
+        fn enabled(&self, _: &log::Metadata) -> bool {
+            true
+        }
         fn log(&self, record: &log::Record) {
             let lvl = record.level() as u8;
             let msg = format!("{}", record.args());
-            unsafe { (self.log_fn)(lvl, msg.as_ptr(), msg.len() as u32); }
+            unsafe {
+                (self.log_fn)(lvl, msg.as_ptr(), msg.len() as u32);
+            }
         }
         fn flush(&self) {}
     }

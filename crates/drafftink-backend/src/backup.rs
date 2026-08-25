@@ -4,8 +4,8 @@
 
 use std::path::{Path, PathBuf};
 
-use chrono::{Datelike, Local, NaiveTime, Timelike};
 use chrono::Duration;
+use chrono::{Datelike, Local, NaiveTime, Timelike};
 use tracing::{error, info};
 
 /// 启动备份后台任务
@@ -79,11 +79,7 @@ fn seconds_until_next_backup(backup_hour: u32) -> u64 {
 }
 
 /// 执行一次备份
-fn perform_backup(
-    db_path: &Path,
-    storage_path: &Path,
-    backup_path: &Path,
-) -> anyhow::Result<()> {
+fn perform_backup(db_path: &Path, storage_path: &Path, backup_path: &Path) -> anyhow::Result<()> {
     let now = Local::now();
     let timestamp = format!(
         "{:04}{:02}{:02}_{:02}{:02}{:02}",

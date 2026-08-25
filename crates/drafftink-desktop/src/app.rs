@@ -34,11 +34,10 @@ use crate::shape_renderer::draw_shape;
 use crate::stroke_conv::{core_vec_to_ink, ink_vec_to_core};
 use crate::tools::{
     angle_of, closest_point_on_line, dist_to_segment, draw_active_tool, find_nearest_edge,
-    line_draw_result, protractor_to_unified, set_square_centroid, set_square_edges,
-    snap_angle, snap_angle_grid15, snap_dir_axis, snap_dir_grid45, unified_to_protractor,
-    ActiveTool, CompassMode, CompassTool, CountdownTool, FunctionPlotTool, NumberLineTool,
-    PolygonTool, ProtractorMode, ProtractorTool, RulerTool, SetSquareKind, SetSquareTool,
-    WhichEnd,
+    line_draw_result, protractor_to_unified, set_square_centroid, set_square_edges, snap_angle,
+    snap_angle_grid15, snap_dir_axis, snap_dir_grid45, unified_to_protractor, ActiveTool,
+    CompassMode, CompassTool, CountdownTool, FunctionPlotTool, NumberLineTool, PolygonTool,
+    ProtractorMode, ProtractorTool, RulerTool, SetSquareKind, SetSquareTool, WhichEnd,
 };
 use crate::undo::{UndoCmd, UndoHistory};
 use crate::video_player::VideoPlayer;
@@ -524,11 +523,17 @@ fn draw_function_plot(
 
     // 坐标轴：穿过原点（矩形中心）的横轴（X）与纵轴（Y）。
     painter.line_segment(
-        [egui::pos2(rect.left(), origin.y), egui::pos2(rect.right(), origin.y)],
+        [
+            egui::pos2(rect.left(), origin.y),
+            egui::pos2(rect.right(), origin.y),
+        ],
         axis,
     );
     painter.line_segment(
-        [egui::pos2(origin.x, rect.top()), egui::pos2(origin.x, rect.bottom())],
+        [
+            egui::pos2(origin.x, rect.top()),
+            egui::pos2(origin.x, rect.bottom()),
+        ],
         axis,
     );
 
@@ -624,7 +629,8 @@ pub(crate) struct FunctionPlotInstance {
 }
 
 /// 毫秒 → `m:ss` 或 `h:mm:ss` 的时间文本（长视频超过 1 小时自动显示小时位）。
-fn fmt_time(ms: u64) -> String {    let total = ms / 1000;
+fn fmt_time(ms: u64) -> String {
+    let total = ms / 1000;
     let s = total % 60;
     let m = (total / 60) % 60;
     let h = total / 3600;
@@ -885,7 +891,8 @@ impl IntegratedApp {
                 Ok(enbx_file) => {
                     for slide in &enbx_file.slides {
                         for enbx_elem in &slide.elements {
-                            let ed: drafftink_core::ElementData = drafftink_enbx::map_element_from_enbx(enbx_elem);
+                            let ed: drafftink_core::ElementData =
+                                drafftink_enbx::map_element_from_enbx(enbx_elem);
                             if let Some(legacy) = ed.to_legacy() {
                                 elements.push(legacy);
                             }
@@ -1030,7 +1037,10 @@ impl IntegratedApp {
         };
         self.inserted_videos.push(record.clone());
         // 撤销：插入视频。
-        self.history.push(UndoCmd::InsertVideo { id: id.clone(), record });
+        self.history.push(UndoCmd::InsertVideo {
+            id: id.clone(),
+            record,
+        });
         log::info!("[video] 插入视频元素: {} (id={})", path.display(), id);
 
         // 4) 立即启动解码叠加层，world_rect 锚定到画布中心。
@@ -1112,7 +1122,9 @@ impl IntegratedApp {
 
     /// 进入授课时，解析源 `.enbx` 的内嵌视频资源并启动解码器。
     fn collect_embedded_videos(&mut self, enbx_path: &Option<String>, ctx: &egui::Context) {
-        let Some(path) = enbx_path else { return; };
+        let Some(path) = enbx_path else {
+            return;
+        };
         let enbx = match drafftink_enbx::parse_enbx(std::path::Path::new(path)) {
             Ok(e) => e,
             Err(e) => {
@@ -1184,10 +1196,7 @@ impl IntegratedApp {
         std::thread::spawn(move || {
             let picked = rfd::FileDialog::new()
                 .set_title("选择图片文件")
-                .add_filter(
-                    "图片文件",
-                    &["png", "jpg", "jpeg", "gif", "bmp", "webp"],
-                )
+                .add_filter("图片文件", &["png", "jpg", "jpeg", "gif", "bmp", "webp"])
                 .pick_file();
             if let Some(p) = picked {
                 sink.lock().unwrap().push(p);
@@ -1198,8 +1207,7 @@ impl IntegratedApp {
 
     /// 主循环每帧消费待插入的图片路径：构造图片叠加层实例塞入当前页画布中心。
     fn consume_pending_images(&mut self, ctx: &egui::Context) {
-        let pending: Vec<PathBuf> =
-            std::mem::take(&mut *self.pending_images.lock().unwrap());
+        let pending: Vec<PathBuf> = std::mem::take(&mut *self.pending_images.lock().unwrap());
         for path in pending {
             if self.pending_image.is_none() {
                 // 进入「点击放置」模式：幽灵图片框跟随光标，单击画布固定到该处（Esc 取消）。
@@ -1219,7 +1227,10 @@ impl IntegratedApp {
         std::thread::spawn(move || {
             let picked = rfd::FileDialog::new()
                 .set_title("选择音频文件")
-                .add_filter("音频文件", &["mp3", "wav", "m4a", "aac", "ogg", "flac", "wma"])
+                .add_filter(
+                    "音频文件",
+                    &["mp3", "wav", "m4a", "aac", "ogg", "flac", "wma"],
+                )
                 .pick_file();
             if let Some(p) = picked {
                 sink.lock().unwrap().push(p);
@@ -1230,8 +1241,7 @@ impl IntegratedApp {
 
     /// 主循环每帧消费待插入的音频路径：进入「点击放置」或直接落到画布中心。
     fn consume_pending_audios(&mut self, ctx: &egui::Context) {
-        let pending: Vec<PathBuf> =
-            std::mem::take(&mut *self.pending_audios.lock().unwrap());
+        let pending: Vec<PathBuf> = std::mem::take(&mut *self.pending_audios.lock().unwrap());
         for path in pending {
             if self.pending_audio.is_none() {
                 self.pending_audio = Some(path);
@@ -1287,7 +1297,11 @@ impl IntegratedApp {
 
         // 撤销：插入。
         self.history.push(UndoCmd::InsertAudio { id, record });
-        log::info!("[audio] 插入音频元素: {} (duration={}ms)", path.display(), duration_ms);
+        log::info!(
+            "[audio] 插入音频元素: {} (duration={}ms)",
+            path.display(),
+            duration_ms
+        );
         ctx.request_repaint();
     }
 
@@ -1359,7 +1373,11 @@ impl IntegratedApp {
     /// 各自折算为对应 `Enbx*` 描述，资源以「页」为单位归类，保证翻页后不串页。
     pub(crate) fn save_bundle(&self) -> crate::save::SaveBundle {
         let doc = &self.edit.doc;
-        let page_count = if doc.pages.is_empty() { 1 } else { doc.pages.len() };
+        let page_count = if doc.pages.is_empty() {
+            1
+        } else {
+            doc.pages.len()
+        };
 
         let mut pages = Vec::with_capacity(page_count);
         for p in 0..page_count {
@@ -1600,10 +1618,8 @@ impl IntegratedApp {
                             gh = gw * 9.0 / 16.0;
                         }
                         let zoom = cam.as_ref().map(|c| c.zoom).unwrap_or(1.0);
-                        let ghost_rect = egui::Rect::from_center_size(
-                            pos,
-                            egui::vec2(gw * zoom, gh * zoom),
-                        );
+                        let ghost_rect =
+                            egui::Rect::from_center_size(pos, egui::vec2(gw * zoom, gh * zoom));
                         painter.rect_filled(
                             ghost_rect,
                             4.0,
@@ -1727,11 +1743,7 @@ impl IntegratedApp {
                         }
                     },
                     Err(e) => {
-                        log::warn!(
-                            "[image] 读取文件失败: {} — {:?}",
-                            inst.path.display(),
-                            e
-                        );
+                        log::warn!("[image] 读取文件失败: {} — {:?}", inst.path.display(), e);
                         None
                     }
                 };
@@ -2140,7 +2152,8 @@ impl IntegratedApp {
                 };
                 if let Some(index) = elems.iter().position(|e| e.base().id.to_string() == id) {
                     let elem = elems.remove(index);
-                    self.history.push(UndoCmd::RemoveElement { page, index, elem });
+                    self.history
+                        .push(UndoCmd::RemoveElement { page, index, elem });
                 }
             }
         }
@@ -2181,10 +2194,7 @@ impl IntegratedApp {
         };
         // 拖拽开始：守卫由空闲 → 本实例认领，快照旧几何（旧 user_rect）。
         if !was_active && active_drag.is_some() {
-            *drag_snapshot = Some(DragSnapshot::Overlay {
-                sel,
-                old_rect: old,
-            });
+            *drag_snapshot = Some(DragSnapshot::Overlay { sel, old_rect: old });
         }
         // 拖拽结束：守卫释放，若几何确有变化则 push ModifyRect（撤销 = 回旧矩形）。
         if was_active && active_drag.is_none() {
@@ -2213,7 +2223,12 @@ impl IntegratedApp {
     /// 按元素 id 查找文档层元素（跨 `elements` / `pages[page]`）。
     fn find_text_elem(&self, page: usize, elem_id: Uuid) -> Option<Element> {
         if self.edit.doc.pages.is_empty() {
-            self.edit.doc.elements.iter().find(|e| e.id() == elem_id).cloned()
+            self.edit
+                .doc
+                .elements
+                .iter()
+                .find(|e| e.id() == elem_id)
+                .cloned()
         } else {
             self.edit
                 .doc
@@ -2346,7 +2361,9 @@ impl IntegratedApp {
                 self.inserted_audios.push(record.clone());
                 self.rebuild_audio_instance(&record);
             }
-            UndoCmd::ModifyText { page, elem_id, old, .. } => {
+            UndoCmd::ModifyText {
+                page, elem_id, old, ..
+            } => {
                 // 撤销「修改」= 回旧值（base 几何 + 文本内容）。
                 self.replace_text_elem(page, elem_id, old);
             }
@@ -2416,7 +2433,9 @@ impl IntegratedApp {
                 self.audio_instances.remove(&id);
                 self.inserted_audios.retain(|a| a.id != id);
             }
-            UndoCmd::ModifyText { page, elem_id, new, .. } => {
+            UndoCmd::ModifyText {
+                page, elem_id, new, ..
+            } => {
                 // 重做「修改」= 应用新值。
                 self.replace_text_elem(page, elem_id, new);
             }
@@ -2600,7 +2619,11 @@ impl IntegratedApp {
                 rect.min + egui::vec2(6.0, (rect.height() - 24.0) / 2.0),
                 egui::vec2(24.0, 24.0),
             );
-            painter.circle_filled(play_btn.center(), 12.0, egui::Color32::from_rgb(0, 150, 255));
+            painter.circle_filled(
+                play_btn.center(),
+                12.0,
+                egui::Color32::from_rgb(0, 150, 255),
+            );
             painter.text(
                 play_btn.center(),
                 egui::Align2::CENTER_CENTER,
@@ -2619,7 +2642,10 @@ impl IntegratedApp {
                 let progress = (cur as f32 / dur as f32).clamp(0.0, 1.0);
                 let played = egui::Rect::from_min_max(
                     bar_rect.min,
-                    egui::pos2(bar_rect.left() + bar_rect.width() * progress, bar_rect.bottom()),
+                    egui::pos2(
+                        bar_rect.left() + bar_rect.width() * progress,
+                        bar_rect.bottom(),
+                    ),
                 );
                 painter.rect_filled(played, 3.0, egui::Color32::from_rgb(0, 150, 255));
             }
@@ -2654,8 +2680,7 @@ impl IntegratedApp {
                         }
                     } else if pointer_pressed && dur > 0 && bar_hit.contains(pos) {
                         inst.seeking = true;
-                        let ratio =
-                            ((pos.x - bar_rect.left()) / bar_rect.width()).clamp(0.0, 1.0);
+                        let ratio = ((pos.x - bar_rect.left()) / bar_rect.width()).clamp(0.0, 1.0);
                         inst.seek_target_ms = (ratio * dur as f32) as u64;
                     }
                 }
@@ -2712,9 +2737,8 @@ impl IntegratedApp {
         if prepare {
             if let Some(kind) = self.pending_shape {
                 let esc = ctx.input(|i| i.key_pressed(egui::Key::Escape));
-                let (pressed, released) = ctx.input(|i| {
-                    (i.pointer.primary_pressed(), i.pointer.primary_released())
-                });
+                let (pressed, released) =
+                    ctx.input(|i| (i.pointer.primary_pressed(), i.pointer.primary_released()));
                 let pointer = ctx.pointer_interact_pos();
 
                 if esc {
@@ -2834,7 +2858,8 @@ impl IntegratedApp {
                     stroke_color.3,
                 ),
             );
-            let fill = fill_color.map(|c| egui::Color32::from_rgba_unmultiplied(c.0, c.1, c.2, c.3));
+            let fill =
+                fill_color.map(|c| egui::Color32::from_rgba_unmultiplied(c.0, c.1, c.2, c.3));
 
             let selected = self.selected_element_id == Some(SelectedElement::Shape(key.clone()));
             if prepare && selected {
@@ -2858,7 +2883,15 @@ impl IntegratedApp {
                 interact.draw_overlay(&painter);
             } else {
                 // 未选中 / 授课模式：纯图形渲染，无边框、无交互。
-                draw_shape(&painter, rect, kind, stroke, fill, arc_degrees, line_flipped);
+                draw_shape(
+                    &painter,
+                    rect,
+                    kind,
+                    stroke,
+                    fill,
+                    arc_degrees,
+                    line_flipped,
+                );
             }
         }
 
@@ -2952,8 +2985,13 @@ impl IntegratedApp {
             self.marquee_rect = None;
             return;
         }
-        let (pressed, released, down) =
-            ctx.input(|i| (i.pointer.primary_pressed(), i.pointer.primary_released(), i.pointer.primary_down()));
+        let (pressed, released, down) = ctx.input(|i| {
+            (
+                i.pointer.primary_pressed(),
+                i.pointer.primary_released(),
+                i.pointer.primary_down(),
+            )
+        });
         let pointer = ctx.pointer_interact_pos();
 
         if pressed {
@@ -3000,7 +3038,11 @@ impl IntegratedApp {
                 egui::Order::Foreground,
                 egui::Id::new("marquee_overlay"),
             ));
-            painter.rect_filled(r, 0.0, egui::Color32::from_rgba_unmultiplied(0, 120, 255, 30));
+            painter.rect_filled(
+                r,
+                0.0,
+                egui::Color32::from_rgba_unmultiplied(0, 120, 255, 30),
+            );
             painter.rect_stroke(
                 r,
                 0.0,
@@ -3080,7 +3122,10 @@ impl IntegratedApp {
             page: self.edit.multi_page.current_page,
         };
         self.function_instances.insert(id.clone(), inst.clone());
-        self.history.push(UndoCmd::InsertFunction { id: id.clone(), inst });
+        self.history.push(UndoCmd::InsertFunction {
+            id: id.clone(),
+            inst,
+        });
         // 自动选中新实例，便于老师立即拖动/调整。
         self.selected_element_id = Some(SelectedElement::Function(id));
         log::info!("[function-plot] 框选提交函数曲线实例");
@@ -3110,7 +3155,9 @@ impl IntegratedApp {
                     ui.label(format!("📊 检测到函数：{}", menu.text));
                     if ui.button("📈 函数绘图").clicked() {
                         match crate::function_parser::parse(&menu.text) {
-                            Ok(expr) => to_plot = Some((expr, menu.text.clone(), menu.anchor.center())),
+                            Ok(expr) => {
+                                to_plot = Some((expr, menu.text.clone(), menu.anchor.center()))
+                            }
                             Err(e) => error = Some(e),
                         }
                     }
@@ -3137,7 +3184,10 @@ impl IntegratedApp {
             let pressed = ctx.input(|i| i.pointer.primary_pressed());
             let pointer = ctx.pointer_interact_pos();
             let clicked_outside = pressed
-                && !res.response.rect.contains(pointer.unwrap_or(egui::Pos2::ZERO));
+                && !res
+                    .response
+                    .rect
+                    .contains(pointer.unwrap_or(egui::Pos2::ZERO));
             if clicked_outside {
                 self.function_menu = None;
             } else {
@@ -3294,7 +3344,10 @@ impl IntegratedApp {
                 });
                 ui.horizontal(|ui| {
                     // 放大镜：点一下激活 / 再点一下退出（也可按 Esc 退出）。
-                    if ui.selectable_label(self.magnifier.active, "🔍 放大镜").clicked() {
+                    if ui
+                        .selectable_label(self.magnifier.active, "🔍 放大镜")
+                        .clicked()
+                    {
                         self.magnifier.active = !self.magnifier.active;
                     }
                     // 随机点名器：点按打开浮动窗口（名单在该工具内临时保留）。
@@ -3325,8 +3378,8 @@ impl IntegratedApp {
             if self.name_picker.elapsed >= self.name_picker.roll_speed {
                 self.name_picker.elapsed = 0.0;
                 if !self.name_picker.names.is_empty() {
-                    let idx = (ctx.input(|i| i.time * 10.0) as usize)
-                        % self.name_picker.names.len();
+                    let idx =
+                        (ctx.input(|i| i.time * 10.0) as usize) % self.name_picker.names.len();
                     self.name_picker.display_name = self.name_picker.names[idx].clone();
                 }
             }
@@ -3369,7 +3422,11 @@ impl IntegratedApp {
         let list = if self.name_picker.names.is_empty() {
             "（空）".to_string()
         } else {
-            format!("{}（{} 人）", self.name_picker.names.join("  "), self.name_picker.names.len())
+            format!(
+                "{}（{} 人）",
+                self.name_picker.names.join("  "),
+                self.name_picker.names.len()
+            )
         };
         ui.label(format!("当前名单: {list}"));
 
@@ -3387,13 +3444,22 @@ impl IntegratedApp {
         frame.show(ui, |ui| {
             ui.set_min_size(egui::vec2(260.0, 76.0));
             ui.vertical_centered(|ui| {
-                let name = if display.is_empty() { "　" } else { display.as_str() };
+                let name = if display.is_empty() {
+                    "　"
+                } else {
+                    display.as_str()
+                };
                 let color = if selected {
                     egui::Color32::from_rgb(70, 40, 0)
                 } else {
                     egui::Color32::WHITE
                 };
-                ui.label(egui::RichText::new(name).size(big.size).color(color).strong());
+                ui.label(
+                    egui::RichText::new(name)
+                        .size(big.size)
+                        .color(color)
+                        .strong(),
+                );
             });
         });
 
@@ -3477,7 +3543,8 @@ impl IntegratedApp {
         };
         let cur_page = self.current_canvas_page();
         // 圈内绘制裁剪到圆的外接正方形（近似圆，圆角外的角落由环形遮罩压暗）。
-        let clip_rect = egui::Rect::from_center_size(center, egui::vec2(radius * 2.0, radius * 2.0));
+        let clip_rect =
+            egui::Rect::from_center_size(center, egui::vec2(radius * 2.0, radius * 2.0));
         let inner = painter.with_clip_rect(clip_rect);
 
         // ── 圈内放大重绘：只重新绘制「所圈区域内的可见元素」──
@@ -3521,7 +3588,15 @@ impl IntegratedApp {
             let fill = inst
                 .fill_color
                 .map(|c| egui::Color32::from_rgba_unmultiplied(c.0, c.1, c.2, c.3));
-            draw_shape(&inner, mag, inst.kind, stroke, fill, inst.arc_degrees, inst.line_flipped);
+            draw_shape(
+                &inner,
+                mag,
+                inst.kind,
+                stroke,
+                fill,
+                inst.arc_degrees,
+                inst.line_flipped,
+            );
         }
 
         // 函数绘图：在主画布矩形放大后，重绘完整的坐标系 + 曲线（内部自带裁剪）。
@@ -3534,7 +3609,9 @@ impl IntegratedApp {
             if inst.page != cur_page {
                 continue;
             }
-            let r = inst.user_rect.unwrap_or_else(|| function_default_rect(screen, inst.scale));
+            let r = inst
+                .user_rect
+                .unwrap_or_else(|| function_default_rect(screen, inst.scale));
             let mag = egui::Rect::from_min_max(
                 magnifier_transform(r.min, center, panel_offset, 1.0, zoom),
                 magnifier_transform(r.max, center, panel_offset, 1.0, zoom),
@@ -3545,7 +3622,9 @@ impl IntegratedApp {
         // ── 圈外压暗（带洞环形遮罩），只留圆内内容高亮。──
         // 外半径取足够大，覆盖整个屏幕角落（with_clip 未裁剪此层）。
         let ring_color = egui::Color32::from_rgba_unmultiplied(18, 22, 30, 120);
-        painter.add(egui::Shape::mesh(annulus_mesh(center, radius, 8000.0, ring_color)));
+        painter.add(egui::Shape::mesh(annulus_mesh(
+            center, radius, 8000.0, ring_color,
+        )));
 
         // 蓝色圆圈边框。
         painter.circle_stroke(
@@ -3698,10 +3777,8 @@ impl IntegratedApp {
                     if double_clicked || enter {
                         let r = t.radius();
                         if r > 2.0 {
-                            let rect = egui::Rect::from_center_size(
-                                t.pivot,
-                                egui::vec2(r * 2.0, r * 2.0),
-                            );
+                            let rect =
+                                egui::Rect::from_center_size(t.pivot, egui::vec2(r * 2.0, r * 2.0));
                             match t.mode {
                                 CompassMode::Circle => {
                                     commit = Some((ShapeKind::Circle, rect, None, false, false));
@@ -3710,7 +3787,11 @@ impl IntegratedApp {
                                     let end = angle_of(t.pivot, t.pencil);
                                     let fill = t.mode == CompassMode::Sector;
                                     commit = Some((
-                                        if fill { ShapeKind::Sector } else { ShapeKind::Arc },
+                                        if fill {
+                                            ShapeKind::Sector
+                                        } else {
+                                            ShapeKind::Arc
+                                        },
                                         rect,
                                         Some((0.0, end)),
                                         false,
@@ -3732,7 +3813,10 @@ impl IntegratedApp {
                     t.rotation_deg = snapped;
                 }
                 // 底边方向 = 直角顶点 origin → 30° 顶点，与 set_square_points 的 rotate_vec 约定一致。
-                let dir = crate::tools::rotate_vec(egui::Vec2::new(1.0, 0.0), t.rotation_deg.to_radians());
+                let dir = crate::tools::rotate_vec(
+                    egui::Vec2::new(1.0, 0.0),
+                    t.rotation_deg.to_radians(),
+                );
                 let edge_end = t.origin + dir * t.size;
                 // 重心（三顶点均值）用于判定「平移」。
                 let grip = set_square_centroid(&t);
@@ -3801,11 +3885,7 @@ impl IntegratedApp {
                     t.moving = false;
                 }
                 // 双击 / Enter：提交整条底边为 Line。
-                if (double_clicked || enter)
-                    && !t.drawing
-                    && !t.moving
-                    && !t.rotating
-                {
+                if (double_clicked || enter) && !t.drawing && !t.moving && !t.rotating {
                     let rect = egui::Rect::from_two_pos(t.origin, edge_end);
                     let line_flipped = (t.origin.x > edge_end.x) != (t.origin.y > edge_end.y);
                     commit = Some((ShapeKind::Line, rect, None, line_flipped, false));
@@ -3861,7 +3941,8 @@ impl IntegratedApp {
                                     t.center,
                                     egui::vec2(t.radius * 2.0, t.radius * 2.0),
                                 );
-                                commit = Some((ShapeKind::Angle, rect, Some((a0, a1)), false, false));
+                                commit =
+                                    Some((ShapeKind::Angle, rect, Some((a0, a1)), false, false));
                             }
                         }
                     }
@@ -3903,7 +3984,11 @@ impl IntegratedApp {
                                 }
                                 WhichEnd::End => {
                                     let v = p - t.start;
-                                    t.end = if shift { t.start + snap_dir_grid45(v) } else { p };
+                                    t.end = if shift {
+                                        t.start + snap_dir_grid45(v)
+                                    } else {
+                                        p
+                                    };
                                 }
                             }
                         }
@@ -3974,7 +4059,11 @@ impl IntegratedApp {
                             egui::vec2(t.radius * 2.0, t.radius * 2.0),
                         );
                         commit = Some((
-                            ShapeKind::Polygon { center, radius: t.radius, sides: t.sides },
+                            ShapeKind::Polygon {
+                                center,
+                                radius: t.radius,
+                                sides: t.sides,
+                            },
                             rect,
                             None,
                             false,
@@ -4058,13 +4147,7 @@ impl IntegratedApp {
                                 step: t.step,
                                 ..drafftink_core::model::NumberLineData::default()
                             };
-                            commit = Some((
-                                ShapeKind::NumberLine(data),
-                                rect,
-                                None,
-                                false,
-                                false,
-                            ));
+                            commit = Some((ShapeKind::NumberLine(data), rect, None, false, false));
                         }
                     }
                     t.dragging = false;
@@ -4234,11 +4317,11 @@ impl IntegratedApp {
                 .iter()
                 .position(|e| e.base().id.to_string() == id)
         } else {
-            self.edit
-                .doc
-                .pages
-                .get(page)
-                .and_then(|p| p.elements.iter().position(|e| e.base().id.to_string() == id))
+            self.edit.doc.pages.get(page).and_then(|p| {
+                p.elements
+                    .iter()
+                    .position(|e| e.base().id.to_string() == id)
+            })
         };
         let Some(idx) = idx else {
             return;
@@ -4304,7 +4387,12 @@ impl IntegratedApp {
                     ob.position != nb.position || ob.size != nb.size
                 };
                 if changed {
-                    self.history.push(UndoCmd::ModifyText { page, elem_id, old, new });
+                    self.history.push(UndoCmd::ModifyText {
+                        page,
+                        elem_id,
+                        old,
+                        new,
+                    });
                 }
             }
         }
@@ -4406,10 +4494,8 @@ impl IntegratedApp {
                             gh = gw * 9.0 / 16.0;
                         }
                         let zoom = cam.as_ref().map(|c| c.zoom).unwrap_or(1.0);
-                        let ghost_rect = egui::Rect::from_center_size(
-                            pos,
-                            egui::vec2(gw * zoom, gh * zoom),
-                        );
+                        let ghost_rect =
+                            egui::Rect::from_center_size(pos, egui::vec2(gw * zoom, gh * zoom));
                         painter.rect_filled(
                             ghost_rect,
                             4.0,
@@ -4680,7 +4766,10 @@ impl IntegratedApp {
                     );
                     let played_rect = egui::Rect::from_min_max(
                         bar_rect.min,
-                        egui::pos2(bar_rect.left() + bar_rect.width() * progress, bar_rect.bottom()),
+                        egui::pos2(
+                            bar_rect.left() + bar_rect.width() * progress,
+                            bar_rect.bottom(),
+                        ),
                     );
                     painter.rect_filled(played_rect, 3.0, egui::Color32::from_rgb(0, 150, 255));
                     let handle_x = bar_rect.left() + bar_rect.width() * progress;
@@ -4848,7 +4937,9 @@ impl App for IntegratedApp {
             if factor != 1.0 {
                 let screen = ctx.screen_rect();
                 for inst in self.video_instances.values_mut() {
-                    let cur = inst.user_rect.unwrap_or_else(|| default_overlay_rect(screen));
+                    let cur = inst
+                        .user_rect
+                        .unwrap_or_else(|| default_overlay_rect(screen));
                     let new_size = cur.size() * factor;
                     let new_rect = egui::Rect::from_center_size(cur.center(), new_size);
                     if new_rect.width() >= 40.0 && new_rect.height() >= 30.0 {
@@ -4960,8 +5051,7 @@ impl App for IntegratedApp {
         // 统一画布单击处理：单击元素 → 选中；单击空白处 → 取消选中（「先隐身后选中」范式）。
         // 在叠加层绘制前求值，使本帧选中态立即被叠加层读取，从而显示边框 / 抓手。
         if self.mode == AppMode::Prepare {
-            let (pressed, modifiers) =
-                ctx.input(|i| (i.pointer.primary_pressed(), i.modifiers));
+            let (pressed, modifiers) = ctx.input(|i| (i.pointer.primary_pressed(), i.modifiers));
             if pressed {
                 if let Some(pos) = ctx.pointer_interact_pos() {
                     let screen = ctx.screen_rect();
@@ -5116,7 +5206,9 @@ fn demo_svg_shapes() -> Vec<Element> {
             stroke_width: 3.0,
             ..Default::default()
         },
-        svg_path: "M100,0 L124,76 L200,76 L138,120 L162,196 L100,152 L38,196 L62,120 L0,76 L76,76 Z".to_string(),
+        svg_path:
+            "M100,0 L124,76 L200,76 L138,120 L162,196 L100,152 L38,196 L62,120 L0,76 L76,76 Z"
+                .to_string(),
         is_closed: true,
         has_end_arrow: false,
         has_start_arrow: false,
@@ -5192,7 +5284,11 @@ fn resolve_plugin_dir() -> std::path::PathBuf {
         return cwd;
     }
     std::env::var_os("APPDATA")
-        .map(|v| std::path::PathBuf::from(v).join("drafftink").join("plugins"))
+        .map(|v| {
+            std::path::PathBuf::from(v)
+                .join("drafftink")
+                .join("plugins")
+        })
         .unwrap_or_else(|| std::path::PathBuf::from("plugins"))
 }
 
@@ -5210,12 +5306,20 @@ mod tests {
             ..NamePickerTool::default()
         };
         t.add_from_input();
-        assert_eq!(t.names, ["张三", "李四", "王五", "赵六"], "英/中/换行分隔皆可解析");
+        assert_eq!(
+            t.names,
+            ["张三", "李四", "王五", "赵六"],
+            "英/中/换行分隔皆可解析"
+        );
 
         // 重复名字不重复加入；输入框在加入后应清空。
         t.input_text = "张三,小七".to_string();
         t.add_from_input();
-        assert_eq!(t.names, ["张三", "李四", "王五", "赵六", "小七"], "重复去重");
+        assert_eq!(
+            t.names,
+            ["张三", "李四", "王五", "赵六", "小七"],
+            "重复去重"
+        );
         assert!(t.input_text.is_empty(), "加入后清空输入框");
 
         // 纯函数 parse_names：包围空白、分号、回车一并处理。
@@ -5238,7 +5342,11 @@ mod tests {
         };
         t.stop_rolling();
         assert!(!t.is_rolling, "停止后不再滚动");
-        assert_eq!(t.selected_name.as_deref(), Some("王五"), "选中当前显示的名字");
+        assert_eq!(
+            t.selected_name.as_deref(),
+            Some("王五"),
+            "选中当前显示的名字"
+        );
 
         // 显示区为空（仍未开始滚动）：回退到名单第一项，保证永远选中一名。
         let mut t2 = NamePickerTool {
@@ -5246,7 +5354,11 @@ mod tests {
             ..NamePickerTool::default()
         };
         t2.stop_rolling();
-        assert_eq!(t2.selected_name.as_deref(), Some("张三"), "空显示区回退到名单首项");
+        assert_eq!(
+            t2.selected_name.as_deref(),
+            Some("张三"),
+            "空显示区回退到名单首项"
+        );
     }
 
     /// 放大镜坐标变换正确性：圆心保持不动，周围点以圆心为基准等比外扩；
@@ -5270,7 +5382,11 @@ mod tests {
             2.0,
             3.0,
         );
-        assert_eq!(out, pos2(310.0, 260.0), "通用画布参数 → 世界放大后映射回屏幕");
+        assert_eq!(
+            out,
+            pos2(310.0, 260.0),
+            "通用画布参数 → 世界放大后映射回屏幕"
+        );
 
         // 关键不变量：**任何**画布参数与放大倍数下，放大镜圆心都保持固定。
         for zf in [1.0, 2.0, 4.0] {
@@ -5546,7 +5662,10 @@ mod tests {
         assert!(out.exists(), ".enbx should exist after save");
 
         // 预期资源文件名：md5(裸路径).wav（embed_resource_id 先 strip "file://" 再 MD5）。
-        let md5_hex = format!("{:x}", md5::compute(audio_path.to_string_lossy().as_bytes()));
+        let md5_hex = format!(
+            "{:x}",
+            md5::compute(audio_path.to_string_lossy().as_bytes())
+        );
         let expected_name = format!("{md5_hex}.wav");
 
         let file = std::fs::File::open(&out).expect("open enbx");
@@ -5579,7 +5698,10 @@ mod tests {
             1,
             "exactly one Audio element expected, got {audio_elems:?}"
         );
-        assert_eq!(audio_elems[0], expected_name, "Audio resource_id should be the MD5-named file");
+        assert_eq!(
+            audio_elems[0], expected_name,
+            "Audio resource_id should be the MD5-named file"
+        );
 
         let _ = std::fs::remove_file(&audio_path);
         let _ = std::fs::remove_file(&out);
@@ -5604,9 +5726,7 @@ mod tests {
                 .count()
         } else {
             let p = app.edit.multi_page.current_page;
-            app.edit
-                .doc
-                .pages[p]
+            app.edit.doc.pages[p]
                 .elements
                 .iter()
                 .filter(|e| matches!(e, Element::Text(_)))
@@ -5678,7 +5798,10 @@ mod tests {
             app.inserted_videos.is_empty(),
             "inserted video record must be removed on delete"
         );
-        assert!(app.selected_element_id.is_none(), "selection must be cleared");
+        assert!(
+            app.selected_element_id.is_none(),
+            "selection must be cleared"
+        );
         assert!(app.active_drag.is_none(), "drag guard must be cleared");
     }
 
@@ -5692,7 +5815,10 @@ mod tests {
         } else {
             &app.edit.doc.pages[page].elements
         };
-        elems.iter().filter(|e| matches!(e, Element::Text(_))).count()
+        elems
+            .iter()
+            .filter(|e| matches!(e, Element::Text(_)))
+            .count()
     }
 
     /// 用本地 ffmpeg 生成一段 1 秒、440Hz 正弦的 WAV（纯音频测试样本）。
@@ -5825,12 +5951,18 @@ mod tests {
         // 撤销 → user_rect 回旧值。
         let cmd = app.history.undo().expect("undo");
         app.apply_undo(cmd, &ctx);
-        assert_eq!(app.shape_instances[&id].user_rect, old_rect, "撤销后应回旧矩形");
+        assert_eq!(
+            app.shape_instances[&id].user_rect, old_rect,
+            "撤销后应回旧矩形"
+        );
 
         // 重做 → user_rect 回新值。
         let cmd = app.history.redo().expect("redo");
         app.apply_redo(cmd, &ctx);
-        assert_eq!(app.shape_instances[&id].user_rect, new_rect, "重做后应回新矩形");
+        assert_eq!(
+            app.shape_instances[&id].user_rect, new_rect,
+            "重做后应回新矩形"
+        );
     }
 
     /// Part B：文本内容修改（ModifyText）的撤销与重做（走 commit_text_edit 提交路径）。
@@ -5850,7 +5982,11 @@ mod tests {
 
         // 编辑前快照旧元素。
         let old = app.clone_text_elem(page, 0);
-        app.text_edit_undo = Some(TextEditSession { page, elem_id, old: old.clone() });
+        app.text_edit_undo = Some(TextEditSession {
+            page,
+            elem_id,
+            old: old.clone(),
+        });
 
         // 修改文本内容（模拟 TextEdit 输入）。
         let new_text = "Hello Modify".to_string();
@@ -5925,4 +6061,3 @@ mod tests {
         assert!(app.shape_instances.is_empty(), "撤销后圆应被移除");
     }
 }
-

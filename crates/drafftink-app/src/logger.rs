@@ -78,7 +78,11 @@ pub fn init(global_level: LevelFilter) -> Box<dyn std::any::Any> {
             let _ = std::fs::rename(&path, path.with_extension("log.old"));
         }
     }
-    let file = OpenOptions::new().create(true).append(true).open(&path).ok();
+    let file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+        .ok();
     let path_s = path.display().to_string();
     let logger = FileLogger {
         file: Mutex::new(file),
@@ -94,7 +98,9 @@ pub fn init(global_level: LevelFilter) -> Box<dyn std::any::Any> {
 
 struct LoggerGuard;
 impl Drop for LoggerGuard {
-    fn drop(&mut self) { log::logger().flush(); }
+    fn drop(&mut self) {
+        log::logger().flush();
+    }
 }
 
 fn log_path() -> PathBuf {
@@ -110,7 +116,9 @@ fn log_path() -> PathBuf {
 
 fn now() -> String {
     use std::time::SystemTime;
-    let dur = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default();
+    let dur = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap_or_default();
     let secs = dur.as_secs();
     let days = (secs / 86400) as i64;
     let tod = (secs % 86400) as u32;
@@ -123,7 +131,11 @@ fn now() -> String {
 
 fn days_to_date(mut days: i64) -> (i64, u32, u32) {
     days += 719468;
-    let era = if days >= 0 { days / 146097 } else { (days - 146096) / 146097 };
+    let era = if days >= 0 {
+        days / 146097
+    } else {
+        (days - 146096) / 146097
+    };
     let doe = (days - era * 146097) as u32;
     let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
     let y = yoe as i64 + era * 400;

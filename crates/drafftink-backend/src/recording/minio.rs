@@ -77,8 +77,7 @@ impl MinioStorage {
         let (host, port) = match without_scheme.split_once(':') {
             Some((h, p)) => (
                 h.to_string(),
-                p.parse::<u16>()
-                    .map_err(|_| anyhow!("非法端口: {p}"))?,
+                p.parse::<u16>().map_err(|_| anyhow!("非法端口: {p}"))?,
             ),
             None => (without_scheme.to_string(), 9000),
         };
@@ -133,7 +132,10 @@ impl MinioStorage {
             scope,
             sha256_hex(canonical_request.as_bytes())
         );
-        let k_date = hmac_sha256(format!("AWS4{}", self.secret_key).as_bytes(), date.as_bytes());
+        let k_date = hmac_sha256(
+            format!("AWS4{}", self.secret_key).as_bytes(),
+            date.as_bytes(),
+        );
         let k_region = hmac_sha256(&k_date, self.region.as_bytes());
         let k_service = hmac_sha256(&k_region, b"s3");
         let k_signing = hmac_sha256(&k_service, b"aws4_request");
@@ -168,7 +170,13 @@ impl MinioStorage {
     }
 
     /// 通过 TCP 发送请求并接收完整响应。
-    fn send_recv(&self, method: &str, key: &str, payload: &[u8], content_type: &str) -> Result<Vec<u8>> {
+    fn send_recv(
+        &self,
+        method: &str,
+        key: &str,
+        payload: &[u8],
+        content_type: &str,
+    ) -> Result<Vec<u8>> {
         let mut stream = TcpStream::connect((self.host.as_str(), self.port))
             .map_err(|e| anyhow!("连接 MinIO 失败 ({}:{}): {e}", self.host, self.port))?;
         let head = self.request_head(method, key, payload, content_type);

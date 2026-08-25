@@ -19,14 +19,10 @@ impl ArgbColor {
             return Err(format!("Invalid ARGB hex: '{}'", hex));
         }
         let bytes = &hex[1..];
-        let a = u8::from_str_radix(&bytes[0..2], 16)
-            .map_err(|e| format!("Bad alpha: {}", e))?;
-        let r = u8::from_str_radix(&bytes[2..4], 16)
-            .map_err(|e| format!("Bad red: {}", e))?;
-        let g = u8::from_str_radix(&bytes[4..6], 16)
-            .map_err(|e| format!("Bad green: {}", e))?;
-        let b = u8::from_str_radix(&bytes[6..8], 16)
-            .map_err(|e| format!("Bad blue: {}", e))?;
+        let a = u8::from_str_radix(&bytes[0..2], 16).map_err(|e| format!("Bad alpha: {}", e))?;
+        let r = u8::from_str_radix(&bytes[2..4], 16).map_err(|e| format!("Bad red: {}", e))?;
+        let g = u8::from_str_radix(&bytes[4..6], 16).map_err(|e| format!("Bad green: {}", e))?;
+        let b = u8::from_str_radix(&bytes[6..8], 16).map_err(|e| format!("Bad blue: {}", e))?;
         Ok(Self { a, r, g, b })
     }
 
@@ -64,12 +60,22 @@ impl Default for TextElement {
             height: 0.0,
             rotation: 0.0,
             is_locked: false,
-            background: ArgbColor { a: 0, r: 255, g: 255, b: 255 },
+            background: ArgbColor {
+                a: 0,
+                r: 255,
+                g: 255,
+                b: 255,
+            },
             content: String::new(),
             font_size: 0.0,
             font_family: String::new(),
             font_weight: String::new(),
-            foreground: ArgbColor { a: 255, r: 0, g: 0, b: 0 },
+            foreground: ArgbColor {
+                a: 255,
+                r: 0,
+                g: 0,
+                b: 0,
+            },
         }
     }
 }

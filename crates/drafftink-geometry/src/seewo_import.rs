@@ -59,18 +59,14 @@ pub fn parse_transform_3d(s: &str) -> Result<Matrix4<f32>> {
         .context("Transform3D 解析失败")?;
 
     if values.len() != 16 {
-        anyhow::bail!(
-            "Transform3D 需要 16 个值，实际 {}",
-            values.len()
-        );
+        anyhow::bail!("Transform3D 需要 16 个值，实际 {}", values.len());
     }
 
     // 行优先填充
     Ok(Matrix4::new(
-        values[0], values[1], values[2], values[3],
-        values[4], values[5], values[6], values[7],
-        values[8], values[9], values[10], values[11],
-        values[12], values[13], values[14], values[15],
+        values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7],
+        values[8], values[9], values[10], values[11], values[12], values[13], values[14],
+        values[15],
     ))
 }
 
@@ -324,10 +320,7 @@ pub struct SeewoMeshData {
 /// 在 World Matrix 中翻转 Y 轴，使几何体在引擎中正确朝向。
 pub fn y_axis_correction_matrix() -> Matrix4<f32> {
     Matrix4::new(
-        1.0,  0.0, 0.0, 0.0,
-        0.0, -1.0, 0.0, 0.0,
-        0.0,  0.0, 1.0, 0.0,
-        0.0,  0.0, 0.0, 1.0,
+        1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
     )
 }
 

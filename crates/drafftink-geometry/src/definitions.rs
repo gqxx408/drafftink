@@ -50,10 +50,7 @@ pub enum PointDef {
     OnCircle { circle: Uuid, angle: f32 },
 
     /// 两线交点
-    Intersection {
-        line_a: Uuid,
-        line_b: Uuid,
-    },
+    Intersection { line_a: Uuid, line_b: Uuid },
 
     /// 线圆交点（选择第一个或第二个交点）
     LineCircleIntersection {
@@ -544,13 +541,7 @@ impl GeometryDoc {
     }
 
     /// 添加圆弧
-    pub fn add_arc(
-        &mut self,
-        center: Uuid,
-        radius: f32,
-        start_angle: f32,
-        end_angle: f32,
-    ) -> Uuid {
+    pub fn add_arc(&mut self, center: Uuid, radius: f32, start_angle: f32, end_angle: f32) -> Uuid {
         let id = Uuid::new_v4();
         self.arcs.insert(
             id,
@@ -588,13 +579,7 @@ impl GeometryDoc {
     }
 
     /// 添加椭圆
-    pub fn add_ellipse(
-        &mut self,
-        center: Uuid,
-        semi_a: f32,
-        semi_b: f32,
-        rotation: f32,
-    ) -> Uuid {
+    pub fn add_ellipse(&mut self, center: Uuid, semi_a: f32, semi_b: f32, rotation: f32) -> Uuid {
         let id = Uuid::new_v4();
         self.ellipses.insert(
             id,
@@ -649,7 +634,8 @@ impl GeometryDoc {
     /// 添加长度标注
     pub fn add_length_mark(&mut self, start: Uuid, end: Uuid) -> Uuid {
         let id = Uuid::new_v4();
-        self.length_marks.insert(id, LengthMarkDef { id, start, end });
+        self.length_marks
+            .insert(id, LengthMarkDef { id, start, end });
         id
     }
 
@@ -732,12 +718,7 @@ impl GeometryDoc {
     }
 
     /// 添加圆柱
-    pub fn add_cylinder(
-        &mut self,
-        bottom_center: Uuid,
-        top_center: Uuid,
-        radius: f32,
-    ) -> Uuid {
+    pub fn add_cylinder(&mut self, bottom_center: Uuid, top_center: Uuid, radius: f32) -> Uuid {
         let id = Uuid::new_v4();
         self.cylinders.insert(
             id,
@@ -811,13 +792,7 @@ impl GeometryDoc {
     }
 
     /// 添加棱锥
-    pub fn add_pyramid(
-        &mut self,
-        base_center: Uuid,
-        apex: Uuid,
-        radius: f32,
-        sides: u32,
-    ) -> Uuid {
+    pub fn add_pyramid(&mut self, base_center: Uuid, apex: Uuid, radius: f32, sides: u32) -> Uuid {
         let id = Uuid::new_v4();
         self.pyramids.insert(
             id,
@@ -908,9 +883,8 @@ impl GeometryDoc {
         self.length_marks
             .retain(|_, l| l.start != id && l.end != id);
         // 三角形：任一顶点被删则删除
-        self.triangles.retain(|_, t| {
-            t.vertex_a != id && t.vertex_b != id && t.vertex_c != id
-        });
+        self.triangles
+            .retain(|_, t| t.vertex_a != id && t.vertex_b != id && t.vertex_c != id);
         // 网格：原点被删则删除
         self.grids.retain(|_, g| g.origin != id);
         // 3D
@@ -1097,7 +1071,10 @@ mod tests {
         let sector_id = doc.add_sector(center, 3.0, 0.0, std::f32::consts::FRAC_PI_2);
 
         assert_eq!(doc.arcs[&arc_id].radius, 3.0);
-        assert_eq!(doc.sectors[&sector_id].end_angle, std::f32::consts::FRAC_PI_2);
+        assert_eq!(
+            doc.sectors[&sector_id].end_angle,
+            std::f32::consts::FRAC_PI_2
+        );
     }
 
     #[test]

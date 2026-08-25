@@ -96,9 +96,7 @@ fn extract_and_verify(req: &Request, state: &AppState) -> Result<JwtClaims, AppE
 /// 从 `Authorization: Bearer` 头提取令牌。
 fn extract_bearer(headers: &HeaderMap) -> Option<String> {
     let value = headers.get(header::AUTHORIZATION)?.to_str().ok()?;
-    value
-        .strip_prefix("Bearer ")
-        .map(|t| t.trim().to_string())
+    value.strip_prefix("Bearer ").map(|t| t.trim().to_string())
 }
 
 /// 从 `Cookie` 头解析 `access_token`。

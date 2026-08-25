@@ -45,7 +45,11 @@ pub fn save_to_file(doc: &MindMapDoc, path: &std::path::Path) -> anyhow::Result<
 pub fn load_from_file(path: &std::path::Path) -> anyhow::Result<MindMapDoc> {
     let content = std::fs::read_to_string(path)?;
     let doc = load_mindmap(&content)?;
-    log::info!("[mindmap] 已加载: {} ({} 个节点)", path.display(), doc.nodes.len());
+    log::info!(
+        "[mindmap] 已加载: {} ({} 个节点)",
+        path.display(),
+        doc.nodes.len()
+    );
     Ok(doc)
 }
 

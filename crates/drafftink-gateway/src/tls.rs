@@ -55,9 +55,7 @@ impl TlsConfig {
     pub fn validate(&self) -> Result<(), String> {
         match (self.cert_path.is_some(), self.key_path.is_some()) {
             (true, true) | (false, false) => Ok(()),
-            _ => Err(
-                "TLS 配置不完整：必须同时提供 cert 与 key，或都不提供".to_string(),
-            ),
+            _ => Err("TLS 配置不完整：必须同时提供 cert 与 key，或都不提供".to_string()),
         }
     }
 }
@@ -69,12 +67,11 @@ mod tests {
     #[test]
     fn tls_validate_requires_both_or_neither() {
         assert!(TlsConfig::new(None, None).validate().is_ok());
-        assert!(TlsConfig::new(
-            Some(PathBuf::from("/c.pem")),
-            Some(PathBuf::from("/k.pem")),
-        )
-        .validate()
-        .is_ok());
+        assert!(
+            TlsConfig::new(Some(PathBuf::from("/c.pem")), Some(PathBuf::from("/k.pem")),)
+                .validate()
+                .is_ok()
+        );
         assert!(TlsConfig::new(Some(PathBuf::from("/c.pem")), None)
             .validate()
             .is_err());

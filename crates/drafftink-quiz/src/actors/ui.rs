@@ -49,7 +49,10 @@ pub fn start_ui_proxy(
                         snap.current_stats = Some(stats);
                     }
                 }
-                UiEvent::StudentJoined { student_id, student_name } => {
+                UiEvent::StudentJoined {
+                    student_id,
+                    student_name,
+                } => {
                     log::info!("[quiz-ui] 学生加入: {} ({})", student_name, student_id);
                 }
                 UiEvent::StudentLeft { student_id } => {
@@ -70,7 +73,10 @@ pub fn start_ui_proxy(
                     log::error!("[quiz-ui] 错误: {}", msg);
                     s.last_error = Some(msg);
                 }
-                UiEvent::UsbDeviceChanged { device_id, connected } => {
+                UiEvent::UsbDeviceChanged {
+                    device_id,
+                    connected,
+                } => {
                     log::info!(
                         "[quiz-ui] USB 设备 {}: {}",
                         if connected { "连接" } else { "断开" },

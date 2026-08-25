@@ -1,7 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod app;
 mod annotation;
+mod app;
 mod interaction;
 mod log_setup;
 mod multi_page;
@@ -22,8 +22,14 @@ fn load_cjk_font() -> Option<(Vec<u8>, &'static str)> {
         ("C:\\Windows\\Fonts\\Dengb.ttf", "DengXian Bold"),
         ("C:\\Windows\\Fonts\\msyh.ttc", "Microsoft YaHei (ttc)"),
         ("C:\\Windows\\Fonts\\simsun.ttc", "SimSun (ttc)"),
-        ("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc", "WenQuanYi"),
-        ("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", "Noto CJK"),
+        (
+            "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+            "WenQuanYi",
+        ),
+        (
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "Noto CJK",
+        ),
         ("/System/Library/Fonts/PingFang.ttc", "PingFang"),
         ("/System/Library/Fonts/STHeiti Light.ttc", "STHeiti"),
     ];
@@ -38,7 +44,10 @@ fn load_cjk_font() -> Option<(Vec<u8>, &'static str)> {
                 );
                 return Some((bytes, name));
             }
-            Ok(_) => log::warn!("[font] Skipping {} (too small, likely not a valid font)", path),
+            Ok(_) => log::warn!(
+                "[font] Skipping {} (too small, likely not a valid font)",
+                path
+            ),
             Err(_) => {}
         }
     }
@@ -81,18 +90,16 @@ fn main() {
         let loaded = if path_lower.ends_with(".enbx") || path_lower.ends_with(".enbxz") {
             // Use format_enbx loader directly for .enbx files
             match std::fs::read(&path) {
-                Ok(data) => {
-                    match format_enbx::loader::load_enbx(&data, &DummyContext) {
-                        Ok(doc) => {
-                            log::info!("[display] Loaded .enbx via built-in loader: {}", path);
-                            Ok(doc)
-                        }
-                        Err(e) => {
-                            log::error!("[display] .enbx load failed: {}", e);
-                            Err(e)
-                        }
+                Ok(data) => match format_enbx::loader::load_enbx(&data, &DummyContext) {
+                    Ok(doc) => {
+                        log::info!("[display] Loaded .enbx via built-in loader: {}", path);
+                        Ok(doc)
                     }
-                }
+                    Err(e) => {
+                        log::error!("[display] .enbx load failed: {}", e);
+                        Err(e)
+                    }
+                },
                 Err(e) => Err(format!("read file failed: {}", e)),
             }
         } else {
@@ -169,12 +176,15 @@ fn main() {
                          Expected hardware GPU (Vulkan/Metal/DX12). \
                          Check your graphics drivers. \
                          Adapter: name=\"{}\" backend={:?} device_type={:?}",
-                        info.name, info.backend, info.device_type
+                        info.name,
+                        info.backend,
+                        info.device_type
                     );
                 } else {
                     log::info!(
                         "[gpu] Hardware GPU confirmed: backend={:?} device_type={:?}",
-                        info.backend, info.device_type
+                        info.backend,
+                        info.device_type
                     );
                 }
 
@@ -183,7 +193,10 @@ fn main() {
                     let a = adapter.get_info();
                     log::info!(
                         "[gpu] Available adapter #{}: name=\"{}\" backend={:?} device_type={:?}",
-                        i, a.name, a.backend, a.device_type
+                        i,
+                        a.name,
+                        a.backend,
+                        a.device_type
                     );
                 }
             } else {

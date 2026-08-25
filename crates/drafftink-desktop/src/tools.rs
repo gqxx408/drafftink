@@ -258,8 +258,14 @@ impl CountdownTool {
         let secs = if let Ok(v) = s.parse::<u32>() {
             v
         } else if let Some((m, sec)) = s.split_once(':') {
-            let m = m.trim().parse::<u32>().map_err(|_| format!("无效分钟 '{m}'"))?;
-            let sec = sec.trim().parse::<u32>().map_err(|_| format!("无效秒 '{sec}'"))?;
+            let m = m
+                .trim()
+                .parse::<u32>()
+                .map_err(|_| format!("无效分钟 '{m}'"))?;
+            let sec = sec
+                .trim()
+                .parse::<u32>()
+                .map_err(|_| format!("无效秒 '{sec}'"))?;
             if sec >= 60 {
                 return Err(format!("秒数不能 ≥ 60（'{sec}'）"));
             }
@@ -541,7 +547,10 @@ pub fn draw_compass(painter: &Painter, t: &CompassTool) {
         Stroke::new(1.0, Color32::from_rgb(0, 150, 255)),
     );
     // 两臂（转轴 → 铅笔脚）。
-    painter.line_segment([pivot, pencil], Stroke::new(2.0, Color32::from_rgb(20, 40, 120)));
+    painter.line_segment(
+        [pivot, pencil],
+        Stroke::new(2.0, Color32::from_rgb(20, 40, 120)),
+    );
     painter.circle_filled(pivot, 4.0, Color32::from_rgb(20, 40, 120));
     painter.circle_filled(pencil, 3.0, Color32::from_rgb(180, 30, 30));
 
@@ -753,7 +762,13 @@ pub fn draw_ruler(painter: &Painter, t: &RulerTool) {
         painter.line_segment([base, tip], Stroke::new(1.0, body));
         if is_cm {
             let label = base + perp * (tick_len + 12.0);
-            painter.text(label, Align2::CENTER_CENTER, format!("{}", i / 10), FontId::proportional(11.0), body);
+            painter.text(
+                label,
+                Align2::CENTER_CENTER,
+                format!("{}", i / 10),
+                FontId::proportional(11.0),
+                body,
+            );
         }
     }
 
@@ -784,7 +799,8 @@ pub fn draw_ruler(painter: &Painter, t: &RulerTool) {
 /// 正多边形：半透明填充 + 描边预览 + 边数/半径文本 + 中心标记。
 pub fn draw_polygon(painter: &Painter, t: &PolygonTool) {
     if t.radius > 1.0 {
-        let pts = crate::shape_renderer::polygon_vertices(t.center, t.radius, t.sides, t.preview_angle);
+        let pts =
+            crate::shape_renderer::polygon_vertices(t.center, t.radius, t.sides, t.preview_angle);
         painter.add(egui::Shape::convex_polygon(
             pts,
             Color32::from_rgba_unmultiplied(0, 150, 255, 60),
@@ -801,11 +817,17 @@ pub fn draw_polygon(painter: &Painter, t: &PolygonTool) {
     // 中心十字 + 圆点（未定位时提示点击位置）。
     let cross = 6.0;
     painter.line_segment(
-        [t.center - Vec2::new(cross, 0.0), t.center + Vec2::new(cross, 0.0)],
+        [
+            t.center - Vec2::new(cross, 0.0),
+            t.center + Vec2::new(cross, 0.0),
+        ],
         Stroke::new(1.0, Color32::from_rgb(0, 150, 255)),
     );
     painter.line_segment(
-        [t.center - Vec2::new(0.0, cross), t.center + Vec2::new(0.0, cross)],
+        [
+            t.center - Vec2::new(0.0, cross),
+            t.center + Vec2::new(0.0, cross),
+        ],
         Stroke::new(1.0, Color32::from_rgb(0, 150, 255)),
     );
     painter.circle_filled(t.center, 4.0, Color32::from_rgb(0, 150, 255));
@@ -827,23 +849,35 @@ pub fn draw_function_plot(painter: &Painter, t: &FunctionPlotTool) {
         let y = c.y + u * s;
         // 竖线（u 在 x 轴，即数学 y 方向在屏幕水平）
         painter.line_segment(
-            [Pos2::new(x, c.y - half_units * s), Pos2::new(x, c.y + half_units * s)],
+            [
+                Pos2::new(x, c.y - half_units * s),
+                Pos2::new(x, c.y + half_units * s),
+            ],
             Stroke::new(1.0, grid_color),
         );
         painter.line_segment(
-            [Pos2::new(c.x - half_units * s, y), Pos2::new(c.x + half_units * s, y)],
+            [
+                Pos2::new(c.x - half_units * s, y),
+                Pos2::new(c.x + half_units * s, y),
+            ],
             Stroke::new(1.0, grid_color),
         );
     }
 
     // X 轴（水平，数学 y=0 → 屏幕 c.y）。
     painter.line_segment(
-        [Pos2::new(c.x - half_units * s, c.y), Pos2::new(c.x + half_units * s, c.y)],
+        [
+            Pos2::new(c.x - half_units * s, c.y),
+            Pos2::new(c.x + half_units * s, c.y),
+        ],
         axis_stroke,
     );
     // Y 轴（垂直，数学 x=0 → 屏幕 c.x；数学 y 向上 = 屏幕 y 减小）。
     painter.line_segment(
-        [Pos2::new(c.x, c.y - half_units * s), Pos2::new(c.x, c.y + half_units * s)],
+        [
+            Pos2::new(c.x, c.y - half_units * s),
+            Pos2::new(c.x, c.y + half_units * s),
+        ],
         axis_stroke,
     );
     // 轴箭头。
@@ -853,8 +887,16 @@ pub fn draw_function_plot(painter: &Painter, t: &FunctionPlotTool) {
         painter.line_segment([tip, tip - dir * 8.0 + perp * 4.0], axis_stroke);
         painter.line_segment([tip, tip - dir * 8.0 - perp * 4.0], axis_stroke);
     };
-    arrow(painter, Pos2::new(c.x + half_units * s, c.y), Pos2::new(c.x + (half_units - 1.0) * s, c.y));
-    arrow(painter, Pos2::new(c.x, c.y - half_units * s), Pos2::new(c.x, c.y - (half_units - 1.0) * s));
+    arrow(
+        painter,
+        Pos2::new(c.x + half_units * s, c.y),
+        Pos2::new(c.x + (half_units - 1.0) * s, c.y),
+    );
+    arrow(
+        painter,
+        Pos2::new(c.x, c.y - half_units * s),
+        Pos2::new(c.x, c.y - (half_units - 1.0) * s),
+    );
 
     // 刻度标注（每 2 单位数字，数学坐标）。
     for i in (-half_units as i32..=half_units as i32).step_by(2) {

@@ -7,7 +7,7 @@ pub mod expr;
 pub mod renderer;
 pub mod sampler;
 pub mod types;
-pub mod viewport;
 pub mod viewer;
+pub mod viewport;
 
 pub use viewer::FunctionViewer;

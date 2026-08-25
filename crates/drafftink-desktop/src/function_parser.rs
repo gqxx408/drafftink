@@ -253,9 +253,9 @@ fn strip_equation_prefix(input: &str) -> &str {
         Some(eq) => {
             let prefix = &s[..eq];
             if !prefix.is_empty()
-                && prefix
-                    .chars()
-                    .all(|c| c.is_alphabetic() || c.is_whitespace() || c == '(' || c == ')' || c == '_')
+                && prefix.chars().all(|c| {
+                    c.is_alphabetic() || c.is_whitespace() || c == '(' || c == ')' || c == '_'
+                })
             {
                 return s[eq + 1..].trim();
             }
@@ -340,14 +340,22 @@ mod tests {
         let pts = sample_points(&e, -5.0, 5.0, 200);
         assert_eq!(pts.len(), 200);
         assert!((pts[200 - 1].0 - 5.0).abs() < 1e-5, "右端点应为 +5");
-        assert!((pts[0].1 - 25.0).abs() < 1e-3, "x=-5 处 y=25，实际 {}", pts[0].1);
+        assert!(
+            (pts[0].1 - 25.0).abs() < 1e-3,
+            "x=-5 处 y=25，实际 {}",
+            pts[0].1
+        );
     }
 
     /// 用户要求：`parse_expr_add` —— 加法/乘法的解析与求值。
     #[test]
     fn parse_expr_add() {
         let e = parse("2 + 3 * x").expect("parse");
-        assert!((e.eval(2.0) - 8.0).abs() < 1e-5, "2+3*2=8, got {}", e.eval(2.0));
+        assert!(
+            (e.eval(2.0) - 8.0).abs() < 1e-5,
+            "2+3*2=8, got {}",
+            e.eval(2.0)
+        );
         // 隐式乘法：2x。
         let e = parse("2x + 1").expect("parse implicit mul");
         assert!((e.eval(3.0) - 7.0).abs() < 1e-5);
@@ -429,8 +437,16 @@ mod tests {
         let a = parse("y = 2x + 1").expect("lowercase prefix");
         let b = parse("  Y= 2x+1  ").expect("uppercase prefix, no spaces");
         for (x, expected) in [(0.0, 1.0), (3.0, 7.0), (-2.0, -3.0)] {
-            assert!((a.eval(x) - expected).abs() < 1e-5, "a({x}) = {}", a.eval(x));
-            assert!((b.eval(x) - expected).abs() < 1e-5, "b({x}) = {}", b.eval(x));
+            assert!(
+                (a.eval(x) - expected).abs() < 1e-5,
+                "a({x}) = {}",
+                a.eval(x)
+            );
+            assert!(
+                (b.eval(x) - expected).abs() < 1e-5,
+                "b({x}) = {}",
+                b.eval(x)
+            );
         }
         // f(x) = ... 形式。
         let c = parse("f(x) = x^2").expect("f(x) prefix");

@@ -12,8 +12,8 @@
 //! 6. Audio sinks are per-animation and cleaned up by `retain`; no global sink.
 
 use drafftink_core::animation::{
-    apply_easing, AnimationCategory, Direction, EffectType,
-    ElementAnimation, SlideAnimationSequence, SLIDE_BACKGROUND_ID,
+    apply_easing, AnimationCategory, Direction, EffectType, ElementAnimation,
+    SlideAnimationSequence, SLIDE_BACKGROUND_ID,
 };
 use drafftink_core::model::Element;
 use std::collections::HashMap;
@@ -178,10 +178,7 @@ impl AnimationPlayer {
             PlayerState::WaitingBefore => {
                 if now.duration_since(self.state_start).as_millis() >= 300 {
                     self.transition(PlayerState::PlayingBefore);
-                    self.start_animations(
-                        &self.sequence.before_queue.clone(),
-                        elements,
-                    );
+                    self.start_animations(&self.sequence.before_queue.clone(), elements);
                 }
             }
 
@@ -203,10 +200,7 @@ impl AnimationPlayer {
             PlayerState::WaitingAfter => {
                 if now.duration_since(self.state_start).as_millis() >= 600 {
                     self.transition(PlayerState::PlayingAfter);
-                    self.start_animations(
-                        &self.sequence.after_queue.clone(),
-                        elements,
-                    );
+                    self.start_animations(&self.sequence.after_queue.clone(), elements);
                 }
             }
 
@@ -229,8 +223,7 @@ impl AnimationPlayer {
 
     /// Returns `true` when the player still has work to do.
     pub fn is_active(&self) -> bool {
-        !matches!(self.state, PlayerState::Idle | PlayerState::Done)
-            || !self.active.is_empty()
+        !matches!(self.state, PlayerState::Idle | PlayerState::Done) || !self.active.is_empty()
     }
 
     /// Stop everything, release audio.  Called on slide change / plugin unload.
@@ -260,9 +253,7 @@ impl AnimationPlayer {
                 for a in &self.active {
                     let id_str = a.anim_id.to_string();
                     let short = &id_str[..id_str.len().min(4)];
-                    let e = Instant::now()
-                        .duration_since(a.start_time)
-                        .as_secs_f32();
+                    let e = Instant::now().duration_since(a.start_time).as_secs_f32();
                     let pct = (e / a.duration.as_secs_f32() * 100.0).min(100.0);
                     ui.label(format!("  {short} — {pct:3.0}%"));
                 }
@@ -281,9 +272,7 @@ impl AnimationPlayer {
                 "Player: {:?} → {:?} (elapsed={:.0}ms)",
                 self.state,
                 new_state,
-                Instant::now()
-                    .duration_since(self.state_start)
-                    .as_millis()
+                Instant::now().duration_since(self.state_start).as_millis()
             );
         }
         self.state = new_state;
@@ -386,8 +375,7 @@ impl AnimationPlayer {
                 .find(|e| e.id() == active.target_element_id)
             {
                 let b = elem.base_mut();
-                b.opacity =
-                    (active.base_opacity + active.delta_opacity * eased).clamp(0.0, 1.0);
+                b.opacity = (active.base_opacity + active.delta_opacity * eased).clamp(0.0, 1.0);
                 b.position[0] = active.base_pos[0] + active.delta_pos[0] * eased;
                 b.position[1] = active.base_pos[1] + active.delta_pos[1] * eased;
                 b.size[0] = active.base_size[0] + active.delta_size[0] * eased;
@@ -430,32 +418,48 @@ fn compute_effect_deltas(
         EffectType::FadeOut => (-base_opacity, [0.0, 0.0], [0.0, 0.0]),
 
         // ── Translate In ────────────────────────────────────────────────
-        EffectType::TranslateInTop => {
-            (1.0 - base_opacity, pos_delta(Direction::Top, dist, true), [0.0, 0.0])
-        }
-        EffectType::TranslateInBottom => {
-            (1.0 - base_opacity, pos_delta(Direction::Bottom, dist, true), [0.0, 0.0])
-        }
-        EffectType::TranslateInLeft => {
-            (1.0 - base_opacity, pos_delta(Direction::Left, dist, true), [0.0, 0.0])
-        }
-        EffectType::TranslateInRight => {
-            (1.0 - base_opacity, pos_delta(Direction::Right, dist, true), [0.0, 0.0])
-        }
+        EffectType::TranslateInTop => (
+            1.0 - base_opacity,
+            pos_delta(Direction::Top, dist, true),
+            [0.0, 0.0],
+        ),
+        EffectType::TranslateInBottom => (
+            1.0 - base_opacity,
+            pos_delta(Direction::Bottom, dist, true),
+            [0.0, 0.0],
+        ),
+        EffectType::TranslateInLeft => (
+            1.0 - base_opacity,
+            pos_delta(Direction::Left, dist, true),
+            [0.0, 0.0],
+        ),
+        EffectType::TranslateInRight => (
+            1.0 - base_opacity,
+            pos_delta(Direction::Right, dist, true),
+            [0.0, 0.0],
+        ),
 
         // ── Translate Out ───────────────────────────────────────────────
-        EffectType::TranslateOutTop => {
-            (-base_opacity, pos_delta(Direction::Top, dist, false), [0.0, 0.0])
-        }
-        EffectType::TranslateOutBottom => {
-            (-base_opacity, pos_delta(Direction::Bottom, dist, false), [0.0, 0.0])
-        }
-        EffectType::TranslateOutLeft => {
-            (-base_opacity, pos_delta(Direction::Left, dist, false), [0.0, 0.0])
-        }
-        EffectType::TranslateOutRight => {
-            (-base_opacity, pos_delta(Direction::Right, dist, false), [0.0, 0.0])
-        }
+        EffectType::TranslateOutTop => (
+            -base_opacity,
+            pos_delta(Direction::Top, dist, false),
+            [0.0, 0.0],
+        ),
+        EffectType::TranslateOutBottom => (
+            -base_opacity,
+            pos_delta(Direction::Bottom, dist, false),
+            [0.0, 0.0],
+        ),
+        EffectType::TranslateOutLeft => (
+            -base_opacity,
+            pos_delta(Direction::Left, dist, false),
+            [0.0, 0.0],
+        ),
+        EffectType::TranslateOutRight => (
+            -base_opacity,
+            pos_delta(Direction::Right, dist, false),
+            [0.0, 0.0],
+        ),
 
         // ── Scale ───────────────────────────────────────────────────────
         EffectType::ScaleIn => {
@@ -463,9 +467,11 @@ fn compute_effect_deltas(
             let dh = base_size[1] * mag;
             (1.0 - base_opacity, [0.0, 0.0], [dw, dh])
         }
-        EffectType::ScaleOut => {
-            (0.0, anim.compute_delta(base_pos), [-base_size[0], -base_size[1]])
-        }
+        EffectType::ScaleOut => (
+            0.0,
+            anim.compute_delta(base_pos),
+            [-base_size[0], -base_size[1]],
+        ),
 
         // ── Zoom (emphasis — grows then shrinks back) ───────────────────
         EffectType::Zoom => {
@@ -475,9 +481,7 @@ fn compute_effect_deltas(
         }
 
         // ── Transparency (emphasis — opacity pulse) ─────────────────────
-        EffectType::Transparency => {
-            (0.7 * mag, [0.0, 0.0], [0.0, 0.0])
-        }
+        EffectType::Transparency => (0.7 * mag, [0.0, 0.0], [0.0, 0.0]),
 
         // ── Default (use category-based opacity, explicit ToX/ToY) ──────
         _ => {
@@ -594,7 +598,12 @@ mod tests {
         let target_id = Uuid::new_v4();
         let anim_id = Uuid::new_v4();
         let mut player = AnimationPlayer::new();
-        let mut elements = vec![make_text_element(target_id, 0.5, [100.0, 200.0], [50.0, 50.0])];
+        let mut elements = vec![make_text_element(
+            target_id,
+            0.5,
+            [100.0, 200.0],
+            [50.0, 50.0],
+        )];
 
         let mut map = HashMap::new();
         map.insert(
@@ -722,8 +731,7 @@ mod tests {
             distance: Some(300.0),
             ..anim
         };
-        let (do_, dp, ds) =
-            compute_effect_deltas(&anim, 0.0, [100.0, 200.0], [50.0, 50.0], 1280.0);
+        let (do_, dp, ds) = compute_effect_deltas(&anim, 0.0, [100.0, 200.0], [50.0, 50.0], 1280.0);
         assert!((do_ - 1.0).abs() < 0.001); // fade in
         assert!((dp[0] - 0.0).abs() < 0.001);
         assert!((dp[1] - 300.0).abs() < 0.001); // -(-300) = 300
@@ -736,8 +744,7 @@ mod tests {
             magnitude: 1.0,
             ..make_fade_in_anim(Uuid::new_v4(), Uuid::new_v4())
         };
-        let (do_, dp, ds) =
-            compute_effect_deltas(&anim, 0.0, [0.0, 0.0], [100.0, 50.0], 1280.0);
+        let (do_, dp, ds) = compute_effect_deltas(&anim, 0.0, [0.0, 0.0], [100.0, 50.0], 1280.0);
         assert!((do_ - 1.0).abs() < 0.001);
         assert!((ds[0] - 100.0).abs() < 0.001);
         assert!((ds[1] - 50.0).abs() < 0.001);
@@ -750,8 +757,7 @@ mod tests {
             magnitude: 1.0,
             ..make_fade_in_anim(Uuid::new_v4(), Uuid::new_v4())
         };
-        let (do_, dp, ds) =
-            compute_effect_deltas(&anim, 1.0, [0.0, 0.0], [200.0, 100.0], 1280.0);
+        let (do_, dp, ds) = compute_effect_deltas(&anim, 1.0, [0.0, 0.0], [200.0, 100.0], 1280.0);
         assert!((do_ - 0.0).abs() < 0.001); // no opacity change
         assert!((ds[0] - 60.0).abs() < 0.001); // 200 * 0.3
     }
@@ -763,8 +769,7 @@ mod tests {
             magnitude: 1.0,
             ..make_fade_in_anim(Uuid::new_v4(), Uuid::new_v4())
         };
-        let (do_, _dp, _ds) =
-            compute_effect_deltas(&anim, 0.3, [0.0, 0.0], [50.0, 50.0], 1280.0);
+        let (do_, _dp, _ds) = compute_effect_deltas(&anim, 0.3, [0.0, 0.0], [50.0, 50.0], 1280.0);
         assert!((do_ - 0.7).abs() < 0.001); // 0.7 pulse
     }
 
@@ -775,8 +780,7 @@ mod tests {
             distance: None,
             ..make_fade_in_anim(Uuid::new_v4(), Uuid::new_v4())
         };
-        let (_do, dp, _ds) =
-            compute_effect_deltas(&anim, 0.0, [0.0, 0.0], [50.0, 50.0], 1280.0);
+        let (_do, dp, _ds) = compute_effect_deltas(&anim, 0.0, [0.0, 0.0], [50.0, 50.0], 1280.0);
         // default: 1280 * 0.25 = 320
         assert!((dp[0] - 320.0).abs() < 0.001);
     }

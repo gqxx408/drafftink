@@ -19,8 +19,8 @@ use crate::definitions::{Point2D, Point3D, PolyhedronType};
 use crate::persistence;
 use crate::primitives3d::{
     generate_cone, generate_cube, generate_cuboid, generate_cylinder, generate_frustum,
-    generate_prism, generate_pyramid, generate_regular_polyhedron, generate_sphere,
-    project_mesh, project_mesh_faces, Camera3D, ProjectedFace, ProjectionMode, RenderMode3D,
+    generate_prism, generate_pyramid, generate_regular_polyhedron, generate_sphere, project_mesh,
+    project_mesh_faces, Camera3D, ProjectedFace, ProjectionMode, RenderMode3D,
 };
 use crate::renderer::GeometryRenderer;
 use crate::seewo_import::{self, SeewoSlide3D};
@@ -340,13 +340,15 @@ impl GeometryViewer {
 
         // 收集渲染数据
         let point_ids: Vec<Uuid> = self.solver.doc.point_ids();
-        let line_defs: Vec<(Uuid, Uuid, Uuid)> = self.solver
+        let line_defs: Vec<(Uuid, Uuid, Uuid)> = self
+            .solver
             .doc
             .lines
             .values()
             .map(|l| (l.id, l.start, l.end))
             .collect();
-        let circle_defs: Vec<(Uuid, Uuid, f32)> = self.solver
+        let circle_defs: Vec<(Uuid, Uuid, f32)> = self
+            .solver
             .doc
             .circles
             .values()
@@ -514,8 +516,14 @@ impl GeometryViewer {
                 ctx.get_2d(am.point_a),
                 ctx.get_2d(am.point_b),
             ) {
-                self.renderer
-                    .draw_angle_mark(painter, v, a, b, canvas_center, cfg.annotation_color);
+                self.renderer.draw_angle_mark(
+                    painter,
+                    v,
+                    a,
+                    b,
+                    canvas_center,
+                    cfg.annotation_color,
+                );
             }
         }
 
@@ -567,14 +575,24 @@ impl GeometryViewer {
         let preview_color = Color32::from_rgba_premultiplied(255, 255, 255, 80);
 
         // 圆/圆弧/扇形/椭圆/圆环/正多边形 拖拽预览
-        if let (Some(center_id), Some(radius)) =
-            (self.interaction.shape_center, self.interaction.shape_drag_radius)
-        {
+        if let (Some(center_id), Some(radius)) = (
+            self.interaction.shape_center,
+            self.interaction.shape_drag_radius,
+        ) {
             if let Some(center_pos) = ctx.get_2d(center_id) {
                 match self.tool {
-                    Tool::Circle | Tool::Arc | Tool::Sector | Tool::RegularPolygon | Tool::Annulus => {
-                        self.renderer
-                            .draw_circle(painter, center_pos, radius, canvas_center, preview_color);
+                    Tool::Circle
+                    | Tool::Arc
+                    | Tool::Sector
+                    | Tool::RegularPolygon
+                    | Tool::Annulus => {
+                        self.renderer.draw_circle(
+                            painter,
+                            center_pos,
+                            radius,
+                            canvas_center,
+                            preview_color,
+                        );
                     }
                     Tool::Ellipse => {
                         self.renderer.draw_ellipse(
@@ -614,8 +632,13 @@ impl GeometryViewer {
                 let pointer = ectx.input(|i| i.pointer.interact_pos());
                 if let Some(mouse) = pointer {
                     let mouse_world = self.renderer.viewport.screen_to_world(mouse, canvas_center);
-                    self.renderer
-                        .draw_line(painter, first_pos, mouse_world, canvas_center, preview_color);
+                    self.renderer.draw_line(
+                        painter,
+                        first_pos,
+                        mouse_world,
+                        canvas_center,
+                        preview_color,
+                    );
                 }
             }
         }
@@ -636,10 +659,14 @@ impl GeometryViewer {
             if let Some(last) = pts.last() {
                 let pointer = ectx.input(|i| i.pointer.interact_pos());
                 if let Some(mouse) = pointer {
-                    let mouse_world =
-                        self.renderer.viewport.screen_to_world(mouse, canvas_center);
-                    self.renderer
-                        .draw_line(painter, *last, mouse_world, canvas_center, preview_color);
+                    let mouse_world = self.renderer.viewport.screen_to_world(mouse, canvas_center);
+                    self.renderer.draw_line(
+                        painter,
+                        *last,
+                        mouse_world,
+                        canvas_center,
+                        preview_color,
+                    );
                 }
             }
         }
@@ -674,10 +701,14 @@ impl GeometryViewer {
             if let Some(last) = pts.last() {
                 let pointer = ectx.input(|i| i.pointer.interact_pos());
                 if let Some(mouse) = pointer {
-                    let mouse_world =
-                        self.renderer.viewport.screen_to_world(mouse, canvas_center);
-                    self.renderer
-                        .draw_line(painter, *last, mouse_world, canvas_center, preview_color);
+                    let mouse_world = self.renderer.viewport.screen_to_world(mouse, canvas_center);
+                    self.renderer.draw_line(
+                        painter,
+                        *last,
+                        mouse_world,
+                        canvas_center,
+                        preview_color,
+                    );
                 }
             }
         }
@@ -781,7 +812,9 @@ impl GeometryViewer {
                         primary_released,
                         mouse_world,
                         ctx_solved,
-                        |center_id, radius| actions.regular_polygon_create = Some((center_id, radius)),
+                        |center_id, radius| {
+                            actions.regular_polygon_create = Some((center_id, radius))
+                        },
                     );
                 }
                 Tool::Arc => {
@@ -1174,7 +1207,13 @@ impl GeometryViewer {
         for cube in self.solver.doc.cubes.values() {
             if let Some(center) = ctx_solved.get_3d(cube.center) {
                 let mesh = generate_cube(center, cube.size);
-                all_faces.extend(project_mesh_faces(&mesh, &self.camera_3d, aspect, screen_size, Tool3D::Cube.base_color()));
+                all_faces.extend(project_mesh_faces(
+                    &mesh,
+                    &self.camera_3d,
+                    aspect,
+                    screen_size,
+                    Tool3D::Cube.base_color(),
+                ));
                 all_edges.extend(project_mesh(&mesh, &self.camera_3d, aspect, screen_size));
             }
         }
@@ -1183,7 +1222,13 @@ impl GeometryViewer {
         for cuboid in self.solver.doc.cuboids.values() {
             if let Some(center) = ctx_solved.get_3d(cuboid.center) {
                 let mesh = generate_cuboid(center, cuboid.width, cuboid.height, cuboid.depth);
-                all_faces.extend(project_mesh_faces(&mesh, &self.camera_3d, aspect, screen_size, Tool3D::Cuboid.base_color()));
+                all_faces.extend(project_mesh_faces(
+                    &mesh,
+                    &self.camera_3d,
+                    aspect,
+                    screen_size,
+                    Tool3D::Cuboid.base_color(),
+                ));
                 all_edges.extend(project_mesh(&mesh, &self.camera_3d, aspect, screen_size));
             }
         }
@@ -1192,29 +1237,49 @@ impl GeometryViewer {
         for sphere in self.solver.doc.spheres.values() {
             if let Some(center) = ctx_solved.get_3d(sphere.center) {
                 let mesh = generate_sphere(center, sphere.radius, 12, 16);
-                all_faces.extend(project_mesh_faces(&mesh, &self.camera_3d, aspect, screen_size, Tool3D::Sphere.base_color()));
+                all_faces.extend(project_mesh_faces(
+                    &mesh,
+                    &self.camera_3d,
+                    aspect,
+                    screen_size,
+                    Tool3D::Sphere.base_color(),
+                ));
                 all_edges.extend(project_mesh(&mesh, &self.camera_3d, aspect, screen_size));
             }
         }
 
         // 圆柱
         for cyl in self.solver.doc.cylinders.values() {
-            if let (Some(bot), Some(top)) =
-                (ctx_solved.get_3d(cyl.bottom_center), ctx_solved.get_3d(cyl.top_center))
-            {
+            if let (Some(bot), Some(top)) = (
+                ctx_solved.get_3d(cyl.bottom_center),
+                ctx_solved.get_3d(cyl.top_center),
+            ) {
                 let mesh = generate_cylinder(bot, top, cyl.radius, 16);
-                all_faces.extend(project_mesh_faces(&mesh, &self.camera_3d, aspect, screen_size, Tool3D::Cylinder.base_color()));
+                all_faces.extend(project_mesh_faces(
+                    &mesh,
+                    &self.camera_3d,
+                    aspect,
+                    screen_size,
+                    Tool3D::Cylinder.base_color(),
+                ));
                 all_edges.extend(project_mesh(&mesh, &self.camera_3d, aspect, screen_size));
             }
         }
 
         // 圆锥
         for cone in self.solver.doc.cones.values() {
-            if let (Some(base), Some(apex)) =
-                (ctx_solved.get_3d(cone.base_center), ctx_solved.get_3d(cone.apex))
-            {
+            if let (Some(base), Some(apex)) = (
+                ctx_solved.get_3d(cone.base_center),
+                ctx_solved.get_3d(cone.apex),
+            ) {
                 let mesh = generate_cone(base, apex, cone.radius, 16);
-                all_faces.extend(project_mesh_faces(&mesh, &self.camera_3d, aspect, screen_size, Tool3D::Cone.base_color()));
+                all_faces.extend(project_mesh_faces(
+                    &mesh,
+                    &self.camera_3d,
+                    aspect,
+                    screen_size,
+                    Tool3D::Cone.base_color(),
+                ));
                 all_edges.extend(project_mesh(&mesh, &self.camera_3d, aspect, screen_size));
             }
         }
@@ -1226,7 +1291,13 @@ impl GeometryViewer {
                 ctx_solved.get_3d(frust.top_center),
             ) {
                 let mesh = generate_frustum(bot, top, frust.bottom_radius, frust.top_radius, 16);
-                all_faces.extend(project_mesh_faces(&mesh, &self.camera_3d, aspect, screen_size, Tool3D::Frustum.base_color()));
+                all_faces.extend(project_mesh_faces(
+                    &mesh,
+                    &self.camera_3d,
+                    aspect,
+                    screen_size,
+                    Tool3D::Frustum.base_color(),
+                ));
                 all_edges.extend(project_mesh(&mesh, &self.camera_3d, aspect, screen_size));
             }
         }
@@ -1238,18 +1309,31 @@ impl GeometryViewer {
                 ctx_solved.get_3d(prism.top_center),
             ) {
                 let mesh = generate_prism(bot, top, prism.radius, prism.sides);
-                all_faces.extend(project_mesh_faces(&mesh, &self.camera_3d, aspect, screen_size, Tool3D::Prism.base_color()));
+                all_faces.extend(project_mesh_faces(
+                    &mesh,
+                    &self.camera_3d,
+                    aspect,
+                    screen_size,
+                    Tool3D::Prism.base_color(),
+                ));
                 all_edges.extend(project_mesh(&mesh, &self.camera_3d, aspect, screen_size));
             }
         }
 
         // 棱锥
         for pyr in self.solver.doc.pyramids.values() {
-            if let (Some(base), Some(apex)) =
-                (ctx_solved.get_3d(pyr.base_center), ctx_solved.get_3d(pyr.apex))
-            {
+            if let (Some(base), Some(apex)) = (
+                ctx_solved.get_3d(pyr.base_center),
+                ctx_solved.get_3d(pyr.apex),
+            ) {
                 let mesh = generate_pyramid(base, apex, pyr.radius, pyr.sides);
-                all_faces.extend(project_mesh_faces(&mesh, &self.camera_3d, aspect, screen_size, Tool3D::Pyramid.base_color()));
+                all_faces.extend(project_mesh_faces(
+                    &mesh,
+                    &self.camera_3d,
+                    aspect,
+                    screen_size,
+                    Tool3D::Pyramid.base_color(),
+                ));
                 all_edges.extend(project_mesh(&mesh, &self.camera_3d, aspect, screen_size));
             }
         }
@@ -1265,7 +1349,13 @@ impl GeometryViewer {
                     PolyhedronType::Icosahedron => [100, 200, 255],
                     PolyhedronType::Dodecahedron => [200, 100, 200],
                 };
-                all_faces.extend(project_mesh_faces(&mesh, &self.camera_3d, aspect, screen_size, color));
+                all_faces.extend(project_mesh_faces(
+                    &mesh,
+                    &self.camera_3d,
+                    aspect,
+                    screen_size,
+                    color,
+                ));
                 all_edges.extend(project_mesh(&mesh, &self.camera_3d, aspect, screen_size));
             }
         }
@@ -1284,7 +1374,13 @@ impl GeometryViewer {
 
             for mesh_data in meshes {
                 // 投影面（实心模式用）— 石膏体白色基底
-                let mut faces = project_mesh_faces(&mesh_data.mesh, &self.camera_3d, aspect, screen_size, [220, 220, 230]);
+                let mut faces = project_mesh_faces(
+                    &mesh_data.mesh,
+                    &self.camera_3d,
+                    aspect,
+                    screen_size,
+                    [220, 220, 230],
+                );
                 // 投影边
                 let mut edges = project_mesh(&mesh_data.mesh, &self.camera_3d, aspect, screen_size);
 
@@ -1349,7 +1445,10 @@ impl GeometryViewer {
                     for (edge, color, thickness) in &seewo_edges {
                         let stroke = Stroke::new(*thickness, *color);
                         painter.line_segment(
-                            [Pos2::new(edge.start.0, edge.start.1), Pos2::new(edge.end.0, edge.end.1)],
+                            [
+                                Pos2::new(edge.start.0, edge.start.1),
+                                Pos2::new(edge.end.0, edge.end.1),
+                            ],
                             stroke,
                         );
                     }
@@ -1358,7 +1457,10 @@ impl GeometryViewer {
                 let stroke = Stroke::new(1.5_f32, Color32::from_rgb(100, 180, 255));
                 for edge in &all_edges {
                     painter.line_segment(
-                        [Pos2::new(edge.start.0, edge.start.1), Pos2::new(edge.end.0, edge.end.1)],
+                        [
+                            Pos2::new(edge.start.0, edge.start.1),
+                            Pos2::new(edge.end.0, edge.end.1),
+                        ],
                         stroke,
                     );
                 }
@@ -1376,7 +1478,11 @@ impl GeometryViewer {
                         Pos2::new(face.vertices[1].0, face.vertices[1].1),
                         Pos2::new(face.vertices[2].0, face.vertices[2].1),
                     ];
-                    painter.add(egui::Shape::convex_polygon(pts.to_vec(), color, Stroke::NONE));
+                    painter.add(egui::Shape::convex_polygon(
+                        pts.to_vec(),
+                        color,
+                        Stroke::NONE,
+                    ));
                 }
                 // 希沃实心面（石膏体）
                 for face in &seewo_faces {
@@ -1391,7 +1497,11 @@ impl GeometryViewer {
                         Pos2::new(face.vertices[1].0, face.vertices[1].1),
                         Pos2::new(face.vertices[2].0, face.vertices[2].1),
                     ];
-                    painter.add(egui::Shape::convex_polygon(pts.to_vec(), color, Stroke::NONE));
+                    painter.add(egui::Shape::convex_polygon(
+                        pts.to_vec(),
+                        color,
+                        Stroke::NONE,
+                    ));
                 }
             }
             RenderMode3D::SolidWireframe => {
@@ -1407,7 +1517,11 @@ impl GeometryViewer {
                         Pos2::new(face.vertices[1].0, face.vertices[1].1),
                         Pos2::new(face.vertices[2].0, face.vertices[2].1),
                     ];
-                    painter.add(egui::Shape::convex_polygon(pts.to_vec(), color, Stroke::NONE));
+                    painter.add(egui::Shape::convex_polygon(
+                        pts.to_vec(),
+                        color,
+                        Stroke::NONE,
+                    ));
                 }
                 // 希沃实心面（石膏体）
                 for face in &seewo_faces {
@@ -1422,13 +1536,20 @@ impl GeometryViewer {
                         Pos2::new(face.vertices[1].0, face.vertices[1].1),
                         Pos2::new(face.vertices[2].0, face.vertices[2].1),
                     ];
-                    painter.add(egui::Shape::convex_polygon(pts.to_vec(), color, Stroke::NONE));
+                    painter.add(egui::Shape::convex_polygon(
+                        pts.to_vec(),
+                        color,
+                        Stroke::NONE,
+                    ));
                 }
                 // 常规边线
                 let stroke = Stroke::new(1.0_f32, Color32::from_rgb(40, 50, 70));
                 for edge in &all_edges {
                     painter.line_segment(
-                        [Pos2::new(edge.start.0, edge.start.1), Pos2::new(edge.end.0, edge.end.1)],
+                        [
+                            Pos2::new(edge.start.0, edge.start.1),
+                            Pos2::new(edge.end.0, edge.end.1),
+                        ],
                         stroke,
                     );
                 }
@@ -1436,7 +1557,10 @@ impl GeometryViewer {
                 for (edge, color, thickness) in &seewo_edges {
                     let stroke = Stroke::new(*thickness, *color);
                     painter.line_segment(
-                        [Pos2::new(edge.start.0, edge.start.1), Pos2::new(edge.end.0, edge.end.1)],
+                        [
+                            Pos2::new(edge.start.0, edge.start.1),
+                            Pos2::new(edge.end.0, edge.end.1),
+                        ],
                         stroke,
                     );
                 }
@@ -1502,20 +1626,36 @@ impl GeometryViewer {
 
         let mut x = -grid_size;
         while x <= grid_size {
-            let start = self.camera_3d.project(Point3D::new(x, 0.0, -grid_size), aspect, screen_size);
-            let end = self.camera_3d.project(Point3D::new(x, 0.0, grid_size), aspect, screen_size);
+            let start =
+                self.camera_3d
+                    .project(Point3D::new(x, 0.0, -grid_size), aspect, screen_size);
+            let end = self
+                .camera_3d
+                .project(Point3D::new(x, 0.0, grid_size), aspect, screen_size);
             if let (Some(s), Some(e)) = (start, end) {
-                edges.push(crate::primitives3d::ProjectedEdge { start: s, end: e, depth: 0.0 });
+                edges.push(crate::primitives3d::ProjectedEdge {
+                    start: s,
+                    end: e,
+                    depth: 0.0,
+                });
             }
             x += grid_step;
         }
 
         let mut z = -grid_size;
         while z <= grid_size {
-            let start = self.camera_3d.project(Point3D::new(-grid_size, 0.0, z), aspect, screen_size);
-            let end = self.camera_3d.project(Point3D::new(grid_size, 0.0, z), aspect, screen_size);
+            let start =
+                self.camera_3d
+                    .project(Point3D::new(-grid_size, 0.0, z), aspect, screen_size);
+            let end = self
+                .camera_3d
+                .project(Point3D::new(grid_size, 0.0, z), aspect, screen_size);
             if let (Some(s), Some(e)) = (start, end) {
-                edges.push(crate::primitives3d::ProjectedEdge { start: s, end: e, depth: 0.0 });
+                edges.push(crate::primitives3d::ProjectedEdge {
+                    start: s,
+                    end: e,
+                    depth: 0.0,
+                });
             }
             z += grid_step;
         }
@@ -1523,7 +1663,10 @@ impl GeometryViewer {
         let stroke = Stroke::new(0.5_f32, grid_color);
         for edge in &edges {
             painter.line_segment(
-                [Pos2::new(edge.start.0, edge.start.1), Pos2::new(edge.end.0, edge.end.1)],
+                [
+                    Pos2::new(edge.start.0, edge.start.1),
+                    Pos2::new(edge.end.0, edge.end.1),
+                ],
                 stroke,
             );
         }
@@ -1652,28 +1795,36 @@ impl GeometryViewer {
 
         // 正多边形创建
         if let Some((center_id, radius)) = actions.regular_polygon_create {
-            self.solver.doc.add_regular_polygon(center_id, radius, 6, 0.0);
+            self.solver
+                .doc
+                .add_regular_polygon(center_id, radius, 6, 0.0);
             self.solver.mark_dirty();
             self.status_msg = format!("正六边形已创建 (r={radius:.1})");
         }
 
         // 圆弧创建
         if let Some((center_id, radius)) = actions.arc_create {
-            self.solver.doc.add_arc(center_id, radius, 0.0, std::f32::consts::FRAC_PI_2);
+            self.solver
+                .doc
+                .add_arc(center_id, radius, 0.0, std::f32::consts::FRAC_PI_2);
             self.solver.mark_dirty();
             self.status_msg = format!("圆弧已创建 (r={radius:.1})");
         }
 
         // 扇形创建
         if let Some((center_id, radius)) = actions.sector_create {
-            self.solver.doc.add_sector(center_id, radius, 0.0, std::f32::consts::FRAC_PI_2);
+            self.solver
+                .doc
+                .add_sector(center_id, radius, 0.0, std::f32::consts::FRAC_PI_2);
             self.solver.mark_dirty();
             self.status_msg = format!("扇形已创建 (r={radius:.1})");
         }
 
         // 椭圆创建
         if let Some((center_id, radius)) = actions.ellipse_create {
-            self.solver.doc.add_ellipse(center_id, radius, radius * 0.6, 0.0);
+            self.solver
+                .doc
+                .add_ellipse(center_id, radius, radius * 0.6, 0.0);
             self.solver.mark_dirty();
             self.status_msg = format!("椭圆已创建 (a={radius:.1})");
         }
@@ -1704,7 +1855,8 @@ impl GeometryViewer {
                         let pts = std::mem::take(&mut self.interaction.bezier_points);
                         self.solver.doc.add_bezier(pts);
                         self.solver.mark_dirty();
-                        self.status_msg = format!("{}`贝塞尔曲线已创建", if n == 3 { "二阶" } else { "三阶" });
+                        self.status_msg =
+                            format!("{}`贝塞尔曲线已创建", if n == 3 { "二阶" } else { "三阶" });
                     } else {
                         self.status_msg = "贝塞尔需要 3 或 4 个控制点".into();
                     }
@@ -1714,18 +1866,15 @@ impl GeometryViewer {
         }
 
         // 角度标注创建
-        if actions.angle_mark_create
-            && self.interaction.angle_points.len() >= 3 {
-                let pts = std::mem::take(&mut self.interaction.angle_points);
-                self.solver.doc.add_angle_mark(pts[0], pts[1], pts[2]);
-                self.solver.mark_dirty();
-                self.status_msg = "角度标注已创建".into();
-            }
+        if actions.angle_mark_create && self.interaction.angle_points.len() >= 3 {
+            let pts = std::mem::take(&mut self.interaction.angle_points);
+            self.solver.doc.add_angle_mark(pts[0], pts[1], pts[2]);
+            self.solver.mark_dirty();
+            self.status_msg = "角度标注已创建".into();
+        }
 
         // 长度标注创建
-        if actions.length_mark_create
-            && self.interaction.length_points.len() >= 2
-        {
+        if actions.length_mark_create && self.interaction.length_points.len() >= 2 {
             let pts = std::mem::take(&mut self.interaction.length_points);
             self.solver.doc.add_length_mark(pts[0], pts[1]);
             self.solver.mark_dirty();
@@ -1733,9 +1882,7 @@ impl GeometryViewer {
         }
 
         // 三角形创建
-        if actions.triangle_create
-            && self.interaction.triangle_points.len() >= 3
-        {
+        if actions.triangle_create && self.interaction.triangle_points.len() >= 3 {
             let pts = std::mem::take(&mut self.interaction.triangle_points);
             self.solver.doc.add_triangle(
                 pts[0],
@@ -1866,27 +2013,23 @@ impl GeometryViewer {
             .set_title("选择希沃 EasiNote Slide XML 文件");
 
         match dialog.pick_file() {
-            Some(path) => {
-                match std::fs::read_to_string(&path) {
-                    Ok(xml_content) => {
-                        match seewo_import::parse_slide_xml(&xml_content) {
-                            Ok(slide) => {
-                                let n = slide.cylinders.len() + slide.cones.len();
-                                self.seewo_slide = Some(slide);
-                                self.is_3d = true;
-                                self.seewo_compat_mode = false;
-                                self.status_msg = format!("已导入 {n} 个希沃 3D 对象");
-                            }
-                            Err(e) => {
-                                self.status_msg = format!("XML 解析失败: {e}");
-                            }
-                        }
+            Some(path) => match std::fs::read_to_string(&path) {
+                Ok(xml_content) => match seewo_import::parse_slide_xml(&xml_content) {
+                    Ok(slide) => {
+                        let n = slide.cylinders.len() + slide.cones.len();
+                        self.seewo_slide = Some(slide);
+                        self.is_3d = true;
+                        self.seewo_compat_mode = false;
+                        self.status_msg = format!("已导入 {n} 个希沃 3D 对象");
                     }
                     Err(e) => {
-                        self.status_msg = format!("文件读取失败: {e}");
+                        self.status_msg = format!("XML 解析失败: {e}");
                     }
+                },
+                Err(e) => {
+                    self.status_msg = format!("文件读取失败: {e}");
                 }
-            }
+            },
             None => {
                 self.status_msg = "已取消导入".into();
             }
@@ -1953,13 +2096,17 @@ impl GeometryViewer {
             }
             Tool3D::Tetrahedron => {
                 let center = self.solver.add_free_point_3d(Point3D::new(0.0, 0.0, 0.0));
-                self.solver.doc.add_regular_polyhedron(center, 2.0, PolyhedronType::Tetrahedron);
+                self.solver
+                    .doc
+                    .add_regular_polyhedron(center, 2.0, PolyhedronType::Tetrahedron);
                 self.solver.mark_dirty();
                 self.status_msg = "正四面体已添加".into();
             }
             Tool3D::Octahedron => {
                 let center = self.solver.add_free_point_3d(Point3D::new(0.0, 0.0, 0.0));
-                self.solver.doc.add_regular_polyhedron(center, 2.0, PolyhedronType::Octahedron);
+                self.solver
+                    .doc
+                    .add_regular_polyhedron(center, 2.0, PolyhedronType::Octahedron);
                 self.solver.mark_dirty();
                 self.status_msg = "正八面体已添加".into();
             }

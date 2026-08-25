@@ -5,8 +5,8 @@
 //!   drafftink-plugin uninstall <name>
 //!   drafftink-plugin list
 
-use std::path::PathBuf;
 use std::fs;
+use std::path::PathBuf;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -45,7 +45,10 @@ fn plugins_dir() -> PathBuf {
 fn install(dir: &PathBuf, src: Option<&String>) {
     let src = match src {
         Some(s) => s,
-        None => { eprintln!("Usage: install <plugin.dll>"); return; }
+        None => {
+            eprintln!("Usage: install <plugin.dll>");
+            return;
+        }
     };
     let src_path = PathBuf::from(src);
     if !src_path.exists() {
@@ -63,7 +66,10 @@ fn install(dir: &PathBuf, src: Option<&String>) {
 fn uninstall(dir: &PathBuf, name: Option<&String>) {
     let name = match name {
         Some(n) => n,
-        None => { eprintln!("Usage: uninstall <name>"); return; }
+        None => {
+            eprintln!("Usage: uninstall <name>");
+            return;
+        }
     };
     if let Ok(entries) = fs::read_dir(dir) {
         for e in entries.flatten() {
@@ -97,5 +103,7 @@ fn list(dir: &PathBuf) {
             }
         }
     }
-    if !any { println!("  (none)"); }
+    if !any {
+        println!("  (none)");
+    }
 }

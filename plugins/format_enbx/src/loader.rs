@@ -20,7 +20,10 @@ pub fn load_enbx(data: &[u8], ctx: &dyn PluginContext) -> Result<CoursewareDoc, 
     let mut archive =
         zip::ZipArchive::new(cursor).map_err(|e| format!("ZIP open failed: {}", e))?;
 
-    ctx.log("info", &format!("ZIP container with {} entries", archive.len()));
+    ctx.log(
+        "info",
+        &format!("ZIP container with {} entries", archive.len()),
+    );
 
     let mut doc = CoursewareDoc::empty();
     // Each Slide_*.xml becomes a PageContent. Collect (page_num, xml) pairs.
@@ -48,7 +51,8 @@ pub fn load_enbx(data: &[u8], ctx: &dyn PluginContext) -> Result<CoursewareDoc, 
 
         // ── Detect slide XML (case-insensitive, robust matching like importer) ──
         let lower = name.to_lowercase();
-        if lower.contains("slide") && lower.ends_with(".xml")
+        if lower.contains("slide")
+            && lower.ends_with(".xml")
             && !lower.contains("slideshow")
             && !lower.contains("slidelayout")
             && !lower.contains("slidemaster")
@@ -80,26 +84,31 @@ pub fn load_enbx(data: &[u8], ctx: &dyn PluginContext) -> Result<CoursewareDoc, 
     let mut seen = std::collections::HashSet::new();
     slide_data.retain(|(page, _)| seen.insert(*page));
 
-    ctx.log("info", &format!(
-        "Found {} slides, pages: {:?}",
-        slide_data.len(),
-        slide_data.iter().map(|(p, _)| *p).collect::<Vec<_>>()
-    ));
+    ctx.log(
+        "info",
+        &format!(
+            "Found {} slides, pages: {:?}",
+            slide_data.len(),
+            slide_data.iter().map(|(p, _)| *p).collect::<Vec<_>>()
+        ),
+    );
 
     // Parse each slide in order
     for (page_num, xml) in &slide_data {
         match parser::parse_slide_xml(xml) {
             Ok(elements) => {
-                ctx.log("info", &format!(
-                    "Page {} parsed: {} elements",
-                    page_num + 1,
-                    elements.len()
-                ));
+                ctx.log(
+                    "info",
+                    &format!("Page {} parsed: {} elements", page_num + 1, elements.len()),
+                );
                 let page = elements_to_page(&elements, ctx);
                 doc.pages.push(page);
             }
             Err(e) => {
-                ctx.log("warn", &format!("Parse skipped page {}: {}", page_num + 1, e));
+                ctx.log(
+                    "warn",
+                    &format!("Parse skipped page {}: {}", page_num + 1, e),
+                );
             }
         }
     }
@@ -135,15 +144,21 @@ fn is_safe_path(name: &str) -> bool {
 // ── Board.xml → canvas size ──────────────────────────────────────
 
 fn parse_board_size(xml: &str) -> Result<(f32, f32), String> {
-    let sw = extract_tag(xml, "SlideWidth")?.parse::<f32>().unwrap_or(1920.0);
-    let sh = extract_tag(xml, "SlideHeight")?.parse::<f32>().unwrap_or(1080.0);
+    let sw = extract_tag(xml, "SlideWidth")?
+        .parse::<f32>()
+        .unwrap_or(1920.0);
+    let sh = extract_tag(xml, "SlideHeight")?
+        .parse::<f32>()
+        .unwrap_or(1080.0);
     Ok((sw, sh))
 }
 
 fn extract_tag(xml: &str, tag: &str) -> Result<String, String> {
     let start = format!("<{}>", tag);
     let end = format!("</{}>", tag);
-    let s = xml.find(&start).ok_or_else(|| format!("<{}> not found", tag))?;
+    let s = xml
+        .find(&start)
+        .ok_or_else(|| format!("<{}> not found", tag))?;
     let e = xml[s..]
         .find(&end)
         .ok_or_else(|| format!("</{}> not found", tag))?;
@@ -248,18 +263,16 @@ fn shape_to_element(s: &ShapeElementData) -> drafftink_core::model::Element {
             has_end_arrow: false,
             has_start_arrow: false,
         }),
-        GeometryKind::Rectangle if s.thickness <= 0.0 => {
-            Element::Shape(ShapeElement {
-                base: BaseElement {
-                    stroke_width: 0.0,
-                    ..make_base()
-                },
-                shape_type: ShapeType::Rectangle,
-                has_start_arrow: false,
-                has_end_arrow: false,
-                scale_y: s.scale_y,
-            })
-        }
+        GeometryKind::Rectangle if s.thickness <= 0.0 => Element::Shape(ShapeElement {
+            base: BaseElement {
+                stroke_width: 0.0,
+                ..make_base()
+            },
+            shape_type: ShapeType::Rectangle,
+            has_start_arrow: false,
+            has_end_arrow: false,
+            scale_y: s.scale_y,
+        }),
         GeometryKind::Rectangle => Element::Shape(ShapeElement {
             base: make_base(),
             shape_type: ShapeType::Rectangle,
@@ -288,7 +301,7 @@ fn shape_to_element(s: &ShapeElementData) -> drafftink_core::model::Element {
                     scale_y: s.scale_y,
                 })
             }
-        },
+        }
         GeometryKind::Bracket => Element::Shape(ShapeElement {
             base: make_base(),
             shape_type: ShapeType::Bracket,
@@ -318,7 +331,11 @@ fn shape_to_element(s: &ShapeElementData) -> drafftink_core::model::Element {
             let is_arrow = s.has_start_arrow || s.has_end_arrow;
             Element::Shape(ShapeElement {
                 base: make_base(),
-                shape_type: if is_arrow { ShapeType::Arrow } else { ShapeType::Line },
+                shape_type: if is_arrow {
+                    ShapeType::Arrow
+                } else {
+                    ShapeType::Line
+                },
                 has_start_arrow: s.has_start_arrow,
                 has_end_arrow: s.has_end_arrow,
                 scale_y: 0.0,

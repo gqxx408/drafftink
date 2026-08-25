@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-use crate::rich_text::RichText;
 use crate::layout::Vec2;
+use crate::rich_text::RichText;
 
 // ── 导图类型 ──────────────────────────────────────────────────────
 
@@ -100,11 +100,11 @@ impl NodeStyle {
     /// 根据层级获取渐变色
     pub fn by_level(level: u32) -> Self {
         let colors: [[u8; 4]; 5] = [
-            [46, 134, 222, 255],   // 根
-            [39, 174, 96, 255],    // L1
-            [241, 196, 15, 255],   // L2
-            [230, 126, 34, 255],   // L3
-            [155, 89, 182, 255],   // L4+
+            [46, 134, 222, 255], // 根
+            [39, 174, 96, 255],  // L1
+            [241, 196, 15, 255], // L2
+            [230, 126, 34, 255], // L3
+            [155, 89, 182, 255], // L4+
         ];
         let idx = (level as usize).min(colors.len() - 1);
         Self {
@@ -138,10 +138,7 @@ pub enum EmbeddedContent {
     /// 视频（路径或 URL）
     Video(String),
     /// 附件（文件路径）
-    Attachment {
-        filename: String,
-        path: String,
-    },
+    Attachment { filename: String, path: String },
 }
 
 // ── 子节点旋转配置（星环图专用） ──────────────────────────────────
@@ -389,10 +386,7 @@ impl MindMapDoc {
         }
 
         // 从旧父节点移除
-        let old_parent_id = self
-            .nodes
-            .get(&node_id)
-            .and_then(|n| n.parent_id);
+        let old_parent_id = self.nodes.get(&node_id).and_then(|n| n.parent_id);
         if let Some(old_pid) = old_parent_id {
             if let Some(old_parent) = self.nodes.get_mut(&old_pid) {
                 old_parent.children.retain(|&id| id != node_id);
@@ -464,7 +458,9 @@ mod tests {
     #[test]
     fn test_add_child() {
         let mut doc = MindMapDoc::new("中心主题");
-        let child_id = doc.add_child(doc.root_id, "子节点", NodePosition::Right).unwrap();
+        let child_id = doc
+            .add_child(doc.root_id, "子节点", NodePosition::Right)
+            .unwrap();
         assert_eq!(doc.nodes.len(), 2);
         assert_eq!(doc.nodes[&doc.root_id].children.len(), 1);
         assert_eq!(doc.nodes[&child_id].level, 1);
@@ -473,7 +469,9 @@ mod tests {
     #[test]
     fn test_remove_node() {
         let mut doc = MindMapDoc::new("中心主题");
-        let child_id = doc.add_child(doc.root_id, "子节点", NodePosition::Right).unwrap();
+        let child_id = doc
+            .add_child(doc.root_id, "子节点", NodePosition::Right)
+            .unwrap();
         doc.remove_node(child_id).unwrap();
         assert_eq!(doc.nodes.len(), 1);
         assert!(doc.nodes[&doc.root_id].children.is_empty());
@@ -483,7 +481,9 @@ mod tests {
     fn test_change_parent() {
         let mut doc = MindMapDoc::new("中心主题");
         let child_a = doc.add_child(doc.root_id, "A", NodePosition::Left).unwrap();
-        let child_b = doc.add_child(doc.root_id, "B", NodePosition::Right).unwrap();
+        let child_b = doc
+            .add_child(doc.root_id, "B", NodePosition::Right)
+            .unwrap();
         let grandchild = doc.add_child(child_b, "B-1", NodePosition::Right).unwrap();
 
         // 移动 grandchild 到 child_a 下
@@ -496,7 +496,9 @@ mod tests {
     #[test]
     fn test_cannot_move_to_descendant() {
         let mut doc = MindMapDoc::new("中心主题");
-        let child = doc.add_child(doc.root_id, "子节点", NodePosition::Right).unwrap();
+        let child = doc
+            .add_child(doc.root_id, "子节点", NodePosition::Right)
+            .unwrap();
         let result = doc.change_parent(doc.root_id, child);
         assert!(result.is_err());
     }
@@ -504,7 +506,9 @@ mod tests {
     #[test]
     fn test_descendants() {
         let mut doc = MindMapDoc::new("中心主题");
-        let a = doc.add_child(doc.root_id, "A", NodePosition::Right).unwrap();
+        let a = doc
+            .add_child(doc.root_id, "A", NodePosition::Right)
+            .unwrap();
         let b = doc.add_child(a, "A-1", NodePosition::Right).unwrap();
         let c = doc.add_child(a, "A-2", NodePosition::Right).unwrap();
 

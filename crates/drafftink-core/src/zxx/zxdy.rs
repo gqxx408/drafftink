@@ -5,12 +5,66 @@
 
 use crate::emgi::types::{DataType, EmgiRecordable, FieldDef, Obligation};
 
-pub const ZXDY010101: FieldDef = FieldDef { id: "ZXDY010101", name: "德育标识", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: None, note: "" };
-pub const ZXDY010102: FieldDef = FieldDef { id: "ZXDY010102", name: "学生标识码", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: Some("JCXS0101"), note: "取用 JCXS0101 学生标识码" };
-pub const ZXDY010103: FieldDef = FieldDef { id: "ZXDY010103", name: "学校标识码", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: Some("JCXX0101"), note: "取用 JCXX0101 学校标识码" };
-pub const ZXDY010104: FieldDef = FieldDef { id: "ZXDY010104", name: "德育类型", data_type: DataType::C, length: 1, obligation: Obligation::M, code_ref: Some("JYT_1001_DEED_TYPE"), source: None, note: "" };
-pub const ZXDY010105: FieldDef = FieldDef { id: "ZXDY010105", name: "德育日期", data_type: DataType::D, length: 8, obligation: Obligation::M, code_ref: None, source: None, note: "YYYYMMDD" };
-pub const ZXDY010106: FieldDef = FieldDef { id: "ZXDY010106", name: "德育内容", data_type: DataType::C, length: 500, obligation: Obligation::O, code_ref: None, source: None, note: "" };
+pub const ZXDY010101: FieldDef = FieldDef {
+    id: "ZXDY010101",
+    name: "德育标识",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
+pub const ZXDY010102: FieldDef = FieldDef {
+    id: "ZXDY010102",
+    name: "学生标识码",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: Some("JCXS0101"),
+    note: "取用 JCXS0101 学生标识码",
+};
+pub const ZXDY010103: FieldDef = FieldDef {
+    id: "ZXDY010103",
+    name: "学校标识码",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: Some("JCXX0101"),
+    note: "取用 JCXX0101 学校标识码",
+};
+pub const ZXDY010104: FieldDef = FieldDef {
+    id: "ZXDY010104",
+    name: "德育类型",
+    data_type: DataType::C,
+    length: 1,
+    obligation: Obligation::M,
+    code_ref: Some("JYT_1001_DEED_TYPE"),
+    source: None,
+    note: "",
+};
+pub const ZXDY010105: FieldDef = FieldDef {
+    id: "ZXDY010105",
+    name: "德育日期",
+    data_type: DataType::D,
+    length: 8,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "YYYYMMDD",
+};
+pub const ZXDY010106: FieldDef = FieldDef {
+    id: "ZXDY010106",
+    name: "德育内容",
+    data_type: DataType::C,
+    length: 500,
+    obligation: Obligation::O,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 
 /// 德育基本（ZXDY01）。
 pub struct Deed {
@@ -38,11 +92,56 @@ impl EmgiRecordable for Deed {
     }
 }
 
-pub const ZXDY020101: FieldDef = FieldDef { id: "ZXDY020101", name: "关注标识", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: None, note: "" };
-pub const ZXDY020102: FieldDef = FieldDef { id: "ZXDY020102", name: "学生标识码", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: Some("JCXS0101"), note: "取用 JCXS0101 学生标识码" };
-pub const ZXDY020103: FieldDef = FieldDef { id: "ZXDY020103", name: "关注类型", data_type: DataType::C, length: 2, obligation: Obligation::M, code_ref: None, source: None, note: "" };
-pub const ZXDY020104: FieldDef = FieldDef { id: "ZXDY020104", name: "关注日期", data_type: DataType::D, length: 8, obligation: Obligation::M, code_ref: None, source: None, note: "YYYYMMDD" };
-pub const ZXDY020105: FieldDef = FieldDef { id: "ZXDY020105", name: "关注原因", data_type: DataType::C, length: 500, obligation: Obligation::O, code_ref: None, source: None, note: "" };
+pub const ZXDY020101: FieldDef = FieldDef {
+    id: "ZXDY020101",
+    name: "关注标识",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
+pub const ZXDY020102: FieldDef = FieldDef {
+    id: "ZXDY020102",
+    name: "学生标识码",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: Some("JCXS0101"),
+    note: "取用 JCXS0101 学生标识码",
+};
+pub const ZXDY020103: FieldDef = FieldDef {
+    id: "ZXDY020103",
+    name: "关注类型",
+    data_type: DataType::C,
+    length: 2,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
+pub const ZXDY020104: FieldDef = FieldDef {
+    id: "ZXDY020104",
+    name: "关注日期",
+    data_type: DataType::D,
+    length: 8,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "YYYYMMDD",
+};
+pub const ZXDY020105: FieldDef = FieldDef {
+    id: "ZXDY020105",
+    name: "关注原因",
+    data_type: DataType::C,
+    length: 500,
+    obligation: Obligation::O,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 
 /// 关注数据（ZXDY02）。
 pub struct Attention {

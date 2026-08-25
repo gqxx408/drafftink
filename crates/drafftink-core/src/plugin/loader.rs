@@ -92,16 +92,11 @@ impl PluginManager {
     /// # Safety
     /// The cdylib at `path` must be a valid drafftink plugin exporting
     /// `drafftink_plugin_entry` and returning a valid `Box<dyn Plugin>`.
-    pub unsafe fn load(
-        &mut self,
-        path: &Path,
-        ctx: &dyn PluginContext,
-    ) -> Result<(), String> {
+    pub unsafe fn load(&mut self, path: &Path, ctx: &dyn PluginContext) -> Result<(), String> {
         log::info!("[plugin] Loading {path:?}");
 
         // 1. dlopen
-        let lib = Library::new(path)
-            .map_err(|e| format!("Failed to load library: {e}"))?;
+        let lib = Library::new(path).map_err(|e| format!("Failed to load library: {e}"))?;
 
         // 2. Resolve entry symbol
         let entry: Symbol<PluginEntryFn> = lib
@@ -116,7 +111,9 @@ impl PluginManager {
         let manifest = plugin.manifest().clone();
         log::info!(
             "[plugin] Loaded {} v{} by {}",
-            manifest.name, manifest.version, manifest.author,
+            manifest.name,
+            manifest.version,
+            manifest.author,
         );
 
         // 5. Check permissions
@@ -171,7 +168,13 @@ impl PluginManager {
             .to_string_lossy()
             .to_string();
 
-        audit.log_event(&name_guess, "load_attempt", &format!("{path:?}"), "pending", false);
+        audit.log_event(
+            &name_guess,
+            "load_attempt",
+            &format!("{path:?}"),
+            "pending",
+            false,
+        );
 
         // 预先读取插件二进制，以便在执行任何插件代码之前完成签名校验。
         let binary = match std::fs::read(path) {
@@ -187,9 +190,15 @@ impl PluginManager {
         let sig_status = if let Some(pubkey) = self.trusted_key {
             match read_plugin_signature(path) {
                 Ok(sig_b64) => {
-                    match crate::plugin::signing::verify_signature(&binary, &sig_b64, None, Some(&pubkey))
-                    {
-                        Ok(crate::plugin::signing::SigStatus::Verified) => SignatureStatus::Verified,
+                    match crate::plugin::signing::verify_signature(
+                        &binary,
+                        &sig_b64,
+                        None,
+                        Some(&pubkey),
+                    ) {
+                        Ok(crate::plugin::signing::SigStatus::Verified) => {
+                            SignatureStatus::Verified
+                        }
                         Ok(_) => SignatureStatus::Untrusted,
                         Err(e) => {
                             audit.log_event(
@@ -385,7 +394,10 @@ impl PluginManager {
     }
 
     pub fn loaded_names(&self) -> Vec<&str> {
-        self.loaded.iter().map(|p| p.manifest.name.as_str()).collect()
+        self.loaded
+            .iter()
+            .map(|p| p.manifest.name.as_str())
+            .collect()
     }
 
     /// Collect file importers from all loaded plugins.
@@ -412,7 +424,10 @@ impl PluginManager {
 
 impl Drop for PluginManager {
     fn drop(&mut self) {
-        eprintln!("[plugin] PluginManager dropping, {} plugins", self.loaded.len());
+        eprintln!(
+            "[plugin] PluginManager dropping, {} plugins",
+            self.loaded.len()
+        );
         for loaded in self.loaded.drain(..) {
             loaded.plugin.on_unload();
             // ★ Key: intentionally leak the DLL to avoid FreeLibrary deadlock on Windows
@@ -519,8 +534,7 @@ impl DrafftinkPluginLoader {
         log::info!("[dyn-plugin] Loading {path:?}");
 
         // 1. dlopen
-        let lib = Library::new(path)
-            .map_err(|e| format!("Failed to load library: {e}"))?;
+        let lib = Library::new(path).map_err(|e| format!("Failed to load library: {e}"))?;
 
         // 2. Resolve `create_plugin` symbol
         let entry: Symbol<DrafftinkPluginEntryFn> = lib
@@ -599,7 +613,9 @@ impl DrafftinkPluginLoader {
                         None,
                         Some(&pubkey),
                     ) {
-                        Ok(crate::plugin::signing::SigStatus::Verified) => SignatureStatus::Verified,
+                        Ok(crate::plugin::signing::SigStatus::Verified) => {
+                            SignatureStatus::Verified
+                        }
                         _ => SignatureStatus::Untrusted,
                     }
                 }
@@ -614,9 +630,8 @@ impl DrafftinkPluginLoader {
             return (r, SignatureStatus::Verified);
         }
         if self.trusted_key.is_some() {
-            let msg =
-                "Plugin signature verification failed; refusing to load (potential RCE risk)"
-                    .to_string();
+            let msg = "Plugin signature verification failed; refusing to load (potential RCE risk)"
+                .to_string();
             audit.log_event(&name_guess, "load_blocked", "-", &msg, false);
             return (Err(msg), sig_status);
         }
@@ -782,10 +797,8 @@ mod tests {
 
     fn temp_dir() -> PathBuf {
         let n = COUNTER.fetch_add(1, Ordering::SeqCst);
-        let dir = std::env::temp_dir().join(format!(
-            "drafftink_loader_test_{}_{n}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("drafftink_loader_test_{}_{n}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }

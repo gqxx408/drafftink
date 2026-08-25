@@ -31,7 +31,8 @@ impl ResourceManager {
         if let Some(bytes) = video {
             self.storage.save(&meta.storage_key, bytes)?;
         }
-        self.db.save_resource_meta(&meta.resource_id, &serde_json::to_string(meta)?)?;
+        self.db
+            .save_resource_meta(&meta.resource_id, &serde_json::to_string(meta)?)?;
         Ok(())
     }
 

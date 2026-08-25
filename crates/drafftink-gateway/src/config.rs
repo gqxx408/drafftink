@@ -65,7 +65,10 @@ impl GatewayConfig {
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(10 * 1024 * 1024),
-            jwt: match std::env::var("DRAFTTINK_JWT_SECRET").ok().filter(|s| !s.is_empty()) {
+            jwt: match std::env::var("DRAFTTINK_JWT_SECRET")
+                .ok()
+                .filter(|s| !s.is_empty())
+            {
                 Some(s) => JwtConfig {
                     secret: s.into_bytes(),
                     ..Default::default()
@@ -110,13 +113,11 @@ impl GatewayConfig {
         let has_cert = self.tls_cert_path.is_some();
         if !has_cert {
             if let Some(443) = self.listen_port() {
-                return Err(
-                    "拒绝在未启用 TLS 的情况下监听 443（标准 TLS 端口）。\n\
+                return Err("拒绝在未启用 TLS 的情况下监听 443（标准 TLS 端口）。\n\
                      请二选一：\n\
                      1) 配置 GATEWAY_TLS_CERT 与 GATEWAY_TLS_KEY 以启用 TLS；或\n\
                      2) 将 GATEWAY_LISTEN_ADDR 改为非 TLS 端口（如 0.0.0.0:8080）。"
-                        .to_string(),
-                );
+                    .to_string());
             }
         }
         Ok(())
@@ -146,7 +147,10 @@ mod tests {
     fn validate_tls_allows_non_tls_port() {
         let mut cfg = GatewayConfig::default();
         cfg.listen_addr = "0.0.0.0:8080".to_string();
-        assert!(cfg.validate_tls().is_ok(), "非 TLS 端口无 TLS 应允许（开发/内网 LB 场景）");
+        assert!(
+            cfg.validate_tls().is_ok(),
+            "非 TLS 端口无 TLS 应允许（开发/内网 LB 场景）"
+        );
     }
 
     #[test]

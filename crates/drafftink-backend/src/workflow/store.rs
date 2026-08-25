@@ -42,10 +42,7 @@ impl WorkflowStore {
     /// 创建并持久化一个审批实例。
     pub fn create_workflow(&self, instance: WorkflowInstance) -> WorkflowInstance {
         let id = instance.id;
-        self.workflows
-            .lock()
-            .unwrap()
-            .insert(id, instance.clone());
+        self.workflows.lock().unwrap().insert(id, instance.clone());
         instance
     }
 

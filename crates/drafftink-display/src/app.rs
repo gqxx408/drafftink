@@ -2,24 +2,24 @@
 
 use drafftink_core::board::{DisplayBoard, Snapshot};
 use drafftink_core::document;
+use drafftink_core::integration::SharedAppContext;
 use drafftink_core::model::CoursewareDoc;
-use drafftink_core::plugin::PluginManager;
 use drafftink_core::plugin::api::DummyContext;
+use drafftink_core::plugin::PluginManager;
 use drafftink_core::Camera;
 use egui::Color32;
 use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle, WindowHandle};
 use std::sync::{Arc, Mutex};
-use drafftink_core::integration::SharedAppContext;
 
-use crate::annotation::{AnnotationSystem, ToolbarAction, ToolType};
+use crate::annotation::{AnnotationSystem, ToolType, ToolbarAction};
 use crate::interaction::InteractionState;
 use crate::multi_page::MultiPageState;
 use crate::physics::PhysicsEditor;
 use crate::workshop::Workshop;
 use drafftink_cosmos::CosmosViewer;
-use drafftink_mindmap::MindMapViewer;
 use drafftink_functions::FunctionViewer;
 use drafftink_geometry::{GeometryViewer, SolarSystemViewer};
+use drafftink_mindmap::MindMapViewer;
 
 // ---------------------------------------------------------------------------
 // ParentWindow — 包装 RawWindowHandle 用于 rfd::FileDialog::set_parent()
@@ -109,7 +109,7 @@ impl DisplayApp {
         // ── Plugin system ──
         // Search order: 1) plugins/ next to exe  2) cwd plugins/  3) %APPDATA%
         let mut plugin_dir = get_plugins_dir(); // fallback
-        // Try exe-relative path first (works for both cargo run and cargo build)
+                                                // Try exe-relative path first (works for both cargo run and cargo build)
         if let Ok(exe) = std::env::current_exe() {
             // Walk up from target/release/display.exe to project root, then plugins/
             let mut candidate = exe.clone();
@@ -207,7 +207,12 @@ impl DisplayApp {
         cam.offset = [pw * 0.5, ph * 0.5];
         log::info!(
             "[camera] fit_to_page: page={}x{} viewport={}x{} zoom={:.3} offset={:?}",
-            pw, ph, vw, vh, cam.zoom, cam.offset
+            pw,
+            ph,
+            vw,
+            vh,
+            cam.zoom,
+            cam.offset
         );
     }
 
@@ -243,8 +248,11 @@ impl DisplayApp {
 
             match result {
                 Ok(doc) => {
-                    log::info!("[app] Loaded doc: {} pages, page_size={:?}",
-                        doc.pages.len(), doc.page_size);
+                    log::info!(
+                        "[app] Loaded doc: {} pages, page_size={:?}",
+                        doc.pages.len(),
+                        doc.page_size
+                    );
                     self.doc = doc;
                     self.doc_path = Some(picked.to_string_lossy().into_owned());
                     self.multi_page = MultiPageState::from_doc(&self.doc);
@@ -301,8 +309,7 @@ impl DisplayApp {
             ToolbarAction::PrevPage => {
                 if self.multi_page.current_page > 0 {
                     self.multi_page.current_page -= 1;
-                    let snap =
-                        Snapshot::from_doc(&self.doc, self.multi_page.current_page);
+                    let snap = Snapshot::from_doc(&self.doc, self.multi_page.current_page);
                     self.board.load_snapshot(&snap);
                     self.analyze_smart_alpha();
                 }
@@ -310,8 +317,7 @@ impl DisplayApp {
             ToolbarAction::NextPage => {
                 if self.multi_page.current_page + 1 < self.doc.pages.len() {
                     self.multi_page.current_page += 1;
-                    let snap =
-                        Snapshot::from_doc(&self.doc, self.multi_page.current_page);
+                    let snap = Snapshot::from_doc(&self.doc, self.multi_page.current_page);
                     self.board.load_snapshot(&snap);
                     self.analyze_smart_alpha();
                 }
@@ -321,8 +327,7 @@ impl DisplayApp {
                 std::process::exit(0);
             }
             ToolbarAction::ToggleMore => {
-                self.annotations.toolbar.more_menu_open =
-                    !self.annotations.toolbar.more_menu_open;
+                self.annotations.toolbar.more_menu_open = !self.annotations.toolbar.more_menu_open;
             }
         }
     }
@@ -392,7 +397,9 @@ fn get_plugins_dir() -> std::path::PathBuf {
     let base = std::env::var("APPDATA").unwrap_or_else(|_| ".".into());
     #[cfg(not(windows))]
     let base = std::env::var("HOME").unwrap_or_else(|_| ".".into());
-    std::path::PathBuf::from(base).join("drafftink").join("plugins")
+    std::path::PathBuf::from(base)
+        .join("drafftink")
+        .join("plugins")
 }
 
 impl eframe::App for DisplayApp {
@@ -475,10 +482,8 @@ impl eframe::App for DisplayApp {
                 editor.ui(ctx);
             }
             // Close button (top-left corner) to go back to courseware mode
-            let _close_rect = egui::Rect::from_min_size(
-                egui::pos2(12.0, 12.0),
-                egui::vec2(100.0, 36.0),
-            );
+            let _close_rect =
+                egui::Rect::from_min_size(egui::pos2(12.0, 12.0), egui::vec2(100.0, 36.0));
             let _close_response = ctx.layer_painter(egui::LayerId::new(
                 egui::Order::Tooltip,
                 egui::Id::new("physics_close_btn"),
@@ -607,12 +612,9 @@ impl eframe::App for DisplayApp {
         // Annotation system (input + toolbar + render + cache)
         let page_current = self.multi_page.current_page;
         let page_total = self.doc.pages.len().max(1);
-        let action = self.annotations.update(
-            ctx,
-            screen_rect,
-            page_current,
-            page_total,
-        );
+        let action = self
+            .annotations
+            .update(ctx, screen_rect, page_current, page_total);
 
         self.apply_action(action);
 
@@ -630,11 +632,16 @@ impl eframe::App for DisplayApp {
                         .inner_margin(egui::Margin::same(8.0))
                         .show(ui, |ui| {
                             // 白底黑字：覆盖深色主题
-                            ui.visuals_mut().widgets.noninteractive.fg_stroke.color = Color32::from_rgb(30, 30, 30);
-                            ui.visuals_mut().widgets.inactive.fg_stroke.color = Color32::from_rgb(30, 30, 30);
-                            ui.visuals_mut().widgets.hovered.fg_stroke.color = Color32::from_rgb(30, 30, 30);
-                            ui.visuals_mut().widgets.hovered.bg_fill = Color32::from_rgb(220, 220, 220);
-                            ui.visuals_mut().widgets.active.fg_stroke.color = Color32::from_rgb(30, 30, 30);
+                            ui.visuals_mut().widgets.noninteractive.fg_stroke.color =
+                                Color32::from_rgb(30, 30, 30);
+                            ui.visuals_mut().widgets.inactive.fg_stroke.color =
+                                Color32::from_rgb(30, 30, 30);
+                            ui.visuals_mut().widgets.hovered.fg_stroke.color =
+                                Color32::from_rgb(30, 30, 30);
+                            ui.visuals_mut().widgets.hovered.bg_fill =
+                                Color32::from_rgb(220, 220, 220);
+                            ui.visuals_mut().widgets.active.fg_stroke.color =
+                                Color32::from_rgb(30, 30, 30);
                             if ui.button("打开课件").clicked() {
                                 self.annotations.toolbar.more_menu_open = false;
                                 self.open_file_dialog();
@@ -704,7 +711,11 @@ impl eframe::App for DisplayApp {
                     ui.visuals_mut().widgets.active.fg_stroke.color = FLOAT_TEXT;
                     ui.horizontal(|ui| {
                         if ui
-                            .button(if self.show_preview { "👁 预览:开" } else { "👁 预览:关" })
+                            .button(if self.show_preview {
+                                "👁 预览:开"
+                            } else {
+                                "👁 预览:关"
+                            })
                             .clicked()
                         {
                             self.show_preview = !self.show_preview;
@@ -718,10 +729,11 @@ impl eframe::App for DisplayApp {
                         let hl_active = matches!(self.annotations.tool, ToolType::Highlighter);
                         let er_active = matches!(self.annotations.tool, ToolType::Eraser);
                         if ui
-                            .add(
-                                egui::Button::new("✏ 笔")
-                                    .fill(if pen_active { FLOAT_ACTIVE } else { FLOAT_INACTIVE }),
-                            )
+                            .add(egui::Button::new("✏ 笔").fill(if pen_active {
+                                FLOAT_ACTIVE
+                            } else {
+                                FLOAT_INACTIVE
+                            }))
                             .clicked()
                         {
                             self.annotations.tool = ToolType::Pen;
@@ -729,10 +741,11 @@ impl eframe::App for DisplayApp {
                             self.annotations.thickness = 2.5;
                         }
                         if ui
-                            .add(
-                                egui::Button::new("🖍 荧光")
-                                    .fill(if hl_active { FLOAT_ACTIVE } else { FLOAT_INACTIVE }),
-                            )
+                            .add(egui::Button::new("🖍 荧光").fill(if hl_active {
+                                FLOAT_ACTIVE
+                            } else {
+                                FLOAT_INACTIVE
+                            }))
                             .clicked()
                         {
                             self.annotations.tool = ToolType::Highlighter;
@@ -740,10 +753,11 @@ impl eframe::App for DisplayApp {
                             self.annotations.thickness = 12.0;
                         }
                         if ui
-                            .add(
-                                egui::Button::new("✕ 橡皮")
-                                    .fill(if er_active { FLOAT_ACTIVE } else { FLOAT_INACTIVE }),
-                            )
+                            .add(egui::Button::new("✕ 橡皮").fill(if er_active {
+                                FLOAT_ACTIVE
+                            } else {
+                                FLOAT_INACTIVE
+                            }))
                             .clicked()
                         {
                             self.annotations.tool = ToolType::Eraser;

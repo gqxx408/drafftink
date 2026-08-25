@@ -32,14 +32,14 @@ impl Default for BarChartConfig {
     fn default() -> Self {
         Self {
             colors: vec![
-                Color32::from_rgb(66, 133, 244),   // A: 蓝色
-                Color32::from_rgb(234, 67, 53),     // B: 红色
-                Color32::from_rgb(251, 188, 4),     // C: 黄色
-                Color32::from_rgb(52, 168, 83),     // D: 绿色
-                Color32::from_rgb(142, 68, 173),    // E: 紫色
-                Color32::from_rgb(243, 156, 18),    // F: 橙色
-                Color32::from_rgb(22, 160, 133),    // G: 青色
-                Color32::from_rgb(192, 57, 43),     // H: 深红
+                Color32::from_rgb(66, 133, 244), // A: 蓝色
+                Color32::from_rgb(234, 67, 53),  // B: 红色
+                Color32::from_rgb(251, 188, 4),  // C: 黄色
+                Color32::from_rgb(52, 168, 83),  // D: 绿色
+                Color32::from_rgb(142, 68, 173), // E: 紫色
+                Color32::from_rgb(243, 156, 18), // F: 橙色
+                Color32::from_rgb(22, 160, 133), // G: 青色
+                Color32::from_rgb(192, 57, 43),  // H: 深红
             ],
             correct_color: Color32::from_rgb(46, 204, 113),
             background: Color32::from_rgb(30, 35, 45),
@@ -100,7 +100,10 @@ pub fn draw_bar_chart(
     for i in 0..=4 {
         let y = base_y - max_bar_height * (i as f32 / 4.0);
         painter.line_segment(
-            [Pos2::new(rect.min.x + padding, y), Pos2::new(rect.max.x - padding, y)],
+            [
+                Pos2::new(rect.min.x + padding, y),
+                Pos2::new(rect.max.x - padding, y),
+            ],
             Stroke::new(1.0, Color32::from_rgba_unmultiplied(255, 255, 255, 30)),
         );
         // 百分比标签
@@ -116,7 +119,11 @@ pub fn draw_bar_chart(
 
     // 绘制柱体
     for (i, label) in options.iter().enumerate() {
-        let count = stats.option_distribution.get(&(i as u8)).copied().unwrap_or(0);
+        let count = stats
+            .option_distribution
+            .get(&(i as u8))
+            .copied()
+            .unwrap_or(0);
         let ratio = count as f32 / total as f32;
         let bar_height = max_bar_height * ratio * config.animation_progress;
 
@@ -124,7 +131,11 @@ pub fn draw_bar_chart(
 
         // 柱体颜色
         let color = config.colors.get(i).copied().unwrap_or(Color32::GRAY);
-        let bar_color = if count > 0 { color } else { color.gamma_multiply(0.3) };
+        let bar_color = if count > 0 {
+            color
+        } else {
+            color.gamma_multiply(0.3)
+        };
 
         // 柱体矩形
         let bar_rect = Rect::from_min_max(
@@ -133,11 +144,7 @@ pub fn draw_bar_chart(
         );
 
         // 绘制柱体
-        painter.rect_filled(
-            bar_rect,
-            Rounding::same(config.rounding),
-            bar_color,
-        );
+        painter.rect_filled(bar_rect, Rounding::same(config.rounding), bar_color);
 
         // 柱体顶部数值
         if count > 0 {

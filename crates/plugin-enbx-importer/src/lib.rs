@@ -12,19 +12,27 @@ impl EnbxImporter {
         let ver = c"0.1.0";
         PluginMeta {
             api_version: PLUGIN_API_VERSION,
-            name: name.as_ptr() as *const u8, name_len: name.to_bytes().len() as u32,
-            desc: desc.as_ptr() as *const u8, desc_len: desc.to_bytes().len() as u32,
-            version: ver.as_ptr() as *const u8, version_len: ver.to_bytes().len() as u32,
+            name: name.as_ptr() as *const u8,
+            name_len: name.to_bytes().len() as u32,
+            desc: desc.as_ptr() as *const u8,
+            desc_len: desc.to_bytes().len() as u32,
+            version: ver.as_ptr() as *const u8,
+            version_len: ver.to_bytes().len() as u32,
         }
     }
 
     unsafe fn execute(
-        action: *const u8, action_len: u32,
-        input: *const u8, input_len: u32,
-        output: *mut u8, output_len: *mut u32,
+        action: *const u8,
+        action_len: u32,
+        input: *const u8,
+        input_len: u32,
+        output: *mut u8,
+        output_len: *mut u32,
     ) -> PluginResult {
         let action = unsafe { seewo_plugin_api::read_str(action, action_len) };
-        if action != "import" { return PluginResult::NotSupported; }
+        if action != "import" {
+            return PluginResult::NotSupported;
+        }
 
         let path_str = unsafe { seewo_plugin_api::read_str(input, input_len) };
         let path = PathBuf::from(path_str);
@@ -49,7 +57,9 @@ impl EnbxImporter {
 // ---------------------------------------------------------------------------
 
 #[no_mangle]
-pub unsafe extern "C" fn _plugin_meta() -> PluginMeta { EnbxImporter::meta() }
+pub unsafe extern "C" fn _plugin_meta() -> PluginMeta {
+    EnbxImporter::meta()
+}
 
 #[no_mangle]
 pub unsafe extern "C" fn _plugin_create(ctx: *const PluginContext) -> *mut std::ffi::c_void {
@@ -61,16 +71,23 @@ pub unsafe extern "C" fn _plugin_create(ctx: *const PluginContext) -> *mut std::
 
 #[no_mangle]
 pub unsafe extern "C" fn _plugin_destroy(h: *mut std::ffi::c_void) {
-    if !h.is_null() { drop(Box::from_raw(h as *mut EnbxImporter)); }
+    if !h.is_null() {
+        drop(Box::from_raw(h as *mut EnbxImporter));
+    }
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn _plugin_execute(
     h: *mut std::ffi::c_void,
-    a: *const u8, al: u32,
-    i: *const u8, il: u32,
-    o: *mut u8, ol: *mut u32,
+    a: *const u8,
+    al: u32,
+    i: *const u8,
+    il: u32,
+    o: *mut u8,
+    ol: *mut u32,
 ) -> PluginResult {
-    if h.is_null() { return PluginResult::Err; }
+    if h.is_null() {
+        return PluginResult::Err;
+    }
     EnbxImporter::execute(a, al, i, il, o, ol)
 }

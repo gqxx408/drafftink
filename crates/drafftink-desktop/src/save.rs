@@ -197,7 +197,10 @@ pub(crate) fn save_enbx(app: &IntegratedApp, output_path: &Path) -> Result<()> {
     // 收集所有引用的扩展名（用于 [Content_Types].xml）。
     let mut extensions: Vec<String> = vec!["xml".to_string()];
     for name in resources.keys() {
-        if let Some(ext) = std::path::Path::new(name).extension().and_then(|e| e.to_str()) {
+        if let Some(ext) = std::path::Path::new(name)
+            .extension()
+            .and_then(|e| e.to_str())
+        {
             let ext = ext.to_lowercase();
             if !extensions.contains(&ext) {
                 extensions.push(ext);
@@ -362,7 +365,9 @@ fn build_save_info_metadata_xml() -> Vec<u8> {
 fn build_content_types_xml(extensions: &[String]) -> Vec<u8> {
     let mut out = String::new();
     out.push_str("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-    out.push_str("<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">\n");
+    out.push_str(
+        "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">\n",
+    );
     for ext in extensions {
         out.push_str(&format!(
             "  <Default Extension=\"{}\" ContentType=\"\"/>\n",

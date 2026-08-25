@@ -18,13 +18,13 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use crate::whiteboard::{
-    Canvas, MediaAsset, Metadata, MigrationNote, MigrationReport, WbElement, WbImage, WbPage,
-    WbPlaceholder, WbShape, WbShapeType, WbText, WhiteboardDoc,
-};
 use crate::enbx_model::{
     Enbx3dShape, EnbxActivity, EnbxActivityItem, EnbxElement, EnbxParsed, EnbxPicture, EnbxTopic,
     EnbxVideo, ImageXml, Reference, ShapeXml, TextXml,
+};
+use crate::whiteboard::{
+    Canvas, MediaAsset, Metadata, MigrationNote, MigrationReport, WbElement, WbImage, WbPage,
+    WbPlaceholder, WbShape, WbShapeType, WbText, WhiteboardDoc,
 };
 
 /// 希沃标准视口（V3 校准目标）。
@@ -63,7 +63,12 @@ pub fn convert(parsed: &EnbxParsed, resources_dir: &Path) -> WhiteboardDoc {
             // 媒体类 / 3D / 课堂活动类元素需要额外上下文（reference / 资源目录 / media / notes），在此显式分发。
             let produced: Vec<WbElement> = match elem {
                 EnbxElement::Picture(pic) => {
-                    vec![convert_picture(pic, &parsed.reference, resources_dir, &mut media)]
+                    vec![convert_picture(
+                        pic,
+                        &parsed.reference,
+                        resources_dir,
+                        &mut media,
+                    )]
                 }
                 EnbxElement::Video(vid) => vec![convert_video(
                     vid,
@@ -76,7 +81,12 @@ pub fn convert(parsed: &EnbxParsed, resources_dir: &Path) -> WhiteboardDoc {
                 EnbxElement::Image(img) => vec![WbElement::Image(convert_image(img, &mut media))],
                 EnbxElement::Cylinder(c) => {
                     logs.push(format!("[slide {i}] 3D 形状 <Cylinder> 降级为占位符"));
-                    vec![convert_3d_shape("Cylinder", c, &mut migration_notes, i as u32)]
+                    vec![convert_3d_shape(
+                        "Cylinder",
+                        c,
+                        &mut migration_notes,
+                        i as u32,
+                    )]
                 }
                 EnbxElement::Cone(c) => {
                     logs.push(format!("[slide {i}] 3D 形状 <Cone> 降级为占位符"));
@@ -616,7 +626,9 @@ pub fn parse_argb_color_bg(s: &str) -> Option<u32> {
 pub fn convert_topic(topic: &EnbxTopic, notes: &mut Vec<String>) -> Vec<WbElement> {
     notes.push(format!(
         "Topic 类型: {}，连线: {}，子节点数: {}",
-        topic.topic_type, topic.branch_type, topic.children.len()
+        topic.topic_type,
+        topic.branch_type,
+        topic.children.len()
     ));
 
     let all_empty = topic.center_text.trim().is_empty()
@@ -636,12 +648,7 @@ pub fn convert_topic(topic: &EnbxTopic, notes: &mut Vec<String>) -> Vec<WbElemen
 
     // 中心节点文本。
     if !topic.center_text.trim().is_empty() {
-        let (x, y, w, h) = calibrate(
-            topic.x,
-            topic.y,
-            topic.content_width,
-            topic.content_height,
-        );
+        let (x, y, w, h) = calibrate(topic.x, topic.y, topic.content_width, topic.content_height);
         out.push(WbElement::Text(WbText {
             content: topic.center_text.clone(),
             font: "sans-serif".to_string(),
@@ -1170,17 +1177,20 @@ mod tests {
             reference: Reference::default(),
         };
         let doc = convert(&parsed, &root);
-        assert!(matches!(doc.pages[0].elements[0], WbElement::Placeholder(_)));
+        assert!(matches!(
+            doc.pages[0].elements[0],
+            WbElement::Placeholder(_)
+        ));
         assert!(doc.media.is_empty());
         let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]
     fn video_downgrades_to_placeholder_and_logs() {
-        let root = make_resources_root("vid", &[
-            ("vid1.mkv", b"fake-mkv"),
-            ("thumb1.png", b"fake-png"),
-        ]);
+        let root = make_resources_root(
+            "vid",
+            &[("vid1.mkv", b"fake-mkv"), ("thumb1.png", b"fake-png")],
+        );
         let reference = Reference::from_xml(
             r#"<SaveInfoMetadataFile><MetadataContract>
               <Relationship><Id>vid1</Id><Target>Resources\vid1.mkv</Target><Hash>h1</Hash></Relationship>
@@ -1257,7 +1267,9 @@ mod tests {
         };
         let doc = convert(&parsed, Path::new("Resources"));
         match &doc.pages[0].elements[0] {
-            WbElement::Placeholder(p) => assert!(p.reason.contains("3D 形状"), "reason={}", p.reason),
+            WbElement::Placeholder(p) => {
+                assert!(p.reason.contains("3D 形状"), "reason={}", p.reason)
+            }
             other => panic!("expected placeholder, got {other:?}"),
         }
         // 结构化迁移说明应记录该降级。
@@ -1307,13 +1319,16 @@ mod tests {
         };
         let doc = convert(&parsed, Path::new("Resources"));
         match &doc.pages[0].elements[0] {
-            WbElement::Placeholder(p) => assert!(p.reason.contains("课堂活动"), "reason={}", p.reason),
+            WbElement::Placeholder(p) => {
+                assert!(p.reason.contains("课堂活动"), "reason={}", p.reason)
+            }
             other => panic!("expected placeholder, got {other:?}"),
         }
         // 结构化日志应含 "Classify"。
         assert!(
-            doc.migration_notes.iter().any(|n| n.element_type == "Activity"
-                && n.detail.contains("Classify")),
+            doc.migration_notes
+                .iter()
+                .any(|n| n.element_type == "Activity" && n.detail.contains("Classify")),
             "migration_notes={:?}",
             doc.migration_notes
         );

@@ -11,9 +11,9 @@ use egui::{Color32, Painter, Pos2, Rect, Rounding, Stroke, Vec2 as EguiVec2};
 use std::collections::HashMap;
 use uuid::Uuid;
 
+use crate::interaction::MindMapInteraction;
 use crate::layout::Vec2;
 use crate::types::{MapType, MindMapDoc, MindNode};
-use crate::interaction::MindMapInteraction;
 
 /// 思维导图 2D 渲染器
 pub struct MindMapRenderer {
@@ -67,12 +67,7 @@ impl MindMapRenderer {
     }
 
     /// 绘制连线
-    fn render_lines(
-        &self,
-        painter: &Painter,
-        doc: &MindMapDoc,
-        positions: &HashMap<Uuid, Vec2>,
-    ) {
+    fn render_lines(&self, painter: &Painter, doc: &MindMapDoc, positions: &HashMap<Uuid, Vec2>) {
         for node in doc.nodes.values() {
             // 跳过隐藏节点
             if node.hidden {
@@ -161,14 +156,7 @@ impl MindMapRenderer {
     }
 
     /// 绘制三次贝塞尔曲线
-    fn draw_cubic_bezier(
-        &self,
-        painter: &Painter,
-        p0: Pos2,
-        p1: Pos2,
-        p2: Pos2,
-        p3: Pos2,
-    ) {
+    fn draw_cubic_bezier(&self, painter: &Painter, p0: Pos2, p1: Pos2, p2: Pos2, p3: Pos2) {
         let steps = 32;
         let mut points = Vec::with_capacity(steps + 1);
 
@@ -230,12 +218,10 @@ impl MindMapRenderer {
         for i in 0..=steps {
             let t = i as f32 / steps as f32;
             let one_minus_t = 1.0 - t;
-            let x = one_minus_t * one_minus_t * from.x
-                + 2.0 * one_minus_t * t * ctrl.x
-                + t * t * to.x;
-            let y = one_minus_t * one_minus_t * from.y
-                + 2.0 * one_minus_t * t * ctrl.y
-                + t * t * to.y;
+            let x =
+                one_minus_t * one_minus_t * from.x + 2.0 * one_minus_t * t * ctrl.x + t * t * to.x;
+            let y =
+                one_minus_t * one_minus_t * from.y + 2.0 * one_minus_t * t * ctrl.y + t * t * to.y;
             points.push(Pos2::new(x, y));
         }
 
@@ -313,11 +299,7 @@ impl MindMapRenderer {
             style.fill_color[2],
             style.fill_color[3],
         );
-        painter.rect_filled(
-            rect,
-            Rounding::same(style.corner_radius * self.zoom),
-            fill,
-        );
+        painter.rect_filled(rect, Rounding::same(style.corner_radius * self.zoom), fill);
 
         // 节点边框
         let border = Color32::from_rgba_premultiplied(

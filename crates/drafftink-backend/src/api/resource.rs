@@ -44,9 +44,7 @@ pub async fn upload(
     {
         let name = field.name().unwrap_or("").to_string();
         if name == "file" {
-            filename = field
-                .file_name()
-                .map(|s| s.to_string());
+            filename = field.file_name().map(|s| s.to_string());
             let bytes = field
                 .bytes()
                 .await
@@ -84,9 +82,9 @@ pub async fn download(
     let mut response = Bytes::from(data).into_response();
     response.headers_mut().insert(
         header::CONTENT_TYPE,
-        "application/octet-stream".parse().unwrap_or_else(|_| {
-            axum::http::HeaderValue::from_static("application/octet-stream")
-        }),
+        "application/octet-stream"
+            .parse()
+            .unwrap_or_else(|_| axum::http::HeaderValue::from_static("application/octet-stream")),
     );
     Ok(response)
 }

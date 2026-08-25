@@ -264,9 +264,7 @@ mod tests {
         assert!(waf
             .check_request("POST", "/api", b"DROP TABLE users")
             .is_err());
-        assert!(waf
-            .check_request("POST", "/api", b"; -- comment")
-            .is_err());
+        assert!(waf.check_request("POST", "/api", b"; -- comment").is_err());
     }
 
     #[test]
@@ -289,9 +287,7 @@ mod tests {
     #[test]
     fn test_waf_blocks_path_traversal() {
         let waf = WafChecker::new();
-        assert!(waf
-            .check_request("GET", "/api/../etc/passwd", b"")
-            .is_err());
+        assert!(waf.check_request("GET", "/api/../etc/passwd", b"").is_err());
         assert!(waf
             .check_request("GET", "/api/..\\windows\\system32", b"")
             .is_err());
@@ -301,12 +297,16 @@ mod tests {
     fn test_waf_allows_safe_path() {
         let waf = WafChecker::new();
         assert!(waf.check_request("GET", "/api/homework/123", b"").is_ok());
-        assert!(waf.check_request("POST", "/api/homework/submit", b"").is_ok());
+        assert!(waf
+            .check_request("POST", "/api/homework/submit", b"")
+            .is_ok());
     }
 
     #[test]
     fn test_waf_allows_empty_body() {
         let waf = WafChecker::new();
-        assert!(waf.check_request("GET", "/api/homework/result/abc", b"").is_ok());
+        assert!(waf
+            .check_request("GET", "/api/homework/result/abc", b"")
+            .is_ok());
     }
 }

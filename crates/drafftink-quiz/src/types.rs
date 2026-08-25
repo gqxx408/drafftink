@@ -223,9 +223,8 @@ impl QuestionStats {
         }
         // 更新平均响应时间
         let n = self.answered_count as f64;
-        self.avg_response_time_ms = (self.avg_response_time_ms * (n - 1.0)
-            + record.response_time_ms as f64)
-            / n;
+        self.avg_response_time_ms =
+            (self.avg_response_time_ms * (n - 1.0) + record.response_time_ms as f64) / n;
     }
 
     /// 未答题人数 = 总人数 - 已答题人数

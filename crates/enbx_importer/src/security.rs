@@ -4,7 +4,7 @@ use crate::error::EnbxError;
 use std::io::Read;
 
 const MAX_UNCOMPRESSED: u64 = 2_147_483_648; // 2 GB
-const MAX_SINGLE_FILE: u64 = 524_288_000;     // 500 MB
+const MAX_SINGLE_FILE: u64 = 524_288_000; // 500 MB
 const MAX_RATIO: u64 = 100;
 
 /// Hard cap on *actually streamed* extracted bytes in `extract_resources`.
@@ -57,7 +57,9 @@ pub fn check_zip_bomb(
         check_path(name.as_str())?;
 
         if uncomp > MAX_SINGLE_FILE {
-            return Err(EnbxError::Security(format!("file too large: {name} ({uncomp} bytes)")));
+            return Err(EnbxError::Security(format!(
+                "file too large: {name} ({uncomp} bytes)"
+            )));
         }
         let comp = f.compressed_size();
         if comp > 0 && uncomp / comp > MAX_RATIO {

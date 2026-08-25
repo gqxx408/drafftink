@@ -29,23 +29,23 @@
 pub mod codes;
 pub mod jcbx;
 pub mod jcjg;
-pub mod jcxx;
-pub mod jcxs;
 pub mod jctb;
+pub mod jcxs;
+pub mod jcxx;
 pub mod types;
 pub mod xml;
 
 use serde::{Deserialize, Serialize};
 
-pub use codes::{ALL_CODE_TABLES, CodeTable, CodeKind, GBT_3304_ETHNICITY, validate_code};
+pub use codes::{validate_code, CodeKind, CodeTable, ALL_CODE_TABLES, GBT_3304_ETHNICITY};
 pub use jcbx::{Equipment, Schoolhouse};
 pub use jcjg::{StaffBasic, StaffEducation, StaffPartyPost, StaffTitle};
-pub use jcxx::{CampusBasic, ClassInfo, SchoolBasic};
-pub use jcxs::{AwardInfo, PunishmentInfo, ScoreInfo, StudentBasic, StudentStatus};
 pub use jctb::{CommContact, GeneralTeaching, GeneralTime, OrgBasic, PersonBasic};
+pub use jcxs::{AwardInfo, PunishmentInfo, ScoreInfo, StudentBasic, StudentStatus};
+pub use jcxx::{CampusBasic, ClassInfo, SchoolBasic};
 pub use types::{
-    DataType, EmgiError, EmgiField, EmgiRecord, EmgiRecordable, FieldDef, Obligation,
-    is_valid_date8, is_valid_time6,
+    is_valid_date8, is_valid_time6, DataType, EmgiError, EmgiField, EmgiRecord, EmgiRecordable,
+    FieldDef, Obligation,
 };
 
 /// JY/T 1002-2012 标准标识。
@@ -273,8 +273,8 @@ mod tests {
     #[test]
     fn test_full_coverage_mandatory() {
         // 构造一个最小合规的跨子集数据集，验证必备项 100% 可覆盖
-        use crate::emgi::jcjg::{StaffBasic, StaffEducation, StaffTitle};
         use crate::emgi::jcbx::{Equipment, Schoolhouse};
+        use crate::emgi::jcjg::{StaffBasic, StaffEducation, StaffTitle};
         use crate::emgi::jcxs::{AwardInfo, PunishmentInfo, ScoreInfo, StudentStatus};
 
         let mut ds = EmgiDataset::new();
@@ -374,7 +374,9 @@ mod tests {
         assert!(
             errs.is_empty(),
             "跨子集必备项应全部通过，错误: {:?}",
-            errs.iter().map(|(_, f, e)| (f, e.to_string())).collect::<Vec<_>>()
+            errs.iter()
+                .map(|(_, f, e)| (f, e.to_string()))
+                .collect::<Vec<_>>()
         );
     }
 }

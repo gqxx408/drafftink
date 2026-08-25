@@ -58,8 +58,7 @@ mod wasm_impl {
             crate::browser::local_storage_get(KEY_STORAGE_SK),
             crate::browser::local_storage_get(KEY_STORAGE_PK),
         ) {
-            if let (Some(sk_bytes), Some(pk_bytes)) =
-                (hex_to_bytes(&sk_hex), hex_to_bytes(&pk_hex))
+            if let (Some(sk_bytes), Some(pk_bytes)) = (hex_to_bytes(&sk_hex), hex_to_bytes(&pk_hex))
             {
                 if sk_bytes.len() == 32 && pk_bytes.len() == 32 {
                     let mut sk = [0u8; 32];

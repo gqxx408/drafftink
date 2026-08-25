@@ -566,10 +566,7 @@ fn parse_reference_xml(xml: &str) -> HashMap<String, String> {
                 let name = e.name();
                 let local = local_name(name.as_ref());
                 let lower = local.to_lowercase();
-                if matches!(
-                    lower.as_str(),
-                    "relationship" | "resource" | "ref" | "item"
-                ) {
+                if matches!(lower.as_str(), "relationship" | "resource" | "ref" | "item") {
                     let mut id = None;
                     let mut target = None;
                     for attr in e.attributes().flatten() {
@@ -802,10 +799,7 @@ pub fn parse_slide_xml(xml: &str, ref_map: &HashMap<String, String>) -> Result<E
 
 /// Parse a `<Text>` element.  The opening tag `e` has already been consumed;
 /// this function reads child elements until the matching `</Text>`.
-fn parse_text_element(
-    reader: &mut Reader<&[u8]>,
-    start: &BytesStart<'_>,
-) -> Result<EnbxText> {
+fn parse_text_element(reader: &mut Reader<&[u8]>, start: &BytesStart<'_>) -> Result<EnbxText> {
     let mut text = EnbxText {
         x: 0.0,
         y: 0.0,
@@ -822,7 +816,14 @@ fn parse_text_element(
     for attr in start.attributes().flatten() {
         let key = local_name(attr.key.as_ref()).to_lowercase();
         let val = attr.unescape_value().unwrap_or_default().to_string();
-        set_rect_field(&mut text.x, &mut text.y, &mut text.width, &mut text.height, &key, &val);
+        set_rect_field(
+            &mut text.x,
+            &mut text.y,
+            &mut text.width,
+            &mut text.height,
+            &key,
+            &val,
+        );
     }
 
     let mut buf = Vec::new();
@@ -926,7 +927,14 @@ fn parse_image_element(
     for attr in start.attributes().flatten() {
         let key = local_name(attr.key.as_ref()).to_lowercase();
         let val = attr.unescape_value().unwrap_or_default().to_string();
-        set_rect_field(&mut img.x, &mut img.y, &mut img.width, &mut img.height, &key, &val);
+        set_rect_field(
+            &mut img.x,
+            &mut img.y,
+            &mut img.width,
+            &mut img.height,
+            &key,
+            &val,
+        );
         if key == "r:id" || key == "r:embed" || key == "resource" || key == "source" {
             img.resource_id = resolve_resource(&val, ref_map);
         }
@@ -973,10 +981,7 @@ fn parse_image_element(
 }
 
 /// Parse a `<Shape>` element.
-fn parse_shape_element(
-    reader: &mut Reader<&[u8]>,
-    start: &BytesStart<'_>,
-) -> Result<EnbxShape> {
+fn parse_shape_element(reader: &mut Reader<&[u8]>, start: &BytesStart<'_>) -> Result<EnbxShape> {
     let mut shape = EnbxShape {
         x: 0.0,
         y: 0.0,
@@ -1129,10 +1134,7 @@ fn parse_shape_element(
 }
 
 /// Parse a `<Path>` / `<FreeLine>` / `<Ink>` element.
-fn parse_path_element(
-    reader: &mut Reader<&[u8]>,
-    start: &BytesStart<'_>,
-) -> Result<EnbxPath> {
+fn parse_path_element(reader: &mut Reader<&[u8]>, start: &BytesStart<'_>) -> Result<EnbxPath> {
     let mut path = EnbxPath {
         points: Vec::new(),
         stroke_color: default_stroke(),
@@ -1178,7 +1180,8 @@ fn parse_path_element(
                             }
                         }
                         if let Some(s) = read_str(reader, e) {
-                            let parts: Vec<&str> = s.split(|c: char| c == ',' || c.is_whitespace())
+                            let parts: Vec<&str> = s
+                                .split(|c: char| c == ',' || c.is_whitespace())
                                 .filter(|s| !s.is_empty())
                                 .collect();
                             if parts.len() >= 2 {
@@ -1367,9 +1370,7 @@ fn xml_attr(xv: &XmlValue, key: &str) -> Option<String> {
 
 /// Find a direct child element by (case-insensitive) tag name.
 fn xml_child<'a>(xv: &'a XmlValue, tag: &str) -> Option<&'a XmlValue> {
-    xv.children
-        .iter()
-        .find(|c| c.tag.eq_ignore_ascii_case(tag))
+    xv.children.iter().find(|c| c.tag.eq_ignore_ascii_case(tag))
 }
 
 /// Extract a numeric field from an attribute or a direct child's text content.
@@ -1557,7 +1558,10 @@ fn parse_3d_shape(xv: &XmlValue) -> Result<Enbx3dShape> {
 }
 
 /// Parse an `<ActivityItem>` subtree into [`EnbxActivityItem`].
-fn parse_activity_item(xv: &XmlValue, ref_map: &HashMap<String, String>) -> Result<EnbxActivityItem> {
+fn parse_activity_item(
+    xv: &XmlValue,
+    ref_map: &HashMap<String, String>,
+) -> Result<EnbxActivityItem> {
     let mut a = EnbxActivityItem {
         resource_id: String::new(),
         activity_id: String::new(),
@@ -1784,10 +1788,7 @@ fn parse_topic(xv: &XmlValue) -> Result<EnbxTopic> {
 // ---------------------------------------------------------------------------
 
 /// Recursively parse an unknown XML element into an [`XmlValue`].
-fn parse_xml_value(
-    reader: &mut Reader<&[u8]>,
-    start: &BytesStart<'_>,
-) -> Result<XmlValue> {
+fn parse_xml_value(reader: &mut Reader<&[u8]>, start: &BytesStart<'_>) -> Result<XmlValue> {
     let tag = local_name(start.name().as_ref()).to_string();
     let mut attributes = HashMap::new();
     for attr in start.attributes().flatten() {
@@ -1854,10 +1855,13 @@ fn parse_xml_value(
 // ---------------------------------------------------------------------------
 
 /// Parse optional metadata from the archive (e.g. `Document.xml`).
-fn parse_metadata_entry(
-    archive: &mut zip::ZipArchive<std::fs::File>,
-) -> Result<EnbxMetadata> {
-    let candidates = ["Document.xml", "document.xml", "Metadata.xml", "metadata.xml"];
+fn parse_metadata_entry(archive: &mut zip::ZipArchive<std::fs::File>) -> Result<EnbxMetadata> {
+    let candidates = [
+        "Document.xml",
+        "document.xml",
+        "Metadata.xml",
+        "metadata.xml",
+    ];
     let mut found: Option<String> = None;
     for c in &candidates {
         if archive.by_name(c).is_ok() {
@@ -2077,14 +2081,7 @@ fn parse_adjust(e: &BytesStart<'_>) -> Adjust {
 }
 
 /// Set one of the `x / y / width / height` fields from an attribute.
-fn set_rect_field(
-    x: &mut f64,
-    y: &mut f64,
-    w: &mut f64,
-    h: &mut f64,
-    key: &str,
-    val: &str,
-) {
+fn set_rect_field(x: &mut f64, y: &mut f64, w: &mut f64, h: &mut f64, key: &str, val: &str) {
     match key {
         "x" | "left" => {
             if let Ok(v) = val.parse::<f64>() {
@@ -2677,7 +2674,10 @@ mod tests {
         match &slide.elements[6] {
             EnbxElement::Unknown(xv) => {
                 assert_eq!(xv.tag, "CustomWidget");
-                assert_eq!(xv.attributes.get("mode").map(|s| s.as_str()), Some("legacy"));
+                assert_eq!(
+                    xv.attributes.get("mode").map(|s| s.as_str()),
+                    Some("legacy")
+                );
                 assert_eq!(xv.children.len(), 1);
             }
             other => panic!("expected Unknown, got {other:?}"),

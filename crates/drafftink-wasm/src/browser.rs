@@ -189,7 +189,9 @@ pub use wasm_impl::{
 };
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use native_impl::{fetch_homework, get_url_param, is_online, local_storage_get, local_storage_set, submit_homework};
+pub use native_impl::{
+    fetch_homework, get_url_param, is_online, local_storage_get, local_storage_set, submit_homework,
+};
 
 // ════════════════════════════════════════════════════════════════════════════
 //  Unit tests (run on native)
@@ -208,7 +210,10 @@ mod tests {
 
     #[test]
     fn test_parse_query_param_with_question_mark() {
-        assert_eq!(parse_query_param("?hw=xyz789", "hw"), Some("xyz789".to_string()));
+        assert_eq!(
+            parse_query_param("?hw=xyz789", "hw"),
+            Some("xyz789".to_string())
+        );
     }
 
     #[test]
@@ -225,7 +230,10 @@ mod tests {
     #[test]
     fn test_parse_query_param_url_encoded_value() {
         let query = "hw=abc%20123&name=test";
-        assert_eq!(parse_query_param(query, "hw"), Some("abc%20123".to_string()));
+        assert_eq!(
+            parse_query_param(query, "hw"),
+            Some("abc%20123".to_string())
+        );
     }
 
     #[test]

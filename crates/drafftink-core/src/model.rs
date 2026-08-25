@@ -166,7 +166,11 @@ pub enum ShapeKind {
     /// 实际渲染时与 [`ShapeKind::Arc`]/[`ShapeKind::Sector`] 一致，由叠加层 rect 派生
     /// 中心与半径（保证拖拽缩放后几何仍跟随），因此 `center`/`radius` 主要作为
     /// 提交时的定义参数保存，渲染以 rect 为唯一真相来源。
-    Polygon { center: [f32; 2], radius: f32, sides: u8 },
+    Polygon {
+        center: [f32; 2],
+        radius: f32,
+        sides: u8,
+    },
     /// 数轴（虚拟教具提交：数轴工具）。
     ///
     /// 携带完整刻度参数（[`NumberLineData`]）：主/次刻度、数值标签（起点数值 +
@@ -362,8 +366,7 @@ impl Element {
 // ---------------------------------------------------------------------------
 
 /// Content of a single page in a multi-page courseware document.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PageContent {
     pub elements: Vec<Element>,
     /// Bincode-serialised `Vec<StrokeData>` (annotation layer).
@@ -376,7 +379,6 @@ pub struct PageContent {
     #[serde(default)]
     pub animation_sequence: Option<crate::animation::SlideAnimationSequence>,
 }
-
 
 // ---------------------------------------------------------------------------
 // Document
@@ -397,8 +399,12 @@ pub struct CoursewareDoc {
     pub pages: Vec<PageContent>,
 }
 
-fn default_page_size() -> [f32; 2] { [1920.0, 1080.0] }
-fn default_bg_color() -> [u8; 4] { [255, 255, 255, 255] }
+fn default_page_size() -> [f32; 2] {
+    [1920.0, 1080.0]
+}
+fn default_bg_color() -> [u8; 4] {
+    [255, 255, 255, 255]
+}
 
 impl Default for CoursewareDoc {
     fn default() -> Self {
@@ -427,14 +433,22 @@ impl CoursewareDoc {
 
     /// Find an element by id.
     pub fn get(&self, id: ElementId) -> Option<&Element> {
-        self.elements.iter().find(|e| e.id() == id)
-            .or_else(|| self.pages.iter().flat_map(|p| p.elements.iter()).find(|e| e.id() == id))
+        self.elements.iter().find(|e| e.id() == id).or_else(|| {
+            self.pages
+                .iter()
+                .flat_map(|p| p.elements.iter())
+                .find(|e| e.id() == id)
+        })
     }
 
     /// Find an element by id (mutable).
     pub fn get_mut(&mut self, id: ElementId) -> Option<&mut Element> {
-        self.elements.iter_mut().find(|e| e.id() == id)
-            .or_else(|| self.pages.iter_mut().flat_map(|p| p.elements.iter_mut()).find(|e| e.id() == id))
+        self.elements.iter_mut().find(|e| e.id() == id).or_else(|| {
+            self.pages
+                .iter_mut()
+                .flat_map(|p| p.elements.iter_mut())
+                .find(|e| e.id() == id)
+        })
     }
 
     /// Remove an element by id, returning it.

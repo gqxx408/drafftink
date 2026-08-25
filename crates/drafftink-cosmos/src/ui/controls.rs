@@ -83,7 +83,10 @@ impl ControlPanel {
         let panel_frame = egui::Frame::window(&ctx.style())
             .inner_margin(egui::Margin::symmetric(12.0, 10.0))
             .fill(Color32::from_black_alpha(200))
-            .stroke(Stroke::new(1.0, Color32::from_rgba_unmultiplied(100, 150, 200, 180)));
+            .stroke(Stroke::new(
+                1.0,
+                Color32::from_rgba_unmultiplied(100, 150, 200, 180),
+            ));
 
         egui::Area::new(egui::Id::new("cosmos_controls"))
             .movable(true)
@@ -131,7 +134,8 @@ impl ControlPanel {
                     // ── 性能优化：缓存标签，仅场景变化时重建 ──
                     let entity_count = scene.names.len();
                     if self.cached_planet_labels.len() != entity_count {
-                        self.cached_planet_labels = scene.names
+                        self.cached_planet_labels = scene
+                            .names
                             .iter()
                             .enumerate()
                             .map(|(idx, _name)| {
@@ -139,10 +143,7 @@ impl ControlPanel {
                                     .as_ref()
                                     .map(|info| info.name.as_str())
                                     .unwrap_or("?");
-                                (
-                                    format!("\u{25CF} {}", name),
-                                    format!("\u{25CB} {}", name),
-                                )
+                                (format!("\u{25CF} {}", name), format!("\u{25CB} {}", name))
                             })
                             .collect();
                         self.cached_entity_count = entity_count;
@@ -161,8 +162,13 @@ impl ControlPanel {
 
                                 // 从缓存取标签，避免每帧 format!()
                                 let label_text = if idx < self.cached_planet_labels.len() {
-                                    let (ref selected, ref unselected) = self.cached_planet_labels[idx];
-                                    if is_selected { selected.as_str() } else { unselected.as_str() }
+                                    let (ref selected, ref unselected) =
+                                        self.cached_planet_labels[idx];
+                                    if is_selected {
+                                        selected.as_str()
+                                    } else {
+                                        unselected.as_str()
+                                    }
                                 } else {
                                     // 防御性回退
                                     ""
@@ -198,20 +204,14 @@ impl ControlPanel {
                             );
                             ui.add_space(4.0);
                             ui.label(
-                                RichText::new(format!(
-                                    "直径: {:.0} km",
-                                    info.diameter_km
-                                ))
-                                .color(Color32::from_rgb(160, 180, 200))
-                                .size(10.0),
+                                RichText::new(format!("直径: {:.0} km", info.diameter_km))
+                                    .color(Color32::from_rgb(160, 180, 200))
+                                    .size(10.0),
                             );
                             ui.label(
-                                RichText::new(format!(
-                                    "质量: {:.2e} kg",
-                                    info.mass_kg
-                                ))
-                                .color(Color32::from_rgb(160, 180, 200))
-                                .size(10.0),
+                                RichText::new(format!("质量: {:.2e} kg", info.mass_kg))
+                                    .color(Color32::from_rgb(160, 180, 200))
+                                    .size(10.0),
                             );
                         }
                     }

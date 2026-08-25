@@ -34,7 +34,7 @@ use std::time::Duration;
 
 use axum::extract::{ConnectInfo, DefaultBodyLimit, Path, Request, State};
 use axum::http::{HeaderMap, Method};
-use axum::middleware::{Next, from_fn_with_state};
+use axum::middleware::{from_fn_with_state, Next};
 use axum::response::Response;
 use axum::routing::{get, post};
 use axum::Router;
@@ -51,8 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize tracing.
     tracing_subscriber::fmt()
         .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "info".into()),
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()),
         )
         .init();
 
@@ -63,7 +62,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 启动安全闸门（P0-1）：JWT 密钥缺失或使用已知默认硬编码密钥时，
     // 直接拒绝启动，避免与后端信任错配或任何人伪造令牌。
     if let Err(e) = config.jwt.validate_not_default() {
-        eprintln!("ERROR: JWT secret not configured. Set DRAFTTINK_JWT_SECRET environment variable.");
+        eprintln!(
+            "ERROR: JWT secret not configured. Set DRAFTTINK_JWT_SECRET environment variable."
+        );
         eprintln!("Refusing to start with default/empty secret (security risk).");
         eprintln!("Details: {e}");
         std::process::exit(1);
@@ -84,14 +85,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(1);
     }
 
-    let tls_config = tls::TlsConfig::new(
-        config.tls_cert_path.clone(),
-        config.tls_key_path.clone(),
-    );
+    let tls_config = tls::TlsConfig::new(config.tls_cert_path.clone(), config.tls_key_path.clone());
     if tls_config.is_enabled() {
-        tracing::warn!(
-            "TLS is configured but not yet implemented; running HTTP-only"
-        );
+        tracing::warn!("TLS is configured but not yet implemented; running HTTP-only");
     } else {
         tracing::info!("Running in HTTP-only mode (no TLS)");
     }
@@ -107,7 +103,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             interval.tick().await;
             let mut limiter = cleanup_state.rate_limiter.lock().await;
             limiter.cleanup();
-            tracing::debug!("Rate limiter cleanup: {} tracked IPs", limiter.tracked_ip_count());
+            tracing::debug!(
+                "Rate limiter cleanup: {} tracked IPs",
+                limiter.tracked_ip_count()
+            );
         }
     });
 

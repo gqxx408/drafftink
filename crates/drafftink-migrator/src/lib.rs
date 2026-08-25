@@ -7,9 +7,9 @@
 //! - [`wb_to_drftx`]：drftx 序列化（SVG Path 优先）。
 
 pub mod enbx_model;
-pub mod whiteboard;
 pub mod enbx_to_wb;
 pub mod wb_to_drftx;
+pub mod whiteboard;
 
 pub use enbx_to_wb::{
     convert, convert_3d_shape, convert_activity, convert_activity_item, convert_element,
@@ -17,14 +17,14 @@ pub use enbx_to_wb::{
     extract_text_from_topic_title, from_enbx, generate_report, parse_argb_color,
     parse_argb_color_bg, parse_location,
 };
-pub use wb_to_drftx::{to_drftx, shape_path};
+pub use wb_to_drftx::{shape_path, to_drftx};
 
-pub use whiteboard::{
-    Canvas, MediaAsset, Metadata, MigrationNote, MigrationReport, WbElement, WbImage, WbPage,
-    WbPlaceholder, WbShape, WbShapeType, WbText, WhiteboardDoc,
-};
 pub use enbx_model::{
     BoardXml, Enbx3dShape, EnbxActivity, EnbxActivityItem, EnbxClassify, EnbxClassifyItem,
     EnbxElement, EnbxParsed, EnbxPicture, EnbxTopic, EnbxTopicNode, EnbxVideo, ImageXml,
     MediaReference, MigratorError, Reference, ShapeXml, SlideXml, TextRun, TextXml,
+};
+pub use whiteboard::{
+    Canvas, MediaAsset, Metadata, MigrationNote, MigrationReport, WbElement, WbImage, WbPage,
+    WbPlaceholder, WbShape, WbShapeType, WbText, WhiteboardDoc,
 };

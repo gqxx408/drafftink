@@ -171,7 +171,12 @@ impl Camera3D {
     /// 将 3D 点投影到 2D 屏幕坐标
     ///
     /// 返回 None 表示点在裁剪面外。
-    pub fn project(&self, point: Point3D, aspect: f32, screen_size: (f32, f32)) -> Option<(f32, f32)> {
+    pub fn project(
+        &self,
+        point: Point3D,
+        aspect: f32,
+        screen_size: (f32, f32),
+    ) -> Option<(f32, f32)> {
         let vp = self.view_projection_matrix(aspect);
         let p = Point3::from(point);
         let projected = vp.transform_point(&p);
@@ -244,28 +249,47 @@ pub fn generate_cube(center: Point3D, size: f32) -> Mesh3D {
 
     // 12 条棱
     let edges = vec![
-        (0, 1), (1, 2), (2, 3), (3, 0), // 后面
-        (4, 5), (5, 6), (6, 7), (7, 4), // 前面
-        (0, 4), (1, 5), (2, 6), (3, 7), // 连接
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 0), // 后面
+        (4, 5),
+        (5, 6),
+        (6, 7),
+        (7, 4), // 前面
+        (0, 4),
+        (1, 5),
+        (2, 6),
+        (3, 7), // 连接
     ];
 
     // 12 个三角面（6 面 × 2）
     let faces = vec![
         // 后面 (z = -s)
-        (0, 2, 1), (0, 3, 2),
+        (0, 2, 1),
+        (0, 3, 2),
         // 前面 (z = +s)
-        (4, 5, 6), (4, 6, 7),
+        (4, 5, 6),
+        (4, 6, 7),
         // 左面 (x = -s)
-        (0, 4, 7), (0, 7, 3),
+        (0, 4, 7),
+        (0, 7, 3),
         // 右面 (x = +s)
-        (1, 2, 6), (1, 6, 5),
+        (1, 2, 6),
+        (1, 6, 5),
         // 下面 (y = -s)
-        (0, 1, 5), (0, 5, 4),
+        (0, 1, 5),
+        (0, 5, 4),
         // 上面 (y = +s)
-        (3, 7, 6), (3, 6, 2),
+        (3, 7, 6),
+        (3, 6, 2),
     ];
 
-    Mesh3D { vertices, edges, faces }
+    Mesh3D {
+        vertices,
+        edges,
+        faces,
+    }
 }
 
 /// 生成 UV 球体网格
@@ -273,7 +297,12 @@ pub fn generate_cube(center: Point3D, size: f32) -> Mesh3D {
 /// 使用经纬度分割生成球体。
 /// 注意：对于星球级渲染，应使用 Icosphere 获得更均匀的顶点分布。
 /// 此处 UV 球适用于教育几何场景。
-pub fn generate_sphere(center: Point3D, radius: f32, lat_segments: usize, lon_segments: usize) -> Mesh3D {
+pub fn generate_sphere(
+    center: Point3D,
+    radius: f32,
+    lat_segments: usize,
+    lon_segments: usize,
+) -> Mesh3D {
     let mut vertices = Vec::new();
     let mut edges = Vec::new();
     let mut faces = Vec::new();
@@ -318,7 +347,11 @@ pub fn generate_sphere(center: Point3D, radius: f32, lat_segments: usize, lon_se
         }
     }
 
-    Mesh3D { vertices, edges, faces }
+    Mesh3D {
+        vertices,
+        edges,
+        faces,
+    }
 }
 
 /// 生成圆锥网格
@@ -339,8 +372,14 @@ pub fn generate_cone(base_center: Point3D, apex: Point3D, radius: f32, segments:
     } else {
         Vector3::new(0.0, 1.0, 0.0)
     };
-    let right = axis.cross(&up).try_normalize(1e-10).unwrap_or(Vector3::new(1.0, 0.0, 0.0));
-    let forward = right.cross(&axis).try_normalize(1e-10).unwrap_or(Vector3::new(0.0, 0.0, 1.0));
+    let right = axis
+        .cross(&up)
+        .try_normalize(1e-10)
+        .unwrap_or(Vector3::new(1.0, 0.0, 0.0));
+    let forward = right
+        .cross(&axis)
+        .try_normalize(1e-10)
+        .unwrap_or(Vector3::new(0.0, 0.0, 1.0));
 
     for i in 0..segments {
         let angle = i as f32 / segments as f32 * std::f32::consts::TAU;
@@ -369,7 +408,11 @@ pub fn generate_cone(base_center: Point3D, apex: Point3D, radius: f32, segments:
     }
 
     let _ = height; // suppress unused warning
-    Mesh3D { vertices, edges, faces }
+    Mesh3D {
+        vertices,
+        edges,
+        faces,
+    }
 }
 
 /// 生成圆柱网格
@@ -389,8 +432,14 @@ pub fn generate_cylinder(
     } else {
         Vector3::new(0.0, 1.0, 0.0)
     };
-    let right = axis.cross(&up).try_normalize(1e-10).unwrap_or(Vector3::new(1.0, 0.0, 0.0));
-    let forward = right.cross(&axis).try_normalize(1e-10).unwrap_or(Vector3::new(0.0, 0.0, 1.0));
+    let right = axis
+        .cross(&up)
+        .try_normalize(1e-10)
+        .unwrap_or(Vector3::new(1.0, 0.0, 0.0));
+    let forward = right
+        .cross(&axis)
+        .try_normalize(1e-10)
+        .unwrap_or(Vector3::new(0.0, 0.0, 1.0));
 
     // 底面顶点
     vertices.push(bottom_center); // 0: 底面中心
@@ -436,7 +485,11 @@ pub fn generate_cylinder(
         faces.push((b_next, t_next, t_curr));
     }
 
-    Mesh3D { vertices, edges, faces }
+    Mesh3D {
+        vertices,
+        edges,
+        faces,
+    }
 }
 
 // ── 投影渲染辅助 ────────────────────────────────────────────────
@@ -505,7 +558,11 @@ pub fn project_mesh(
         .collect();
 
     // 按深度排序（远的先画）
-    edges.sort_by(|a, b| b.depth.partial_cmp(&a.depth).unwrap_or(std::cmp::Ordering::Equal));
+    edges.sort_by(|a, b| {
+        b.depth
+            .partial_cmp(&a.depth)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     edges
 }
@@ -616,7 +673,11 @@ pub fn project_mesh_faces(
         .collect();
 
     // 按深度排序（远的先画，画家算法）
-    faces.sort_by(|a, b| b.depth.partial_cmp(&a.depth).unwrap_or(std::cmp::Ordering::Equal));
+    faces.sort_by(|a, b| {
+        b.depth
+            .partial_cmp(&a.depth)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     faces
 }
@@ -649,28 +710,47 @@ pub fn generate_cuboid(center: Point3D, width: f32, height: f32, depth: f32) -> 
 
     // 12 条棱
     let edges = vec![
-        (0, 1), (1, 2), (2, 3), (3, 0), // 后面
-        (4, 5), (5, 6), (6, 7), (7, 4), // 前面
-        (0, 4), (1, 5), (2, 6), (3, 7), // 连接
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 0), // 后面
+        (4, 5),
+        (5, 6),
+        (6, 7),
+        (7, 4), // 前面
+        (0, 4),
+        (1, 5),
+        (2, 6),
+        (3, 7), // 连接
     ];
 
     // 12 个三角面（6 面 × 2）
     let faces = vec![
         // 后面 (z = -hd)
-        (0, 2, 1), (0, 3, 2),
+        (0, 2, 1),
+        (0, 3, 2),
         // 前面 (z = +hd)
-        (4, 5, 6), (4, 6, 7),
+        (4, 5, 6),
+        (4, 6, 7),
         // 左面 (x = -hw)
-        (0, 4, 7), (0, 7, 3),
+        (0, 4, 7),
+        (0, 7, 3),
         // 右面 (x = +hw)
-        (1, 2, 6), (1, 6, 5),
+        (1, 2, 6),
+        (1, 6, 5),
         // 下面 (y = -hh)
-        (0, 1, 5), (0, 5, 4),
+        (0, 1, 5),
+        (0, 5, 4),
         // 上面 (y = +hh)
-        (3, 7, 6), (3, 6, 2),
+        (3, 7, 6),
+        (3, 6, 2),
     ];
 
-    Mesh3D { vertices, edges, faces }
+    Mesh3D {
+        vertices,
+        edges,
+        faces,
+    }
 }
 
 /// 生成 N 边棱柱网格
@@ -744,19 +824,18 @@ pub fn generate_prism(
         faces.push((b_next, t_next, t_curr));
     }
 
-    Mesh3D { vertices, edges, faces }
+    Mesh3D {
+        vertices,
+        edges,
+        faces,
+    }
 }
 
 /// 生成 N 边棱锥网格
 ///
 /// 底面多边形 + 朝向顶点的三角侧面。
 /// 与生成圆锥类似，但底面是正多边形而非圆形。
-pub fn generate_pyramid(
-    base_center: Point3D,
-    apex: Point3D,
-    radius: f32,
-    sides: u32,
-) -> Mesh3D {
+pub fn generate_pyramid(base_center: Point3D, apex: Point3D, radius: f32, sides: u32) -> Mesh3D {
     let mut vertices = Vec::new();
     let mut edges = Vec::new();
     let mut faces = Vec::new();
@@ -808,7 +887,11 @@ pub fn generate_pyramid(
         faces.push((curr, next, apex_idx)); // 侧面
     }
 
-    Mesh3D { vertices, edges, faces }
+    Mesh3D {
+        vertices,
+        edges,
+        faces,
+    }
 }
 
 /// 生成圆台（截头圆锥）网格
@@ -886,7 +969,11 @@ pub fn generate_frustum(
         faces.push((b_next, t_next, t_curr));
     }
 
-    Mesh3D { vertices, edges, faces }
+    Mesh3D {
+        vertices,
+        edges,
+        faces,
+    }
 }
 
 /// 生成正多面体网格
@@ -911,25 +998,17 @@ pub fn generate_regular_polyhedron(
                 Vector3::new(-1.0, 1.0, -1.0),
                 Vector3::new(1.0, -1.0, -1.0),
             ];
-            let vertices: Vec<Point3D> = raw
-                .iter()
-                .map(|v| center + v * scale)
-                .collect();
+            let vertices: Vec<Point3D> = raw.iter().map(|v| center + v * scale).collect();
 
-            let edges = vec![
-                (0, 1), (0, 2), (0, 3),
-                (1, 2), (1, 3),
-                (2, 3),
-            ];
+            let edges = vec![(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)];
 
-            let faces = vec![
-                (0, 2, 1),
-                (0, 1, 3),
-                (0, 3, 2),
-                (1, 2, 3),
-            ];
+            let faces = vec![(0, 2, 1), (0, 1, 3), (0, 3, 2), (1, 2, 3)];
 
-            Mesh3D { vertices, edges, faces }
+            Mesh3D {
+                vertices,
+                edges,
+                faces,
+            }
         }
         PolyhedronType::Hexahedron => {
             // 正六面体 = 立方体，外接球半径 = size → 边长 = size * 2/√3
@@ -947,19 +1026,36 @@ pub fn generate_regular_polyhedron(
             ];
 
             let edges = vec![
-                (0, 2), (0, 3), (0, 4), (0, 5),
-                (1, 2), (1, 3), (1, 4), (1, 5),
-                (2, 4), (2, 5), (3, 4), (3, 5),
+                (0, 2),
+                (0, 3),
+                (0, 4),
+                (0, 5),
+                (1, 2),
+                (1, 3),
+                (1, 4),
+                (1, 5),
+                (2, 4),
+                (2, 5),
+                (3, 4),
+                (3, 5),
             ];
 
             let faces = vec![
-                (0, 4, 2), (0, 2, 5),
-                (0, 5, 3), (0, 3, 4),
-                (1, 2, 4), (1, 5, 2),
-                (1, 4, 3), (1, 3, 5),
+                (0, 4, 2),
+                (0, 2, 5),
+                (0, 5, 3),
+                (0, 3, 4),
+                (1, 2, 4),
+                (1, 5, 2),
+                (1, 4, 3),
+                (1, 3, 5),
             ];
 
-            Mesh3D { vertices, edges, faces }
+            Mesh3D {
+                vertices,
+                edges,
+                faces,
+            }
         }
         PolyhedronType::Icosahedron => {
             // 黄金比例
@@ -982,20 +1078,37 @@ pub fn generate_regular_polyhedron(
             // 归一化后缩放至外接球半径 size
             let norm = (1.0 + phi * phi).sqrt();
             let scale = size / norm;
-            let vertices: Vec<Point3D> = raw
-                .iter()
-                .map(|v| center + v * scale)
-                .collect();
+            let vertices: Vec<Point3D> = raw.iter().map(|v| center + v * scale).collect();
 
             let edges = vec![
-                (0, 2), (0, 4), (0, 6), (0, 8), (0, 10),
-                (1, 3), (1, 4), (1, 6), (1, 9), (1, 11),
-                (2, 5), (2, 7), (2, 8), (2, 10),
-                (3, 5), (3, 7), (3, 9), (3, 11),
-                (4, 6), (4, 8), (4, 9),
-                (5, 7), (5, 8), (5, 9),
-                (6, 10), (6, 11),
-                (7, 10), (7, 11),
+                (0, 2),
+                (0, 4),
+                (0, 6),
+                (0, 8),
+                (0, 10),
+                (1, 3),
+                (1, 4),
+                (1, 6),
+                (1, 9),
+                (1, 11),
+                (2, 5),
+                (2, 7),
+                (2, 8),
+                (2, 10),
+                (3, 5),
+                (3, 7),
+                (3, 9),
+                (3, 11),
+                (4, 6),
+                (4, 8),
+                (4, 9),
+                (5, 7),
+                (5, 8),
+                (5, 9),
+                (6, 10),
+                (6, 11),
+                (7, 10),
+                (7, 11),
                 (8, 9),
                 (10, 11),
             ];
@@ -1003,17 +1116,36 @@ pub fn generate_regular_polyhedron(
             // 20 个三角面（通过边遍历推导：每条边恰好属于 2 个面）
             let faces = vec![
                 // 围绕顶点 0 的 5 个面
-                (0, 2, 8), (0, 8, 4), (0, 4, 6), (0, 6, 10), (0, 10, 2),
+                (0, 2, 8),
+                (0, 8, 4),
+                (0, 4, 6),
+                (0, 6, 10),
+                (0, 10, 2),
                 // 围绕顶点 1 的 5 个面
-                (1, 3, 9), (1, 9, 4), (1, 4, 6), (1, 6, 11), (1, 11, 3),
+                (1, 3, 9),
+                (1, 9, 4),
+                (1, 4, 6),
+                (1, 6, 11),
+                (1, 11, 3),
                 // 中部环
-                (2, 8, 5), (2, 5, 7), (2, 7, 10),
-                (3, 9, 5), (3, 5, 7), (3, 7, 11),
+                (2, 8, 5),
+                (2, 5, 7),
+                (2, 7, 10),
+                (3, 9, 5),
+                (3, 5, 7),
+                (3, 7, 11),
                 // 底部 4 个面
-                (4, 8, 9), (5, 8, 9), (6, 11, 10), (7, 11, 10),
+                (4, 8, 9),
+                (5, 8, 9),
+                (6, 11, 10),
+                (7, 11, 10),
             ];
 
-            Mesh3D { vertices, edges, faces }
+            Mesh3D {
+                vertices,
+                edges,
+                faces,
+            }
         }
         PolyhedronType::Dodecahedron => {
             // 黄金比例
@@ -1050,24 +1182,40 @@ pub fn generate_regular_polyhedron(
             ];
             // 缩放 size/√3 使外接球半径为 size
             let scale = size / 3.0_f32.sqrt();
-            let vertices: Vec<Point3D> = raw
-                .iter()
-                .map(|v| center + v * scale)
-                .collect();
+            let vertices: Vec<Point3D> = raw.iter().map(|v| center + v * scale).collect();
 
             // 30 条边（基于标准正十二面体拓扑）
             let edges = vec![
-                (0, 8), (0, 12), (0, 16),
-                (1, 9), (1, 12), (1, 17),
-                (2, 10), (2, 13), (2, 16),
-                (3, 11), (3, 13), (3, 17),
-                (4, 8), (4, 14), (4, 18),
-                (5, 9), (5, 14), (5, 19),
-                (6, 10), (6, 15), (6, 18),
-                (7, 11), (7, 15), (7, 19),
-                (8, 10), (9, 11),
-                (12, 14), (13, 15),
-                (16, 17), (18, 19),
+                (0, 8),
+                (0, 12),
+                (0, 16),
+                (1, 9),
+                (1, 12),
+                (1, 17),
+                (2, 10),
+                (2, 13),
+                (2, 16),
+                (3, 11),
+                (3, 13),
+                (3, 17),
+                (4, 8),
+                (4, 14),
+                (4, 18),
+                (5, 9),
+                (5, 14),
+                (5, 19),
+                (6, 10),
+                (6, 15),
+                (6, 18),
+                (7, 11),
+                (7, 15),
+                (7, 19),
+                (8, 10),
+                (9, 11),
+                (12, 14),
+                (13, 15),
+                (16, 17),
+                (18, 19),
             ];
 
             // 12 个五边形面（每个五边形拆成 3 个三角形，共 36 个三角面）
@@ -1095,7 +1243,11 @@ pub fn generate_regular_polyhedron(
                 faces.push((p[0], p[3], p[4]));
             }
 
-            Mesh3D { vertices, edges, faces }
+            Mesh3D {
+                vertices,
+                edges,
+                faces,
+            }
         }
     }
 }
@@ -1160,7 +1312,11 @@ mod tests {
     fn test_generate_cube_offset() {
         let mesh = generate_cube(Vector3::new(5.0, 0.0, 0.0), 2.0);
         // 最左顶点 x = 5 - 1 = 4
-        let min_x = mesh.vertices.iter().map(|v| v.x).fold(f32::INFINITY, f32::min);
+        let min_x = mesh
+            .vertices
+            .iter()
+            .map(|v| v.x)
+            .fold(f32::INFINITY, f32::min);
         assert!((min_x - 4.0).abs() < 0.001);
     }
 

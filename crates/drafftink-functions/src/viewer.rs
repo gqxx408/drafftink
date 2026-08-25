@@ -183,10 +183,7 @@ impl FunctionViewer {
                         let curve_id = curve.id;
 
                         // 从缓存中提取错误信息（clone 避免借用冲突）
-                        let error_msg = self
-                            .cache
-                            .get(&curve_id)
-                            .and_then(|c| c.error.clone());
+                        let error_msg = self.cache.get(&curve_id).and_then(|c| c.error.clone());
 
                         let color = Color32::from_rgba_unmultiplied(
                             curve.color[0],
@@ -202,10 +199,8 @@ impl FunctionViewer {
                             .show(ui, |ui| {
                                 ui.horizontal(|ui| {
                                     // 颜色色块
-                                    let (rect, _) = ui.allocate_exact_size(
-                                        Vec2::new(14.0, 14.0),
-                                        Sense::hover(),
-                                    );
+                                    let (rect, _) = ui
+                                        .allocate_exact_size(Vec2::new(14.0, 14.0), Sense::hover());
                                     ui.painter().rect_filled(rect, 3.0, color);
 
                                     // 表达式
@@ -359,10 +354,7 @@ impl FunctionViewer {
             let curve_id = curve.id;
 
             // 检查是否需要重采样
-            let needs_resample = self
-                .cache
-                .get(&curve_id)
-                .is_some_and(|e| e.dirty);
+            let needs_resample = self.cache.get(&curve_id).is_some_and(|e| e.dirty);
 
             if !needs_resample {
                 continue;
@@ -397,7 +389,8 @@ impl FunctionViewer {
         self.renderer.draw_background(&painter, canvas_rect);
 
         // 网格
-        self.renderer.draw_grid(&painter, &self.viewport, &transform, canvas_rect);
+        self.renderer
+            .draw_grid(&painter, &self.viewport, &transform, canvas_rect);
 
         // 曲线 — 按 UUID 匹配缓存数据
         for curve in &self.curves {
@@ -418,13 +411,8 @@ impl FunctionViewer {
                     curve.color[2],
                     curve.color[3],
                 );
-                self.renderer.draw_curve(
-                    &painter,
-                    segments,
-                    color,
-                    &self.viewport,
-                    &transform,
-                );
+                self.renderer
+                    .draw_curve(&painter, segments, color, &self.viewport, &transform);
 
                 // 标签
                 self.renderer.draw_curve_label(
@@ -464,7 +452,10 @@ impl FunctionViewer {
         }
 
         // ── 交互：双击添加函数 ──
-        let double_click = ctx.input(|i| i.pointer.button_double_clicked(egui::PointerButton::Primary));
+        let double_click = ctx.input(|i| {
+            i.pointer
+                .button_double_clicked(egui::PointerButton::Primary)
+        });
         if double_click {
             if let Some(pos) = pointer_pos {
                 if canvas_rect.contains(pos) {
@@ -541,10 +532,8 @@ impl FunctionViewer {
                     for &c in CURVE_PALETTE {
                         let color = Color32::from_rgba_unmultiplied(c[0], c[1], c[2], c[3]);
                         let selected = self.edit_state.color == c;
-                        let (rect, response) = ui.allocate_exact_size(
-                            Vec2::new(24.0, 24.0),
-                            Sense::click(),
-                        );
+                        let (rect, response) =
+                            ui.allocate_exact_size(Vec2::new(24.0, 24.0), Sense::click());
                         if response.clicked() {
                             self.edit_state.color = c;
                         }
@@ -664,9 +653,7 @@ impl FunctionViewer {
                         match self.edit_state.curve_id {
                             Some(id) => {
                                 // 编辑现有曲线 — 按 UUID 查找
-                                if let Some(curve) =
-                                    self.curves.iter_mut().find(|c| c.id == id)
-                                {
+                                if let Some(curve) = self.curves.iter_mut().find(|c| c.id == id) {
                                     curve.expression = expr_str;
                                     curve.color = self.edit_state.color;
                                     curve.parameters = self.edit_state.params.clone();
@@ -758,8 +745,7 @@ impl FunctionViewer {
     /// 每次删除操作后调用，避免缓存残留导致渲染错位。
     fn validate_cache(&mut self) {
         // 收集存活曲线的 UUID 集合
-        let alive_ids: std::collections::HashSet<Uuid> =
-            self.curves.iter().map(|c| c.id).collect();
+        let alive_ids: std::collections::HashSet<Uuid> = self.curves.iter().map(|c| c.id).collect();
 
         // 移除所有已不存在的 UUID 缓存（清理残留）
         self.cache.retain(|id, _| alive_ids.contains(id));
@@ -850,10 +836,24 @@ mod tests {
         assert!(viewer.cache.get(&survivor_b_id).unwrap().compiled.is_some());
 
         // 记录编译后的表达式源码（用于验证缓存未被篡改）
-        let survivor_a_source = viewer.cache.get(&survivor_a_id).unwrap()
-            .compiled.as_ref().unwrap().source().to_string();
-        let survivor_b_source = viewer.cache.get(&survivor_b_id).unwrap()
-            .compiled.as_ref().unwrap().source().to_string();
+        let survivor_a_source = viewer
+            .cache
+            .get(&survivor_a_id)
+            .unwrap()
+            .compiled
+            .as_ref()
+            .unwrap()
+            .source()
+            .to_string();
+        let survivor_b_source = viewer
+            .cache
+            .get(&survivor_b_id)
+            .unwrap()
+            .compiled
+            .as_ref()
+            .unwrap()
+            .source()
+            .to_string();
 
         // 删除第一条曲线（索引 0）
         let deleted_id = viewer.curves[0].id;
@@ -1077,10 +1077,7 @@ mod tests {
         viewer.add_curve("sin(x)", palette_color(0));
 
         let new_id = viewer.curves[0].id;
-        assert_ne!(
-            new_id, original_id,
-            "重新添加的曲线必须获得新的 UUID"
-        );
+        assert_ne!(new_id, original_id, "重新添加的曲线必须获得新的 UUID");
         assert!(viewer.cache.contains_key(&new_id));
         assert!(!viewer.cache.contains_key(&original_id));
     }
@@ -1092,16 +1089,30 @@ mod tests {
         viewer.add_curve("sin(x)", palette_color(0));
         let curve_id = viewer.curves[0].id;
 
-        let original_source = viewer.cache.get(&curve_id).unwrap()
-            .compiled.as_ref().unwrap().source().to_string();
+        let original_source = viewer
+            .cache
+            .get(&curve_id)
+            .unwrap()
+            .compiled
+            .as_ref()
+            .unwrap()
+            .source()
+            .to_string();
         assert_eq!(original_source, "sin(x)");
 
         // 修改表达式
         viewer.curves[0].expression = "cos(x)".to_string();
         viewer.recompile_by_id(curve_id);
 
-        let new_source = viewer.cache.get(&curve_id).unwrap()
-            .compiled.as_ref().unwrap().source().to_string();
+        let new_source = viewer
+            .cache
+            .get(&curve_id)
+            .unwrap()
+            .compiled
+            .as_ref()
+            .unwrap()
+            .source()
+            .to_string();
         assert_eq!(new_source, "cos(x)");
     }
 

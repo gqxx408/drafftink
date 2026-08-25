@@ -61,11 +61,9 @@ impl LayoutStrategy for FishBoneLayout {
             // 子节点在分支骨末端
             let child_pos = Vec2::new(
                 spine_x + self.branch_angle.cos() * self.branch_length,
-                y + self.branch_angle.sin() * self.branch_length * if i % 2 == 0 {
-                    1.0
-                } else {
-                    -1.0
-                },
+                y + self.branch_angle.sin()
+                    * self.branch_length
+                    * if i % 2 == 0 { 1.0 } else { -1.0 },
             );
             positions.insert(child_id, child_pos);
 
@@ -108,21 +106,12 @@ fn layout_fishbone_grandchildren(
 
     for (i, &child_id) in node.children.iter().enumerate() {
         let y = start_y + i as f32 * spacing;
-        let pos = Vec2::new(
-            parent_pos.x + angle.cos() * branch_len,
-            y,
-        );
+        let pos = Vec2::new(parent_pos.x + angle.cos() * branch_len, y);
         positions.insert(child_id, pos);
 
         if let Some(child) = doc.nodes.get(&child_id) {
             if !child.children.is_empty() && !child.collapsed {
-                layout_fishbone_grandchildren(
-                    doc,
-                    child,
-                    pos,
-                    branch_len * 0.7,
-                    positions,
-                );
+                layout_fishbone_grandchildren(doc, child, pos, branch_len * 0.7, positions);
             }
         }
     }

@@ -54,7 +54,10 @@ impl SmsChallengeStore {
         let n = (Uuid::new_v4().as_u128() % 1_000_000) as u32;
         let code = format!("{n:06}");
         let exp = (Utc::now() + SMS_TTL).timestamp();
-        self.codes.lock().unwrap().insert(user_id, (code.clone(), exp));
+        self.codes
+            .lock()
+            .unwrap()
+            .insert(user_id, (code.clone(), exp));
         code
     }
 
@@ -231,8 +234,7 @@ pub fn decrypt_json(device_fp: &str, server_secret: &[u8], b64: &str) -> Result<
     let plain = Sm4::new(&key)
         .decrypt_cbc(&iv_b, ct)
         .map_err(|e| AppError::Internal(format!("SM4 解密失败: {e}")))?;
-    String::from_utf8(plain)
-        .map_err(|e| AppError::Internal(format!("SM4 明文非 UTF-8: {e}")))
+    String::from_utf8(plain).map_err(|e| AppError::Internal(format!("SM4 明文非 UTF-8: {e}")))
 }
 
 /// 签发校园级 SSO 令牌（GB/T 36342-2018 单点登录凭证）。

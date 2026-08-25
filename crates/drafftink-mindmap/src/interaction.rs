@@ -11,8 +11,8 @@
 use egui::Pos2;
 use uuid::Uuid;
 
-use crate::types::{MapType, MindMapDoc, NodePosition};
 use crate::layout::Vec2;
+use crate::types::{MapType, MindMapDoc, NodePosition};
 
 /// 交互状态机
 #[derive(Debug, Clone, Default)]
@@ -157,10 +157,7 @@ impl MindMapInteraction {
             }
             MindMapEvent::DragTo(pos) => {
                 if let Some(ref mut drag) = self.dragging {
-                    drag.offset = Vec2::new(
-                        pos.x - drag.start_pos.x,
-                        pos.y - drag.start_pos.y,
-                    );
+                    drag.offset = Vec2::new(pos.x - drag.start_pos.x, pos.y - drag.start_pos.y);
                 }
                 Ok(false) // 拖拽中不修改文档，只更新视觉偏移
             }
@@ -256,9 +253,7 @@ impl MindMapInteraction {
                 // 缩放由外部处理
                 Ok(false)
             }
-            MindMapEvent::ResetZoom => {
-                Ok(false)
-            }
+            MindMapEvent::ResetZoom => Ok(false),
 
             // ── 悬停 ──────────────────────────────────────────
             MindMapEvent::Hover(id) => {
@@ -271,9 +266,7 @@ impl MindMapInteraction {
             }
 
             // ── 键盘快捷键 ────────────────────────────────────
-            MindMapEvent::KeyPress(action) => {
-                self.handle_key(action, doc)
-            }
+            MindMapEvent::KeyPress(action) => self.handle_key(action, doc),
         }
     }
 
@@ -395,7 +388,9 @@ mod tests {
     #[test]
     fn test_delete_node() {
         let mut doc = MindMapDoc::new("中心主题");
-        let child_id = doc.add_child(doc.root_id, "子节点", NodePosition::Right).unwrap();
+        let child_id = doc
+            .add_child(doc.root_id, "子节点", NodePosition::Right)
+            .unwrap();
         let mut interaction = MindMapInteraction::default();
 
         let changed = interaction

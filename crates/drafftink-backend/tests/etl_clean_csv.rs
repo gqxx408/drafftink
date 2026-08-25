@@ -9,8 +9,8 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use axum::body::{Body, to_bytes};
-use axum::http::{Request, StatusCode, header};
+use axum::body::{to_bytes, Body};
+use axum::http::{header, Request, StatusCode};
 use drafftink_backend::api::router;
 use drafftink_backend::auth::mobile::MobileAuth;
 use drafftink_backend::auth::ratelimit::LoginRateLimiter;
@@ -27,10 +27,8 @@ use uuid::Uuid;
 
 fn make_state() -> AppState {
     let db: Arc<dyn Database> = Arc::new(
-        SledDb::open(
-            &std::env::temp_dir().join(format!("drafftink_etl_test_{}", Uuid::new_v4())),
-        )
-        .unwrap(),
+        SledDb::open(&std::env::temp_dir().join(format!("drafftink_etl_test_{}", Uuid::new_v4())))
+            .unwrap(),
     );
     let storage: Arc<dyn drafftink_backend::storage::Storage> = Arc::new(
         LocalStorage::new(
@@ -43,7 +41,10 @@ fn make_state() -> AppState {
         storage,
         config: BackendConfig::default(),
         sessions: Arc::new(Mutex::new(HashMap::new())),
-        login_ratelimit: Arc::new(LoginRateLimiter::new(10, std::time::Duration::from_secs(60))),
+        login_ratelimit: Arc::new(LoginRateLimiter::new(
+            10,
+            std::time::Duration::from_secs(60),
+        )),
         refresh_store: Arc::new(MemoryRefreshTokenStore::new()),
         workflow: WorkflowStore::new(),
         mobile_auth: MobileAuth::new(),
@@ -63,7 +64,9 @@ S004,,2010/1/1,2019/9/1,211\n";
     let mut body: Vec<u8> = Vec::new();
     // 文件字段
     body.extend_from_slice(format!("--{boundary}\r\n").as_bytes());
-    body.extend_from_slice(b"Content-Disposition: form-data; name=\"file\"; filename=\"test.csv\"\r\n");
+    body.extend_from_slice(
+        b"Content-Disposition: form-data; name=\"file\"; filename=\"test.csv\"\r\n",
+    );
     body.extend_from_slice(b"Content-Type: text/csv\r\n\r\n");
     body.extend_from_slice(csv.as_bytes());
     body.extend_from_slice(b"\r\n");
@@ -130,7 +133,10 @@ async fn test_clean_csv_code_validation() {
     assert_eq!(issues.len(), 2);
     let rows: Vec<u64> = issues.iter().map(|i| i["row"].as_u64().unwrap()).collect();
     assert!(rows.contains(&3));
-    let tables: Vec<&str> = issues.iter().map(|i| i["table"].as_str().unwrap()).collect();
+    let tables: Vec<&str> = issues
+        .iter()
+        .map(|i| i["table"].as_str().unwrap())
+        .collect();
     assert!(tables.contains(&"gender"));
     assert!(tables.contains(&"school_type"));
     // S001 / S002 的合法代码不应出现在 code_issues
@@ -153,7 +159,10 @@ async fn test_clean_csv_missing_file_returns_400() {
     let req = Request::builder()
         .method("POST")
         .uri("/api/v1/etl/clean-csv")
-        .header(header::CONTENT_TYPE, format!("multipart/form-data; boundary={boundary}"))
+        .header(
+            header::CONTENT_TYPE,
+            format!("multipart/form-data; boundary={boundary}"),
+        )
         .body(Body::from(body))
         .unwrap();
     let resp = router(state).oneshot(req).await.unwrap();

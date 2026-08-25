@@ -233,4 +233,3 @@ pub struct Message {
     /// 是否已读
     pub read: bool,
 }
-

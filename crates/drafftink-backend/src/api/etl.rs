@@ -189,7 +189,10 @@ pub fn clean_csv_in_memory(
                             reason: if resp.standard.is_empty() {
                                 format!("标准表 '{table}' 不存在")
                             } else {
-                                format!("代码 '{v}' 不在标准表 '{table}'（依据 {}）中", resp.standard)
+                                format!(
+                                    "代码 '{v}' 不在标准表 '{table}'（依据 {}）中",
+                                    resp.standard
+                                )
                             },
                         });
                     }
@@ -246,10 +249,12 @@ pub async fn clean_csv(
                 csv_text = Some(data);
             }
             Some("date_columns") => {
-                let v = field
-                    .text()
-                    .await
-                    .map_err(|e| (StatusCode::BAD_REQUEST, format!("读取 date_columns 失败: {e}")))?;
+                let v = field.text().await.map_err(|e| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        format!("读取 date_columns 失败: {e}"),
+                    )
+                })?;
                 date_columns = v
                     .split(',')
                     .map(|s| s.trim().to_string())
@@ -257,10 +262,12 @@ pub async fn clean_csv(
                     .collect();
             }
             Some("code_columns") => {
-                let v = field
-                    .text()
-                    .await
-                    .map_err(|e| (StatusCode::BAD_REQUEST, format!("读取 code_columns 失败: {e}")))?;
+                let v = field.text().await.map_err(|e| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        format!("读取 code_columns 失败: {e}"),
+                    )
+                })?;
                 // 多个映射以逗号分隔，单个映射形如 `列名:标准表`。
                 for part in v.split(',') {
                     if let Some((col, table)) = part.split_once(':') {
@@ -326,14 +333,26 @@ mod tests {
             sample_csv(),
             &[],
             &[
-                CodeColumn { column: "gender".into(), table: "gender".into() },
-                CodeColumn { column: "school_type".into(), table: "school_type".into() },
+                CodeColumn {
+                    column: "gender".into(),
+                    table: "gender".into(),
+                },
+                CodeColumn {
+                    column: "school_type".into(),
+                    table: "school_type".into(),
+                },
             ],
         );
         // S003：gender=3 与 school_type=999 均非法
         assert_eq!(resp.code_issues.len(), 2);
-        assert!(resp.code_issues.iter().any(|c| c.row == 3 && c.column == "gender" && c.value == "3"));
-        assert!(resp.code_issues.iter().any(|c| c.row == 3 && c.column == "school_type" && c.value == "999"));
+        assert!(resp
+            .code_issues
+            .iter()
+            .any(|c| c.row == 3 && c.column == "gender" && c.value == "3"));
+        assert!(resp
+            .code_issues
+            .iter()
+            .any(|c| c.row == 3 && c.column == "school_type" && c.value == "999"));
         // 合法代码不应出现在 code_issues（S001 gender=1 / S002 gender=2 / S004 空值）
         assert!(!resp.code_issues.iter().any(|c| c.row == 1));
         assert!(!resp.code_issues.iter().any(|c| c.row == 2));

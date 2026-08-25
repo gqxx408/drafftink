@@ -14,9 +14,7 @@ use std::sync::{Arc, Mutex, RwLock};
 
 use axum::extract::ws::{Message as WsMessage, WebSocket};
 use base64::engine::general_purpose::STANDARD as B64;
-use drafftink_core::recording::{
-    ActivityDirector, DirectingSignals, DirectingStrategy, LiveView,
-};
+use drafftink_core::recording::{ActivityDirector, DirectingSignals, DirectingStrategy, LiveView};
 use drafftink_core::Role;
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
@@ -36,10 +34,7 @@ pub enum LiveFrame {
         data: Vec<u8>,
     },
     /// 控制帧：导播视角已切换
-    Control {
-        view: LiveView,
-        ts: i64,
-    },
+    Control { view: LiveView, ts: i64 },
 }
 
 impl LiveFrame {
@@ -54,10 +49,7 @@ impl LiveFrame {
 
     /// 构造控制帧（导播切换）。
     pub fn control(view: LiveView) -> Self {
-        LiveFrame::Control {
-            view,
-            ts: now_ms(),
-        }
+        LiveFrame::Control { view, ts: now_ms() }
     }
 }
 
@@ -254,11 +246,7 @@ mod tests {
     fn hub_publish_and_subscribe() {
         let hub = LiveHub::new();
         let mut rx = hub.subscribe("r1");
-        hub.publish(
-            "r1",
-            LiveFrame::media(LiveView::Computer, vec![9]),
-            None,
-        );
+        hub.publish("r1", LiveFrame::media(LiveView::Computer, vec![9]), None);
         let frame = rx.try_recv().expect("应收到帧");
         match frame {
             LiveFrame::Media { view, .. } => assert_eq!(view, LiveView::Computer),
@@ -297,7 +285,9 @@ mod tests {
             serde_json::from_str(r#"{"action":"SwitchView","view":"computer"}"#).unwrap();
         assert!(matches!(
             ctrl,
-            ClientControl::SwitchView { view: LiveView::Computer }
+            ClientControl::SwitchView {
+                view: LiveView::Computer
+            }
         ));
     }
 }

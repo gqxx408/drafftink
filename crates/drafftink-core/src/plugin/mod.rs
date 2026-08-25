@@ -15,7 +15,9 @@ pub mod loader;
 pub mod sandbox;
 pub mod signing;
 
-pub use api::{FileImporter, Permission, Plugin, PluginContext as BasePluginContext, PluginManifest};
+pub use api::{
+    FileImporter, Permission, Plugin, PluginContext as BasePluginContext, PluginManifest,
+};
 pub use drafftink_plugin::{
     DrafftinkPlugin, DrafftinkPluginEntryFn, DummyPlugin, PanelSide, PluginContext, ToolbarAction,
     UiPanel,
@@ -25,4 +27,3 @@ pub use signing::SigStatus;
 
 #[cfg(test)]
 mod security_test;
-

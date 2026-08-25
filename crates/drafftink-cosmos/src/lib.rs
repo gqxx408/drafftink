@@ -10,26 +10,26 @@
 //! 3. **轨道线批处理** — 所有轨道合并为单个 Mesh，一次 `painter.add()`
 //! 4. **帧率锁死** — `request_repaint_after(Duration::from_secs_f64(1.0/60.0))`
 
-pub mod geometry;
+pub mod animation;
 pub mod ecs;
+pub mod geometry;
+pub mod projection;
 pub mod render;
+pub mod resources;
 pub mod scene;
 pub mod ui;
-pub mod projection;
-pub mod animation;
-pub mod resources;
 
-use egui::{Color32, Rect, Vec2};
 use egui::epaint::{Mesh, Vertex};
+use egui::{Color32, Rect, Vec2};
 use nalgebra::{Point3, Vector2, Vector3};
 use std::time::Duration;
 
-use crate::animation::{AnimationController, ease_out_cubic};
-use crate::ecs::{Orbit, Rotation, Transform, rotation_system, orbit_system};
+use crate::animation::{ease_out_cubic, AnimationController};
+use crate::ecs::{orbit_system, rotation_system, Orbit, Rotation, Transform};
 use crate::render::{OrbitCamera, RenderBatch, SceneRenderer};
 use crate::resources::ResourceCache;
 use crate::scene::SolarSystemScene;
-use crate::ui::{ControlPanel, ViewMode, render_labels, render_map_view};
+use crate::ui::{render_labels, render_map_view, ControlPanel, ViewMode};
 
 // ─── 帧率配置 ──────────────────────────────────────────────────────────────
 
@@ -64,7 +64,6 @@ pub struct CosmosViewer {
     view_mode: ViewMode,
 
     // ── 性能优化：缓存 ──────────────────────────────────────────────
-
     /// 缓存的星空背景 Mesh（键 = 视口尺寸哈希）
     cached_background: Option<(u64, Mesh)>,
     /// 缓存的轨道线 Mesh（键 = VP 矩阵哈希 + 视口尺寸哈希）
@@ -204,14 +203,18 @@ impl CosmosViewer {
         }
 
         // ── 1. 自转系统：应用到所有实体 ──
-        let rotations: Vec<Rotation> = self.scene.rotations
+        let rotations: Vec<Rotation> = self
+            .scene
+            .rotations
             .iter()
             .map(|r| r.clone().unwrap_or_else(|| Rotation::default()))
             .collect();
         rotation_system(&mut self.scene.transforms, &rotations, dt);
 
         // ── 2. 公转系统：只应用到有轨道的实体 ──
-        let orbit_indices: Vec<usize> = self.scene.orbits
+        let orbit_indices: Vec<usize> = self
+            .scene
+            .orbits
             .iter()
             .enumerate()
             .filter(|(_, o)| o.is_some())
@@ -277,10 +280,7 @@ impl CosmosViewer {
         // 右键拖拽平移
         if is_right_drag {
             let delta = response.drag_delta();
-            let pan_delta = Vector2::new(
-                -delta.x / rect.width(),
-                delta.y / rect.height(),
-            );
+            let pan_delta = Vector2::new(-delta.x / rect.width(), delta.y / rect.height());
             cam.pan(pan_delta);
         }
 
@@ -288,7 +288,12 @@ impl CosmosViewer {
 
         // ── 优化 1: 缓存星空背景（仅视口尺寸变化时重建）──
         let bg_hash = hash_rect_size(&rect);
-        if self.cached_background.as_ref().map(|(h, _)| *h != bg_hash).unwrap_or(true) {
+        if self
+            .cached_background
+            .as_ref()
+            .map(|(h, _)| *h != bg_hash)
+            .unwrap_or(true)
+        {
             self.cached_background = Some((bg_hash, build_background_mesh(rect)));
         }
         if let Some((_, ref mesh)) = self.cached_background {
@@ -301,10 +306,16 @@ impl CosmosViewer {
             let vp_hash = hash_matrix4(&vp);
             let key = hash_combine(vp_hash, bg_hash);
 
-            if self.cached_orbits.as_ref().map(|(h, _)| *h != key).unwrap_or(true) {
-                self.cached_orbits = Some((key, build_orbit_mesh(
-                    &vp, rect.width(), rect.height(), &self.scene.orbits,
-                )));
+            if self
+                .cached_orbits
+                .as_ref()
+                .map(|(h, _)| *h != key)
+                .unwrap_or(true)
+            {
+                self.cached_orbits = Some((
+                    key,
+                    build_orbit_mesh(&vp, rect.width(), rect.height(), &self.scene.orbits),
+                ));
             }
             if let Some((_, ref mesh)) = self.cached_orbits {
                 if mesh.indices.len() > 0 {
@@ -348,7 +359,12 @@ impl CosmosViewer {
                         .unwrap_or(&default_material);
                     let model_matrix = transform.matrix();
                     self.renderer.collect_entity_triangles(
-                        &mut batch, mesh, &model_matrix, material, sw, sh,
+                        &mut batch,
+                        mesh,
+                        &model_matrix,
+                        material,
+                        sw,
+                        sh,
                     );
                 }
             }
@@ -362,17 +378,20 @@ impl CosmosViewer {
     fn draw_perf_info(&self, painter: &egui::Painter, rect: Rect) {
         let entity_count = self.scene.entity_count();
         let mesh_count = self.cache.mesh_count();
-        let cached = if self.cached_orbits.is_some() { " (cached)" } else { "" };
+        let cached = if self.cached_orbits.is_some() {
+            " (cached)"
+        } else {
+            ""
+        };
 
-        let label = format!("🌍 {} 天体 | 📦 {} 网格{} | 🎮 批量渲染", entity_count, mesh_count, cached);
+        let label = format!(
+            "🌍 {} 天体 | 📦 {} 网格{} | 🎮 批量渲染",
+            entity_count, mesh_count, cached
+        );
         let text_color = Color32::from_rgba_unmultiplied(200, 210, 230, 200);
         let bg_color = Color32::from_rgba_unmultiplied(0, 0, 0, 120);
 
-        let galley = painter.layout_no_wrap(
-            label,
-            egui::FontId::monospace(11.0),
-            text_color,
-        );
+        let galley = painter.layout_no_wrap(label, egui::FontId::monospace(11.0), text_color);
 
         let padding = Vec2::new(8.0, 4.0);
         let label_rect = Rect::from_min_size(
@@ -452,15 +471,29 @@ fn build_background_mesh(rect: Rect) -> Mesh {
 
         let idx = mesh.vertices.len() as u32;
         mesh.vertices.extend_from_slice(&[
-            Vertex { pos: egui::pos2(rect.left(), y), uv: egui::Pos2::ZERO, color },
-            Vertex { pos: egui::pos2(rect.right(), y), uv: egui::Pos2::ZERO, color },
-            Vertex { pos: egui::pos2(rect.right(), y + h), uv: egui::Pos2::ZERO, color },
-            Vertex { pos: egui::pos2(rect.left(), y + h), uv: egui::Pos2::ZERO, color },
+            Vertex {
+                pos: egui::pos2(rect.left(), y),
+                uv: egui::Pos2::ZERO,
+                color,
+            },
+            Vertex {
+                pos: egui::pos2(rect.right(), y),
+                uv: egui::Pos2::ZERO,
+                color,
+            },
+            Vertex {
+                pos: egui::pos2(rect.right(), y + h),
+                uv: egui::Pos2::ZERO,
+                color,
+            },
+            Vertex {
+                pos: egui::pos2(rect.left(), y + h),
+                uv: egui::Pos2::ZERO,
+                color,
+            },
         ]);
-        mesh.indices.extend_from_slice(&[
-            idx, idx + 1, idx + 2,
-            idx, idx + 2, idx + 3,
-        ]);
+        mesh.indices
+            .extend_from_slice(&[idx, idx + 1, idx + 2, idx, idx + 2, idx + 3]);
     }
 
     // 伪随机星星（120 颗），使用确定性种子
@@ -475,15 +508,29 @@ fn build_background_mesh(rect: Rect) -> Mesh {
         // 用 4 个三角形近似一个正方形星星
         let idx = mesh.vertices.len() as u32;
         mesh.vertices.extend_from_slice(&[
-            Vertex { pos: egui::pos2(x - size, y - size), uv: egui::Pos2::ZERO, color },
-            Vertex { pos: egui::pos2(x + size, y - size), uv: egui::Pos2::ZERO, color },
-            Vertex { pos: egui::pos2(x + size, y + size), uv: egui::Pos2::ZERO, color },
-            Vertex { pos: egui::pos2(x - size, y + size), uv: egui::Pos2::ZERO, color },
+            Vertex {
+                pos: egui::pos2(x - size, y - size),
+                uv: egui::Pos2::ZERO,
+                color,
+            },
+            Vertex {
+                pos: egui::pos2(x + size, y - size),
+                uv: egui::Pos2::ZERO,
+                color,
+            },
+            Vertex {
+                pos: egui::pos2(x + size, y + size),
+                uv: egui::Pos2::ZERO,
+                color,
+            },
+            Vertex {
+                pos: egui::pos2(x - size, y + size),
+                uv: egui::Pos2::ZERO,
+                color,
+            },
         ]);
-        mesh.indices.extend_from_slice(&[
-            idx, idx + 1, idx + 2,
-            idx, idx + 2, idx + 3,
-        ]);
+        mesh.indices
+            .extend_from_slice(&[idx, idx + 1, idx + 2, idx, idx + 2, idx + 3]);
     }
 
     mesh
@@ -558,14 +605,34 @@ fn build_orbit_mesh(
                     let idx = mesh.vertices.len() as u32;
                     let half_w = 0.5; // 线宽的一半
                     mesh.vertices.extend_from_slice(&[
-                        Vertex { pos: prev, uv: egui::Pos2::ZERO, color: orbit_color },
-                        Vertex { pos: screen_pos, uv: egui::Pos2::ZERO, color: orbit_color },
-                        Vertex { pos: egui::pos2(prev.x + half_w, prev.y), uv: egui::Pos2::ZERO, color: orbit_color },
-                        Vertex { pos: egui::pos2(screen_pos.x + half_w, screen_pos.y), uv: egui::Pos2::ZERO, color: orbit_color },
+                        Vertex {
+                            pos: prev,
+                            uv: egui::Pos2::ZERO,
+                            color: orbit_color,
+                        },
+                        Vertex {
+                            pos: screen_pos,
+                            uv: egui::Pos2::ZERO,
+                            color: orbit_color,
+                        },
+                        Vertex {
+                            pos: egui::pos2(prev.x + half_w, prev.y),
+                            uv: egui::Pos2::ZERO,
+                            color: orbit_color,
+                        },
+                        Vertex {
+                            pos: egui::pos2(screen_pos.x + half_w, screen_pos.y),
+                            uv: egui::Pos2::ZERO,
+                            color: orbit_color,
+                        },
                     ]);
                     mesh.indices.extend_from_slice(&[
-                        idx, idx + 1, idx + 2,
-                        idx + 1, idx + 2, idx + 3,
+                        idx,
+                        idx + 1,
+                        idx + 2,
+                        idx + 1,
+                        idx + 2,
+                        idx + 3,
                     ]);
                 }
                 prev_screen = Some(screen_pos);

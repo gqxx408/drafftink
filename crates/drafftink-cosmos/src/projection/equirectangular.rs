@@ -2,8 +2,8 @@
 //!
 //! 用于 2D 地图模式，将经纬度坐标与 2D 平面坐标、球面 3D 坐标互相转换。
 
-use std::f32::consts::PI;
 use nalgebra::Point3;
+use std::f32::consts::PI;
 
 /// 经纬度转 2D 地图坐标。
 ///

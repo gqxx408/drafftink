@@ -34,7 +34,8 @@ pub fn rotation_system(transforms: &mut [Transform], rotations: &[Rotation], dt:
             } else {
                 Vector3::y()
             };
-            let delta_rot = UnitQuaternion::from_axis_angle(&nalgebra::Unit::new_normalize(axis), angle);
+            let delta_rot =
+                UnitQuaternion::from_axis_angle(&nalgebra::Unit::new_normalize(axis), angle);
             transform.rotation = delta_rot * transform.rotation;
         }
     }

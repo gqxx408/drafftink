@@ -3,14 +3,14 @@
 //! Streams a ZIP-based .enbx file, validates security, parses Board/Document/
 //! Reference/Slides via quick-xml, and builds a `CoursewareDoc`.
 
+pub mod animation_parser;
+mod converter;
 mod error;
 mod parser;
 mod security;
-mod converter;
-pub mod animation_parser;
 
-pub use error::EnbxError;
 pub use converter::ProgressFn;
+pub use error::EnbxError;
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -31,7 +31,10 @@ pub struct ImportReport {
 
 /// Import a .enbx / .enpx file.  Optionally accepts a progress callback:
 /// `callback(current, total, "description")`.
-pub fn import_enbx(path: &Path, progress: Option<ProgressFn>) -> Result<(CoursewareDoc, ImportReport), EnbxError> {
+pub fn import_enbx(
+    path: &Path,
+    progress: Option<ProgressFn>,
+) -> Result<(CoursewareDoc, ImportReport), EnbxError> {
     log::info!("=== ENBX import: {} ===", path.display());
 
     let file = File::open(path)?;
@@ -79,7 +82,9 @@ pub fn import_enbx(path: &Path, progress: Option<ProgressFn>) -> Result<(Coursew
         let mut v = Vec::new();
         f.read_to_end(&mut v).ok();
         log::debug!("Document.xml: {} bytes", v.len());
-        parser::parse_document(v.as_slice()).ok().unwrap_or_default()
+        parser::parse_document(v.as_slice())
+            .ok()
+            .unwrap_or_default()
     } else {
         log::debug!("Document.xml: not found");
         parser::DocMeta::default()
@@ -145,7 +150,11 @@ pub fn import_enbx(path: &Path, progress: Option<ProgressFn>) -> Result<(Coursew
         cb(total, total, "done");
     }
 
-    log::info!("=== Done: {} ok, {} failed ===", report.pages_ok, report.pages_failed);
+    log::info!(
+        "=== Done: {} ok, {} failed ===",
+        report.pages_ok,
+        report.pages_failed
+    );
     Ok((doc, report))
 }
 
@@ -264,7 +273,10 @@ mod tests {
         </Relationships>"#;
         let map = crate::parser::parse_reference(&xml[..]).unwrap();
         let fname = map.get("rId1").expect("rId1 present");
-        assert!(check_path(fname).is_err(), "fname = {fname:?} should be rejected");
+        assert!(
+            check_path(fname).is_err(),
+            "fname = {fname:?} should be rejected"
+        );
     }
 
     // ---- extract_resources: traversal + zip-bomb ------------------------
@@ -277,8 +289,8 @@ mod tests {
         {
             let cursor = Cursor::new(&mut buf);
             let mut w = ZipWriter::new(cursor);
-            let opts = SimpleFileOptions::default()
-                .compression_method(zip::CompressionMethod::Deflated);
+            let opts =
+                SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
             for (name, size) in entries {
                 w.start_file(*name, opts).unwrap();
                 let zeros = [0u8; 8192];
@@ -304,8 +316,7 @@ mod tests {
     #[test]
     fn extract_resources_rejects_traversal_fname() {
         let buf = make_archive(&[("Resources/ok.jpg", 10)]);
-        let mut archive =
-            zip::ZipArchive::new(Cursor::new(buf)).unwrap();
+        let mut archive = zip::ZipArchive::new(Cursor::new(buf)).unwrap();
         let mut ref_map: HashMap<String, String> = HashMap::new();
         ref_map.insert("rId1".to_string(), "../../../../tmp/evil.jpg".to_string());
 
@@ -351,4 +362,3 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dest);
     }
 }
-

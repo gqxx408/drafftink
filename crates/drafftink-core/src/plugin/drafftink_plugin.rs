@@ -50,10 +50,7 @@ pub enum UiPanel {
         side: PanelSide,
     },
     /// A full-screen overlay (e.g., 3D view, experiment).
-    FullScreen {
-        title: String,
-        id: String,
-    },
+    FullScreen { title: String, id: String },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

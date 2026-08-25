@@ -11,12 +11,12 @@
 use std::time::Duration;
 
 use axum::body::Body;
-use axum::http::{HeaderMap, Method, header};
+use axum::http::{header, HeaderMap, Method};
 use axum::response::Response;
 use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
 
-use drafftink_core::{JwtClaims, JwtConfig, verify_jwt};
+use drafftink_core::{verify_jwt, JwtClaims, JwtConfig};
 
 use crate::error::GatewayError;
 use crate::state::GatewayState;
@@ -40,9 +40,7 @@ pub fn verify_request_auth(
 
     let token = auth_header
         .strip_prefix("Bearer ")
-        .ok_or_else(|| {
-            GatewayError::Unauthorized("Invalid Authorization header format".into())
-        })?;
+        .ok_or_else(|| GatewayError::Unauthorized("Invalid Authorization header format".into()))?;
 
     // Extract device fingerprint from X-Device-FP header.
     let device_fp = headers
@@ -51,8 +49,7 @@ pub fn verify_request_auth(
         .ok_or_else(|| GatewayError::Unauthorized("Missing X-Device-FP header".into()))?;
 
     // Verify JWT signature, expiry, and device fingerprint binding.
-    verify_jwt(token, jwt_config, device_fp)
-        .map_err(|e| GatewayError::Unauthorized(e.to_string()))
+    verify_jwt(token, jwt_config, device_fp).map_err(|e| GatewayError::Unauthorized(e.to_string()))
 }
 
 /// Forward a request to the backend and return the response.
@@ -96,13 +93,11 @@ pub async fn forward_to_backend(
     tracing::debug!("Forwarding request to {url}");
 
     // Send with a 30-second timeout.
-    let response = tokio::time::timeout(
-        Duration::from_secs(30),
-        state.http_client.request(request),
-    )
-    .await
-    .map_err(|_| GatewayError::BadGateway("Backend request timed out".into()))?
-    .map_err(|e| GatewayError::BadGateway(format!("Backend request failed: {e}")))?;
+    let response =
+        tokio::time::timeout(Duration::from_secs(30), state.http_client.request(request))
+            .await
+            .map_err(|_| GatewayError::BadGateway("Backend request timed out".into()))?
+            .map_err(|e| GatewayError::BadGateway(format!("Backend request failed: {e}")))?;
 
     // Convert the hyper response into an axum response.
     let status = response.status();

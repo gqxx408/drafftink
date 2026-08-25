@@ -339,7 +339,10 @@ mod tests {
         assert_eq!(SM4_SBOX[0x82], 0x8A, "S-box[0x82] 应为 0x8A");
         assert_eq!(SM4_SBOX[0xA4], 0x82, "值 0x82 应位于索引 0xA4");
         assert_eq!(SM4_SBOX[0xA5], 0x66, "值 0x66 应位于索引 0xA5");
-        assert_eq!(SM4_SBOX[0xEF], 0x84, "S-box[0xEF] 应为 0x84（标准文档示例）");
+        assert_eq!(
+            SM4_SBOX[0xEF], 0x84,
+            "S-box[0xEF] 应为 0x84（标准文档示例）"
+        );
     }
 
     #[test]

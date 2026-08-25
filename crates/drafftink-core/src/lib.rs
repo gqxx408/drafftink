@@ -41,9 +41,9 @@
 
 // ── New architecture modules ─────────────────────────────────────────────
 
-pub mod element;
 pub mod command;
 pub mod context;
+pub mod element;
 pub mod registry;
 
 // ── Legacy modules (preserved for backward compatibility) ────────────────
@@ -66,30 +66,29 @@ pub mod auth;
 pub mod crypto;
 pub mod drftx;
 pub mod emgi;
-pub mod recording;
-pub mod sm4;
-pub mod zxx;
-pub mod models;
-pub mod utils;
 /// 备授一体上层整合共享上下文（不触碰核心逻辑）。
 pub mod integration;
+pub mod models;
+pub mod recording;
+pub mod sm4;
+pub mod utils;
+pub mod zxx;
 
 // ── New API re-exports (root level) ──────────────────────────────────────
 
-pub use element::ElementData;
 pub use command::{BoardCommand, CommandQueue, UndoRedoStack};
 pub use context::{BoardContext, BoardMode, DisplayState, EditState, Slide};
+pub use element::ElementData;
 pub use registry::{Plugin, PluginRegistry};
 
 // ── Legacy re-exports (preserved for backward compatibility) ─────────────
 
+pub use animation::{
+    apply_easing, AnimationCategory, AnimationTrigger, Direction, Easing, EffectType,
+    ElementAnimation, SlideAnimationSequence, SLIDE_BACKGROUND_ID,
+};
 pub use camera::Camera;
 pub use history::{Command, History, MAX_DEPTH as HISTORY_MAX_DEPTH};
-pub use animation::{
-    AnimationCategory, AnimationTrigger, Direction, Easing, EffectType,
-    ElementAnimation, SlideAnimationSequence, SLIDE_BACKGROUND_ID,
-    apply_easing,
-};
 pub use model::{
     BaseElement, CoursewareDoc, Element, ElementId, ImageElement, PageContent, PathElement,
     ShapeElement, ShapeType, TextElement,
@@ -98,44 +97,42 @@ pub use model::{
 // ── 校本教学套件 re-exports ──────────────────────────────────────────────
 
 pub use crypto::{generate_jwt, verify_jwt, verify_jwt_unchecked, JwtClaims, JwtConfig};
-pub use sm4::Sm4;
-pub use drftx::{
-    DrftxFile, ExerciseSignature, ExerciseSnapshot, TeacherAnnotation, sign_snapshot,
-};
+pub use drftx::{sign_snapshot, DrftxFile, ExerciseSignature, ExerciseSnapshot, TeacherAnnotation};
 pub use emgi::{
-    EmgiDataset, EmgiRecordable, Equipment, Schoolhouse, StaffBasic, StaffEducation, StaffPartyPost,
-    StaffTitle, CampusBasic, ClassInfo, SchoolBasic, AwardInfo, PunishmentInfo, ScoreInfo,
-    StudentBasic, StudentStatus, CommContact, GeneralTeaching, GeneralTime, OrgBasic, PersonBasic,
+    AwardInfo, CampusBasic, ClassInfo, CommContact, EmgiDataset, EmgiRecordable, Equipment,
+    GeneralTeaching, GeneralTime, OrgBasic, PersonBasic, PunishmentInfo, SchoolBasic, Schoolhouse,
+    ScoreInfo, StaffBasic, StaffEducation, StaffPartyPost, StaffTitle, StudentBasic, StudentStatus,
 };
+pub use integration::{SharedAppContext, SharedContext};
 pub use models::{
-    AuditAction, AuditLog, Class, Homework, HomeworkStatus, HomeworkSubmission, Role,
-    School, SubmissionStatus, User,
+    AuditAction, AuditLog, Class, Homework, HomeworkStatus, HomeworkSubmission, Role, School,
+    SubmissionStatus, User,
 };
-pub use utils::{format_datetime, format_file_size, sha256, sha256_hex};
+pub use sm4::Sm4;
 pub use utils::date_time::{GbDateTime, GbDateTimeError};
-pub use utils::gb_standard_codes::*;
 pub use utils::gb_industry_codes::*;
 pub use utils::gb_language_codes::*;
-pub use integration::{SharedAppContext, SharedContext};
+pub use utils::gb_standard_codes::*;
+pub use utils::{format_datetime, format_file_size, sha256, sha256_hex};
 
 // ── JY/T 1004 普通中小学校管理信息 (ZXX) re-exports ──────────────
-pub use zxx::{ZxxDataset, SUBSET_NAMES};
-pub use zxx::zxxx::{SchoolProfile, Grade, ClassProfile, Organization, SchoolStandard};
-pub use zxx::zxxs::{StudentProfile, StudentStatusProfile, ExamRecord, Graduation, Evaluation};
-pub use zxx::zxdy::{Deed, Attention};
-pub use zxx::zxjx::{Course, Textbook, TeachPlan, Schedule};
-pub use zxx::zxtw::{Sport, Medical};
-pub use zxx::zxjz::{StaffProfile, StaffQualification, StaffPost};
-pub use zxx::zxbg::{OfficialDoc, Announcement, MANDATORY_COUNT};
-pub use zxx::zxbg::Schedule as OfficeSchedule;
 pub use zxx::xml::to_xml as zxx_to_xml;
+pub use zxx::zxbg::Schedule as OfficeSchedule;
+pub use zxx::zxbg::{Announcement, OfficialDoc, MANDATORY_COUNT};
+pub use zxx::zxdy::{Attention, Deed};
+pub use zxx::zxjx::{Course, Schedule, TeachPlan, Textbook};
+pub use zxx::zxjz::{StaffPost, StaffProfile, StaffQualification};
+pub use zxx::zxtw::{Medical, Sport};
+pub use zxx::zxxs::{Evaluation, ExamRecord, Graduation, StudentProfile, StudentStatusProfile};
+pub use zxx::zxxx::{ClassProfile, Grade, Organization, SchoolProfile, SchoolStandard};
+pub use zxx::{ZxxDataset, SUBSET_NAMES};
 
 // ── DB34/T 2318-2015 课堂录播与资源发布 re-exports ──────────────
 pub use recording::{
     ActivityDirector, ContainerFormat, CoursewareClassification, CoursewareResource,
-    DirectingSignals, DirectingStrategy, InteractionSummary, LIVE_LATENCY_BUDGET_MS, LiveView,
-    RecordingMetadata, RecordingMode, RecordingParams, Resolution, ResourcePermission,
-    StructuredRecording, VideoEncoding, DB34_STANDARD,
+    DirectingSignals, DirectingStrategy, InteractionSummary, LiveView, RecordingMetadata,
+    RecordingMode, RecordingParams, Resolution, ResourcePermission, StructuredRecording,
+    VideoEncoding, DB34_STANDARD, LIVE_LATENCY_BUDGET_MS,
 };
 pub use zxx::integration::{
     course_from_lesson, dataset_from_components, exam_record_from_annotation,
@@ -154,8 +151,8 @@ pub use zxx::integration::{
 /// ctx.process_commands();
 /// ```
 pub mod prelude {
-    pub use crate::element::{Element, ElementData, ElementId, SaveInfo};
     pub use crate::command::{BoardCommand, CommandQueue, UndoRedoStack};
     pub use crate::context::{BoardContext, BoardMode, DisplayState, EditState, Slide};
+    pub use crate::element::{Element, ElementData, ElementId, SaveInfo};
     pub use crate::registry::{Plugin, PluginRegistry};
 }

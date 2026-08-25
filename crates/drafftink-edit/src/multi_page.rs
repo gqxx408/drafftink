@@ -132,8 +132,7 @@ impl MultiPageState {
             .pages
             .iter()
             .map(|p| {
-                let annotations_data =
-                    bincode::serialize(&p.annotations).unwrap_or_default();
+                let annotations_data = bincode::serialize(&p.annotations).unwrap_or_default();
                 PageContent {
                     elements: p.elements.clone(),
                     annotations_data,

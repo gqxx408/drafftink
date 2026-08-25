@@ -14,6 +14,5 @@ pub use components::{
 
 // 重新导出所有系统函数
 pub use systems::{
-    camera_orbit_system, ease_in_out_quad, ease_out_cubic, lerp_vec3, orbit_system,
-    rotation_system,
+    camera_orbit_system, ease_in_out_quad, ease_out_cubic, lerp_vec3, orbit_system, rotation_system,
 };

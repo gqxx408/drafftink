@@ -169,13 +169,13 @@ impl DrftxFile {
         buf.extend_from_slice(&DRFTX_MINOR_VERSION.to_le_bytes());
 
         // ── 快照层 ──
-        let snapshot_bytes = bincode::serialize(&self.snapshot)
-            .map_err(|e| anyhow!("快照序列化失败: {e}"))?;
+        let snapshot_bytes =
+            bincode::serialize(&self.snapshot).map_err(|e| anyhow!("快照序列化失败: {e}"))?;
         write_layer(&mut buf, &snapshot_bytes)?;
 
         // ── 签名层 ──
-        let sig_bytes = bincode::serialize(&self.signature)
-            .map_err(|e| anyhow!("签名序列化失败: {e}"))?;
+        let sig_bytes =
+            bincode::serialize(&self.signature).map_err(|e| anyhow!("签名序列化失败: {e}"))?;
         write_layer(&mut buf, &sig_bytes)?;
 
         // ── EMGI 合规元数据区（可选）──
@@ -190,7 +190,8 @@ impl DrftxFile {
         buf.push(meta_flags);
 
         if let Some(ref emgi) = self.emgi {
-            let emgi_bytes = bincode::serialize(emgi).map_err(|e| anyhow!("EMGI 序列化失败: {e}"))?;
+            let emgi_bytes =
+                bincode::serialize(emgi).map_err(|e| anyhow!("EMGI 序列化失败: {e}"))?;
             write_layer(&mut buf, &emgi_bytes)?;
         }
 
@@ -370,11 +371,14 @@ fn verify_exercise_signature(
     use ed25519_dalek::{Verifier, VerifyingKey};
 
     if signature.algorithm != 0 {
-        bail!("不支持的签名算法: {}（仅支持 Ed25519 = 0）", signature.algorithm);
+        bail!(
+            "不支持的签名算法: {}（仅支持 Ed25519 = 0）",
+            signature.algorithm
+        );
     }
 
-    let verifying_key = VerifyingKey::from_bytes(&signature.public_key)
-        .map_err(|e| anyhow!("无效公钥: {e}"))?;
+    let verifying_key =
+        VerifyingKey::from_bytes(&signature.public_key).map_err(|e| anyhow!("无效公钥: {e}"))?;
 
     let sig = ed25519_dalek::Signature::try_from(signature.signature.as_slice())
         .map_err(|e| anyhow!("无效签名字节: {e}"))?;
@@ -481,11 +485,8 @@ mod tests {
 
     #[test]
     fn test_snapshot_tamper_detection() {
-        let snapshot = ExerciseSnapshot::new(
-            Uuid::new_v4(),
-            Uuid::new_v4(),
-            b"original answer".to_vec(),
-        );
+        let snapshot =
+            ExerciseSnapshot::new(Uuid::new_v4(), Uuid::new_v4(), b"original answer".to_vec());
 
         // 篡改 answer_data 但不更新 hash
         let mut tampered = snapshot.clone();
@@ -665,13 +666,19 @@ mod tests {
         let (sk, _) = test_keypair();
         let snapshot = ExerciseSnapshot::new(Uuid::new_v4(), Uuid::new_v4(), b"x".to_vec());
         let signature = sign_snapshot(&snapshot, &sk).unwrap();
-        let file = DrftxFile { snapshot, signature, annotation: None, emgi: None, recording: None };
+        let file = DrftxFile {
+            snapshot,
+            signature,
+            annotation: None,
+            emgi: None,
+            recording: None,
+        };
 
         let mut bytes = file.to_bytes().unwrap();
         bytes[0] = b'X'; // 破坏魔数
 
-    let result = DrftxFile::from_bytes(&bytes, false);
-    assert!(result.is_err());
+        let result = DrftxFile::from_bytes(&bytes, false);
+        assert!(result.is_err());
     }
 
     #[test]
@@ -680,7 +687,13 @@ mod tests {
         let snapshot = ExerciseSnapshot::new(Uuid::new_v4(), Uuid::new_v4(), Vec::new());
         let signature = sign_snapshot(&snapshot, &sk).unwrap();
 
-        let file = DrftxFile { snapshot, signature, annotation: None, emgi: None, recording: None };
+        let file = DrftxFile {
+            snapshot,
+            signature,
+            annotation: None,
+            emgi: None,
+            recording: None,
+        };
         let bytes = file.to_bytes().unwrap();
         let restored = DrftxFile::from_bytes(&bytes, true).unwrap();
 
@@ -726,7 +739,13 @@ mod tests {
         let (sk, _) = test_keypair();
         let snapshot = ExerciseSnapshot::new(Uuid::new_v4(), Uuid::new_v4(), b"data".to_vec());
         let signature = sign_snapshot(&snapshot, &sk).unwrap();
-        let file = DrftxFile { snapshot, signature, annotation: None, emgi: None, recording: None };
+        let file = DrftxFile {
+            snapshot,
+            signature,
+            annotation: None,
+            emgi: None,
+            recording: None,
+        };
 
         let mut bytes = file.to_bytes().unwrap();
         // 篡改 CRC32 尾部

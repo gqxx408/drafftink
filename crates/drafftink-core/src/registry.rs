@@ -121,7 +121,11 @@ impl PluginRegistry {
 
     /// Register a plugin instance.
     pub fn register(&mut self, plugin: Box<dyn Plugin>) {
-        log::info!("[registry] Registered plugin: {} v{}", plugin.name(), plugin.version());
+        log::info!(
+            "[registry] Registered plugin: {} v{}",
+            plugin.name(),
+            plugin.version()
+        );
         self.plugins.push(plugin);
     }
 
@@ -212,12 +216,10 @@ mod tests {
     // ── Test plugin implementations ─────────────────────────────────
 
     #[derive(Default)]
-struct TestPluginA {
+    struct TestPluginA {
         started: bool,
         shutdown: bool,
     }
-
-    
 
     impl Plugin for TestPluginA {
         fn name(&self) -> &'static str {

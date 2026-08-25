@@ -58,8 +58,7 @@ fn import_enbx(data: &[u8], _ctx: &dyn PluginContext) -> Result<CoursewareDoc, S
     eprintln!("🦀 [DISPLAY-ENBX BUILD: 2026-08-01-ARROWS] 🦀");
 
     let cursor = Cursor::new(data);
-    let mut archive =
-        zip::ZipArchive::new(cursor).map_err(|e| format!("ZIP open: {}", e))?;
+    let mut archive = zip::ZipArchive::new(cursor).map_err(|e| format!("ZIP open: {}", e))?;
 
     // ── 1. ZIP bomb check ────────────────────────────────────────
     security::check_zip_bomb(&mut archive, 100)?;
@@ -98,7 +97,8 @@ fn import_enbx(data: &[u8], _ctx: &dyn PluginContext) -> Result<CoursewareDoc, S
         let lower = name.to_lowercase();
 
         // Match slide XML by name pattern (case-insensitive)
-        if lower.contains("slide") && lower.ends_with(".xml")
+        if lower.contains("slide")
+            && lower.ends_with(".xml")
             && !lower.contains("slideshow")
             && !lower.contains("slidelayout")
             && !lower.contains("slidemaster")
@@ -115,10 +115,7 @@ fn import_enbx(data: &[u8], _ctx: &dyn PluginContext) -> Result<CoursewareDoc, S
                 digits.parse::<usize>().unwrap_or(0)
             };
 
-            eprintln!(
-                "[enbx] ✅ 发现Slide文件: {} (页码: {})",
-                name, page_num
-            );
+            eprintln!("[enbx] ✅ 发现Slide文件: {} (页码: {})", name, page_num);
             slide_entries.push((page_num, name));
         }
     }
@@ -281,15 +278,13 @@ fn shape_to_element(s: &ShapeElementData) -> drafftink_core::model::Element {
                 scale_y: s.scale_y,
             })
         }
-        GeometryKind::Rectangle => {
-            Element::Shape(ShapeElement {
-                base: make_base(),
-                shape_type: ShapeType::Rectangle,
-                has_start_arrow: false,
-                has_end_arrow: false,
-                scale_y: s.scale_y,
-            })
-        }
+        GeometryKind::Rectangle => Element::Shape(ShapeElement {
+            base: make_base(),
+            shape_type: ShapeType::Rectangle,
+            has_start_arrow: false,
+            has_end_arrow: false,
+            scale_y: s.scale_y,
+        }),
         GeometryKind::Ellipse | GeometryKind::Circle => {
             // Seewo circles/ellipses use cubic Bezier SVG paths.
             if !s.svg_path.trim().is_empty() {
@@ -310,30 +305,33 @@ fn shape_to_element(s: &ShapeElementData) -> drafftink_core::model::Element {
                 })
             }
         }
-        GeometryKind::Bracket => {
-            Element::Shape(ShapeElement {
-                base: make_base(),
-                shape_type: ShapeType::Bracket,
-                has_start_arrow: false,
-                has_end_arrow: false,
-                scale_y: s.scale_y,
-            })
-        }
-        GeometryKind::Brace => {
-            Element::Shape(ShapeElement {
-                base: make_base(),
-                shape_type: ShapeType::Brace,
-                has_start_arrow: false,
-                has_end_arrow: false,
-                scale_y: s.scale_y,
-            })
-        }
-        GeometryKind::LineArrowEnd | GeometryKind::LineArrowStart | GeometryKind::LineArrowStartEnd | GeometryKind::Line => {
+        GeometryKind::Bracket => Element::Shape(ShapeElement {
+            base: make_base(),
+            shape_type: ShapeType::Bracket,
+            has_start_arrow: false,
+            has_end_arrow: false,
+            scale_y: s.scale_y,
+        }),
+        GeometryKind::Brace => Element::Shape(ShapeElement {
+            base: make_base(),
+            shape_type: ShapeType::Brace,
+            has_start_arrow: false,
+            has_end_arrow: false,
+            scale_y: s.scale_y,
+        }),
+        GeometryKind::LineArrowEnd
+        | GeometryKind::LineArrowStart
+        | GeometryKind::LineArrowStartEnd
+        | GeometryKind::Line => {
             // Straight line (optionally with arrows)
             let is_arrow = s.has_start_arrow || s.has_end_arrow;
             Element::Shape(ShapeElement {
                 base: make_base(),
-                shape_type: if is_arrow { ShapeType::Arrow } else { ShapeType::Line },
+                shape_type: if is_arrow {
+                    ShapeType::Arrow
+                } else {
+                    ShapeType::Line
+                },
                 has_start_arrow: s.has_start_arrow,
                 has_end_arrow: s.has_end_arrow,
                 scale_y: 0.0,
@@ -381,7 +379,8 @@ fn contains_slide_entry(data: &[u8]) -> bool {
         for i in 0..a.len() {
             if let Ok(e) = a.by_index(i) {
                 let lower = e.name().to_lowercase();
-                if lower.contains("slide") && lower.ends_with(".xml")
+                if lower.contains("slide")
+                    && lower.ends_with(".xml")
                     && !lower.contains("slideshow")
                     && !lower.contains("slidelayout")
                     && !lower.contains("slidemaster")
@@ -439,7 +438,8 @@ mod tests {
             let mut z = zip::ZipWriter::new(std::io::Cursor::new(&mut buf));
             let opts = zip::write::FileOptions::default();
             for page in &[0, 2] {
-                z.start_file(&format!("Slide/Slide_{}.xml", page), opts).unwrap();
+                z.start_file(&format!("Slide/Slide_{}.xml", page), opts)
+                    .unwrap();
                 let xml = format!(
                     r#"<?xml version="1.0"?><Slide><Id>s{}</Id><Width>1280</Width><Height>720</Height><Elements><Element><Id>e1</Id><X>0</X><Y>0</Y><Width>100</Width><Height>50</Height><Text><RichText><TextRuns><TextRun><Text>PAGE_{}</Text><FontSize>24</FontSize><Foreground><ColorBrush>#FF000000</ColorBrush></Foreground></TextRun></TextRuns></RichText></Text></Element></Elements></Slide>"#,
                     page, page

@@ -42,9 +42,7 @@ enum ClientMessage {
         timestamp_ns: u64,
     },
     #[serde(rename = "heartbeat")]
-    Heartbeat {
-        student_id: String,
-    },
+    Heartbeat { student_id: String },
 }
 
 #[derive(Debug, Deserialize)]

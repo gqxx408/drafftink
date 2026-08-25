@@ -50,10 +50,7 @@ pub fn stroke_bounds(stroke: &InkStroke) -> Option<Rect> {
     }
     // 线宽会让实际覆盖范围超出几何点集，外扩半个线宽（下限 1px）避免剔除掉边缘。
     let pad = (stroke.thickness * 0.5).max(1.0);
-    Some(
-        Rect::from_min_max(Pos2::new(min_x, min_y), Pos2::new(max_x, max_y))
-            .expand(pad),
-    )
+    Some(Rect::from_min_max(Pos2::new(min_x, min_y), Pos2::new(max_x, max_y)).expand(pad))
 }
 
 struct Node {
@@ -81,8 +78,14 @@ impl Node {
         let d = self.depth + 1;
         self.children = Some(Box::new([
             Node::new(Rect::from_min_max(min, c), d),
-            Node::new(Rect::from_min_max(Pos2::new(c.x, min.y), Pos2::new(max.x, c.y)), d),
-            Node::new(Rect::from_min_max(Pos2::new(min.x, c.y), Pos2::new(c.x, max.y)), d),
+            Node::new(
+                Rect::from_min_max(Pos2::new(c.x, min.y), Pos2::new(max.x, c.y)),
+                d,
+            ),
+            Node::new(
+                Rect::from_min_max(Pos2::new(min.x, c.y), Pos2::new(c.x, max.y)),
+                d,
+            ),
             Node::new(Rect::from_min_max(c, max), d),
         ]));
 
@@ -107,10 +110,7 @@ impl Node {
     }
 
     fn insert(&mut self, idx: usize, bbox: Rect) {
-        if self.children.is_none()
-            && self.items.len() >= MAX_ITEMS
-            && self.depth < MAX_DEPTH
-        {
+        if self.children.is_none() && self.items.len() >= MAX_ITEMS && self.depth < MAX_DEPTH {
             self.split();
         }
         self.place(idx, bbox);
@@ -255,7 +255,10 @@ mod tests {
         let mut qt = Quadtree::default();
         qt.rebuild(&strokes);
 
-        let hit = qt.query(Rect::from_min_max(Pos2::new(-10.0, -10.0), Pos2::new(50.0, 50.0)));
+        let hit = qt.query(Rect::from_min_max(
+            Pos2::new(-10.0, -10.0),
+            Pos2::new(50.0, 50.0),
+        ));
         assert_eq!(hit, vec![0]);
 
         let hit2 = qt.query(Rect::from_min_max(

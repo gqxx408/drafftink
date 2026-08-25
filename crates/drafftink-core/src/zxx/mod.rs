@@ -27,13 +27,13 @@
 
 pub mod integration;
 pub mod xml;
-pub mod zxxx;
-pub mod zxxs;
+pub mod zxbg;
 pub mod zxdy;
 pub mod zxjx;
-pub mod zxtw;
 pub mod zxjz;
-pub mod zxbg;
+pub mod zxtw;
+pub mod zxxs;
+pub mod zxxx;
 
 use std::collections::BTreeMap;
 
@@ -119,10 +119,10 @@ impl ZxxDataset {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::emgi::{PersonBasic, StudentBasic};
     use crate::emgi::types::DataType;
-    use crate::zxx::zxxs::{ExamRecord, StudentProfile};
+    use crate::emgi::{PersonBasic, StudentBasic};
     use crate::zxx::zxjx::Course;
+    use crate::zxx::zxxs::{ExamRecord, StudentProfile};
 
     fn sample_student() -> StudentBasic {
         StudentBasic {
@@ -171,7 +171,11 @@ mod tests {
         ds.add(&course);
 
         assert_eq!(ds.record_count(), 2);
-        assert!(ds.validate().is_empty(), "校验应全部通过: {:?}", ds.validate());
+        assert!(
+            ds.validate().is_empty(),
+            "校验应全部通过: {:?}",
+            ds.validate()
+        );
 
         let xml = crate::zxx::xml::to_xml(&ds);
         assert!(xml.contains("<ZXX standard=\"JY/T 1004-2012\""));
@@ -217,5 +221,4 @@ mod tests {
         // 防御性：确保枚举型数据元素携带代码表引用
         assert_eq!(DataType::C.as_code(), "C");
     }
-
 }

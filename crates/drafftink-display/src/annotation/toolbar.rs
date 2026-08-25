@@ -21,19 +21,10 @@ const HIGHLIGHTER_COLORS: [([u8; 3], &str); 5] = [
     ([255, 140, 0], "橙"),
 ];
 
-const PEN_WIDTHS: [(f32, &str); 4] = [
-    (1.5, "细"),
-    (2.5, "中"),
-    (4.0, "粗"),
-    (6.0, "特粗"),
-];
+const PEN_WIDTHS: [(f32, &str); 4] = [(1.5, "细"), (2.5, "中"), (4.0, "粗"), (6.0, "特粗")];
 
-const HIGHLIGHTER_WIDTHS: [(f32, &str); 4] = [
-    (8.0, "细"),
-    (12.0, "中"),
-    (18.0, "粗"),
-    (25.0, "特粗"),
-];
+const HIGHLIGHTER_WIDTHS: [(f32, &str); 4] =
+    [(8.0, "细"), (12.0, "中"), (18.0, "粗"), (25.0, "特粗")];
 
 const ACTIVE_BG: Color32 = Color32::from_rgb(60, 120, 220);
 const TOOLBAR_BG: Color32 = Color32::from_rgba_premultiplied(245, 245, 245, 255);
@@ -200,12 +191,14 @@ impl AnnotationToolbar {
                     .show(ui, |ui| {
                         // 覆盖默认深色主题：白底工具栏需要黑字
                         ui.visuals_mut().widgets.noninteractive.fg_stroke.color = TOOLBAR_TEXT;
-                        ui.visuals_mut().widgets.noninteractive.bg_stroke = Stroke::new(1.0, TOOLBAR_BORDER);
+                        ui.visuals_mut().widgets.noninteractive.bg_stroke =
+                            Stroke::new(1.0, TOOLBAR_BORDER);
                         ui.visuals_mut().widgets.inactive.fg_stroke.color = TOOLBAR_TEXT;
                         ui.visuals_mut().widgets.hovered.fg_stroke.color = TOOLBAR_TEXT;
                         ui.visuals_mut().widgets.active.fg_stroke.color = TOOLBAR_TEXT;
                         ui.visuals_mut().widgets.inactive.bg_fill = TOOLBAR_INACTIVE_BG;
-                        ui.visuals_mut().widgets.inactive.bg_stroke = Stroke::new(1.0, TOOLBAR_BORDER);
+                        ui.visuals_mut().widgets.inactive.bg_stroke =
+                            Stroke::new(1.0, TOOLBAR_BORDER);
                         ui.visuals_mut().widgets.hovered.bg_fill = TOOLBAR_INACTIVE_BG;
                         ui.visuals_mut().widgets.active.bg_fill = ACTIVE_BG;
                         ui.visuals_mut().widgets.active.fg_stroke.color = Color32::WHITE;
@@ -227,7 +220,9 @@ impl AnnotationToolbar {
                                         .min_size(egui::vec2(60.0, 28.0)),
                                 )
                                 .clicked()
-                            { *action = ToolbarAction::NewPage; }
+                            {
+                                *action = ToolbarAction::NewPage;
+                            }
                             if ui
                                 .add(
                                     egui::Button::new("◀")
@@ -236,10 +231,19 @@ impl AnnotationToolbar {
                                         .min_size(egui::vec2(22.0, 28.0)),
                                 )
                                 .clicked()
-                            { if page_current > 0 { *action = ToolbarAction::PrevPage; } }
+                            {
+                                if page_current > 0 {
+                                    *action = ToolbarAction::PrevPage;
+                                }
+                            }
                             ui.label(
-                                egui::RichText::new(format!("{}/{}", page_current + 1, page_total.max(1)))
-                                    .size(13.0).color(TOOLBAR_TEXT),
+                                egui::RichText::new(format!(
+                                    "{}/{}",
+                                    page_current + 1,
+                                    page_total.max(1)
+                                ))
+                                .size(13.0)
+                                .color(TOOLBAR_TEXT),
                             );
                             if ui
                                 .add(
@@ -249,40 +253,78 @@ impl AnnotationToolbar {
                                         .min_size(egui::vec2(22.0, 28.0)),
                                 )
                                 .clicked()
-                            { if page_current + 1 < page_total { *action = ToolbarAction::NextPage; } }
+                            {
+                                if page_current + 1 < page_total {
+                                    *action = ToolbarAction::NextPage;
+                                }
+                            }
 
                             ui.separator();
 
                             // ── Tool buttons ──
                             let pen_active = matches!(tool, ToolType::Pen);
-                            if ui.add(egui::Button::new("✏")
-                                .fill(if pen_active { ACTIVE_BG } else { Color32::TRANSPARENT })
-                                .stroke(Stroke::new(1.0, TOOLBAR_BORDER))
-                                .min_size(egui::vec2(32.0, 32.0)))
-                                .on_hover_text("笔 (P)").clicked()
-                            { *tool = ToolType::Pen; *color = [0, 0, 0, 255]; *thickness = 2.5; *changed = true; }
+                            if ui
+                                .add(
+                                    egui::Button::new("✏")
+                                        .fill(if pen_active {
+                                            ACTIVE_BG
+                                        } else {
+                                            Color32::TRANSPARENT
+                                        })
+                                        .stroke(Stroke::new(1.0, TOOLBAR_BORDER))
+                                        .min_size(egui::vec2(32.0, 32.0)),
+                                )
+                                .on_hover_text("笔 (P)")
+                                .clicked()
+                            {
+                                *tool = ToolType::Pen;
+                                *color = [0, 0, 0, 255];
+                                *thickness = 2.5;
+                                *changed = true;
+                            }
 
                             let hl_active = matches!(tool, ToolType::Highlighter);
-                            if ui.add(egui::Button::new("🖍")
-                                .fill(if hl_active { ACTIVE_BG } else { Color32::TRANSPARENT })
-                                .stroke(Stroke::new(1.0, TOOLBAR_BORDER))
-                                .min_size(egui::vec2(32.0, 32.0)))
-                                .on_hover_text("荧光笔 (H)").clicked()
+                            if ui
+                                .add(
+                                    egui::Button::new("🖍")
+                                        .fill(if hl_active {
+                                            ACTIVE_BG
+                                        } else {
+                                            Color32::TRANSPARENT
+                                        })
+                                        .stroke(Stroke::new(1.0, TOOLBAR_BORDER))
+                                        .min_size(egui::vec2(32.0, 32.0)),
+                                )
+                                .on_hover_text("荧光笔 (H)")
+                                .clicked()
                             {
                                 *tool = ToolType::Highlighter;
                                 let hl: [u8; 3] = [255, 230, 0];
                                 let a = *self.highlighter_alphas.get(&hl).unwrap_or(&140);
                                 *color = [hl[0], hl[1], hl[2], a];
-                                *thickness = 12.0; *changed = true;
+                                *thickness = 12.0;
+                                *changed = true;
                             }
 
                             let er_active = matches!(tool, ToolType::Eraser);
-                            if ui.add(egui::Button::new("✕")
-                                .fill(if er_active { ACTIVE_BG } else { Color32::TRANSPARENT })
-                                .stroke(Stroke::new(1.0, TOOLBAR_BORDER))
-                                .min_size(egui::vec2(32.0, 32.0)))
-                                .on_hover_text("橡皮擦 (E)").clicked()
-                            { *tool = ToolType::Eraser; *thickness = 12.0; *changed = true; }
+                            if ui
+                                .add(
+                                    egui::Button::new("✕")
+                                        .fill(if er_active {
+                                            ACTIVE_BG
+                                        } else {
+                                            Color32::TRANSPARENT
+                                        })
+                                        .stroke(Stroke::new(1.0, TOOLBAR_BORDER))
+                                        .min_size(egui::vec2(32.0, 32.0)),
+                                )
+                                .on_hover_text("橡皮擦 (E)")
+                                .clicked()
+                            {
+                                *tool = ToolType::Eraser;
+                                *thickness = 12.0;
+                                *changed = true;
+                            }
 
                             ui.separator();
 
@@ -290,14 +332,29 @@ impl AnnotationToolbar {
                             if matches!(tool, ToolType::Highlighter) {
                                 for &(c, _) in HIGHLIGHTER_COLORS.iter() {
                                     let is_current = color[0..3] == c;
-                                    let fill = Color32::from_rgba_premultiplied(c[0], c[1], c[2], 255);
-                                    if ui.add(egui::Button::new("").fill(fill)
-                                        .stroke(Stroke::new(if is_current {3.0}else{1.0},
-                                            if is_current {Color32::WHITE}else{TOOLBAR_BORDER}))
-                                        .min_size(egui::vec2(22.0, 22.0))).clicked()
+                                    let fill =
+                                        Color32::from_rgba_premultiplied(c[0], c[1], c[2], 255);
+                                    if ui
+                                        .add(
+                                            egui::Button::new("")
+                                                .fill(fill)
+                                                .stroke(Stroke::new(
+                                                    if is_current { 3.0 } else { 1.0 },
+                                                    if is_current {
+                                                        Color32::WHITE
+                                                    } else {
+                                                        TOOLBAR_BORDER
+                                                    },
+                                                ))
+                                                .min_size(egui::vec2(22.0, 22.0)),
+                                        )
+                                        .clicked()
                                     {
                                         let a = *self.highlighter_alphas.get(&c).unwrap_or(&140);
-                                        color[0] = c[0]; color[1] = c[1]; color[2] = c[2]; color[3] = a;
+                                        color[0] = c[0];
+                                        color[1] = c[1];
+                                        color[2] = c[2];
+                                        color[3] = a;
                                         *changed = true;
                                     }
                                     ui.add_space(2.0);
@@ -306,12 +363,27 @@ impl AnnotationToolbar {
                                 for &(c, _) in PEN_COLORS.iter() {
                                     let expected: [u8; 4] = [c[0], c[1], c[2], 255];
                                     let is_current = *color == expected;
-                                    let fill = Color32::from_rgba_premultiplied(c[0], c[1], c[2], 255);
-                                    if ui.add(egui::Button::new("").fill(fill)
-                                        .stroke(Stroke::new(if is_current {3.0}else{1.0},
-                                            if is_current {Color32::WHITE}else{TOOLBAR_BORDER}))
-                                        .min_size(egui::vec2(22.0, 22.0))).clicked()
-                                    { *color = expected; *changed = true; }
+                                    let fill =
+                                        Color32::from_rgba_premultiplied(c[0], c[1], c[2], 255);
+                                    if ui
+                                        .add(
+                                            egui::Button::new("")
+                                                .fill(fill)
+                                                .stroke(Stroke::new(
+                                                    if is_current { 3.0 } else { 1.0 },
+                                                    if is_current {
+                                                        Color32::WHITE
+                                                    } else {
+                                                        TOOLBAR_BORDER
+                                                    },
+                                                ))
+                                                .min_size(egui::vec2(22.0, 22.0)),
+                                        )
+                                        .clicked()
+                                    {
+                                        *color = expected;
+                                        *changed = true;
+                                    }
                                     ui.add_space(2.0);
                                 }
                             }
@@ -325,10 +397,21 @@ impl AnnotationToolbar {
                             };
                             for (w, label) in widths {
                                 let is_current = (*thickness - w).abs() < 0.1;
-                                if ui.add(egui::Button::new(*label)
-                                    .fill(if is_current { ACTIVE_BG } else { TOOLBAR_INACTIVE_BG })
-                                    .min_size(egui::vec2(36.0, 24.0))).clicked()
-                                { *thickness = *w; *changed = true; }
+                                if ui
+                                    .add(
+                                        egui::Button::new(*label)
+                                            .fill(if is_current {
+                                                ACTIVE_BG
+                                            } else {
+                                                TOOLBAR_INACTIVE_BG
+                                            })
+                                            .min_size(egui::vec2(36.0, 24.0)),
+                                    )
+                                    .clicked()
+                                {
+                                    *thickness = *w;
+                                    *changed = true;
+                                }
                             }
 
                             // ── Alpha slider (highlighter only) ──
@@ -336,15 +419,18 @@ impl AnnotationToolbar {
                                 ui.separator();
                                 ui.label(
                                     egui::RichText::new(format!("透明:{}", color[3]))
-                                        .size(11.0).color(TOOLBAR_TEXT),
+                                        .size(11.0)
+                                        .color(TOOLBAR_TEXT),
                                 );
                                 let mut a = color[3] as f64;
-                                if ui.add(
-                                    Slider::new(&mut a, 0.0..=255.0)
-                                        .step_by(5.0)
-                                        .show_value(false)
-                                        .fixed_decimals(0),
-                                ).changed()
+                                if ui
+                                    .add(
+                                        Slider::new(&mut a, 0.0..=255.0)
+                                            .step_by(5.0)
+                                            .show_value(false)
+                                            .fixed_decimals(0),
+                                    )
+                                    .changed()
                                 {
                                     let rgb: [u8; 3] = [color[0], color[1], color[2]];
                                     let na = a as u8;
@@ -357,11 +443,21 @@ impl AnnotationToolbar {
                                 // Smart alpha button
                                 ui.add_space(4.0);
                                 let sa_enabled = self.smart_alpha_enabled;
-                                if ui.add(
-                                    egui::Button::new(if sa_enabled { "🎯✓" } else { "🎯智能" })
-                                        .fill(if sa_enabled { Color32::from_rgb(60, 180, 100) } else { TOOLBAR_INACTIVE_BG })
+                                if ui
+                                    .add(
+                                        egui::Button::new(if sa_enabled {
+                                            "🎯✓"
+                                        } else {
+                                            "🎯智能"
+                                        })
+                                        .fill(if sa_enabled {
+                                            Color32::from_rgb(60, 180, 100)
+                                        } else {
+                                            TOOLBAR_INACTIVE_BG
+                                        })
                                         .min_size(egui::vec2(48.0, 22.0)),
-                                ).clicked()
+                                    )
+                                    .clicked()
                                 {
                                     self.smart_alpha_enabled = !sa_enabled;
                                     if !sa_enabled {
@@ -398,14 +494,32 @@ impl AnnotationToolbar {
                             // 反向布局中先添加的控件位于最右，故顺序与视觉顺序相反：
                             // 先「更多」（最右），后「退出」。
                             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                                if ui.add(egui::Button::new(if self.more_menu_open {"更多 ▴"}else{"更多 ▾"})
-                                    .fill(Color32::TRANSPARENT).stroke(Stroke::NONE)
-                                    .min_size(egui::vec2(52.0, 28.0))).clicked()
-                                { *action = ToolbarAction::ToggleMore; }
-                                if ui.add(egui::Button::new("退出")
-                                    .fill(Color32::TRANSPARENT).stroke(Stroke::NONE)
-                                    .min_size(egui::vec2(36.0, 28.0))).clicked()
-                                { *action = ToolbarAction::Exit; }
+                                if ui
+                                    .add(
+                                        egui::Button::new(if self.more_menu_open {
+                                            "更多 ▴"
+                                        } else {
+                                            "更多 ▾"
+                                        })
+                                        .fill(Color32::TRANSPARENT)
+                                        .stroke(Stroke::NONE)
+                                        .min_size(egui::vec2(52.0, 28.0)),
+                                    )
+                                    .clicked()
+                                {
+                                    *action = ToolbarAction::ToggleMore;
+                                }
+                                if ui
+                                    .add(
+                                        egui::Button::new("退出")
+                                            .fill(Color32::TRANSPARENT)
+                                            .stroke(Stroke::NONE)
+                                            .min_size(egui::vec2(36.0, 28.0)),
+                                    )
+                                    .clicked()
+                                {
+                                    *action = ToolbarAction::Exit;
+                                }
                             });
                         });
                     });

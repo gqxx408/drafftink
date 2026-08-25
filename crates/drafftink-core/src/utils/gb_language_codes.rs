@@ -46,7 +46,10 @@ pub const LANGUAGE_CODE: [(&str, &str); 21] = [
 /// ⚠️ 本表为 [PUBLIC_DOMAIN_REFERENCE]，数字↔名称映射未经官方 PDF 逐字节核对，生产前须验证。
 #[inline(always)]
 pub fn get_language_name(code: &str) -> Option<&'static str> {
-    LANGUAGE_CODE.iter().find(|&&(c, _)| c == code).map(|&(_, n)| n)
+    LANGUAGE_CODE
+        .iter()
+        .find(|&&(c, _)| c == code)
+        .map(|&(_, n)| n)
 }
 
 #[cfg(test)]

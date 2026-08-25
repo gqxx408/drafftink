@@ -116,7 +116,12 @@ impl Slide {
 
     /// Insert an element, assigning it the next available z_order.
     pub fn push(&mut self, element: ElementData) {
-        let max_z = self.elements.iter().map(|e| e.z_order()).max().unwrap_or(-1);
+        let max_z = self
+            .elements
+            .iter()
+            .map(|e| e.z_order())
+            .max()
+            .unwrap_or(-1);
         let mut element = element;
         element.set_z_order(max_z + 1);
         self.elements.push(element);
@@ -588,9 +593,7 @@ impl BoardContext {
                     e.set_position([pos[0] + delta[0], pos[1] + delta[1]]);
                 }
             }
-            BoardCommand::ResizeElement {
-                id, new_size, ..
-            } => {
+            BoardCommand::ResizeElement { id, new_size, .. } => {
                 if let Some(e) = self.slide.get_mut(id) {
                     e.set_size(new_size);
                 }
@@ -625,9 +628,7 @@ impl BoardContext {
                     e.set_position([pos[0] - delta[0], pos[1] - delta[1]]);
                 }
             }
-            BoardCommand::ResizeElement {
-                id, old_size, ..
-            } => {
+            BoardCommand::ResizeElement { id, old_size, .. } => {
                 if let Some(e) = self.slide.get_mut(id) {
                     e.set_size(old_size);
                 }

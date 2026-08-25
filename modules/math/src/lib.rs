@@ -75,13 +75,9 @@ impl DrafftinkPlugin for MathModule {
         );
 
         // ── 3. Register a floating window for geometry tools ──
-        ctx.add_window(
-            "math_geometry_window",
-            "📐 几何工具",
-            |_egui_ctx| {
-                // Geometry tool window content rendered by the host.
-            },
-        );
+        ctx.add_window("math_geometry_window", "📐 几何工具", |_egui_ctx| {
+            // Geometry tool window content rendered by the host.
+        });
 
         // ── 4. Log registration ───────────────────────────────
         ctx.log(&format!(

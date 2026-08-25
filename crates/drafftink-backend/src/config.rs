@@ -49,8 +49,8 @@ impl BackendConfig {
     pub fn from_env() -> Self {
         let defaults = Self::default();
 
-        let listen_addr = std::env::var("DRAFTTINK_LISTEN_ADDR")
-            .unwrap_or_else(|_| defaults.listen_addr.clone());
+        let listen_addr =
+            std::env::var("DRAFTTINK_LISTEN_ADDR").unwrap_or_else(|_| defaults.listen_addr.clone());
 
         let db_path = std::env::var("DRAFTTINK_DB_PATH")
             .map(PathBuf::from)

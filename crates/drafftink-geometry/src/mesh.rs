@@ -442,11 +442,7 @@ pub fn triangulate_ellipse_stroke(
 /// 三角化圆环 — 使用 lyon FillTessellator + EvenOdd 填充规则
 ///
 /// 构建外圆（顺时针）后通过 move_to 切换到内圆（逆时针），以 EvenOdd 规则填充形成圆环。
-pub fn triangulate_annulus(
-    center: Point2D,
-    inner_radius: f32,
-    outer_radius: f32,
-) -> GeometryMesh {
+pub fn triangulate_annulus(center: Point2D, inner_radius: f32, outer_radius: f32) -> GeometryMesh {
     if inner_radius <= 0.0 || outer_radius <= 0.0 || inner_radius >= outer_radius {
         return GeometryMesh::new();
     }
@@ -530,7 +526,13 @@ pub fn triangulate_all(
     for &id in point_ids {
         if let Some(pos) = ctx.get_2d(id) {
             let mesh = triangulate_point(pos, point_size);
-            result.push((GeometryElement::Point { id, size: point_size }, mesh));
+            result.push((
+                GeometryElement::Point {
+                    id,
+                    size: point_size,
+                },
+                mesh,
+            ));
         }
     }
 
@@ -620,14 +622,24 @@ mod tests {
 
     #[test]
     fn test_triangulate_polygon_stroke() {
-        let pts = vec![Point2D::new(0.0, 0.0), Point2D::new(100.0, 0.0), Point2D::new(50.0, 80.0)];
+        let pts = vec![
+            Point2D::new(0.0, 0.0),
+            Point2D::new(100.0, 0.0),
+            Point2D::new(50.0, 80.0),
+        ];
         let mesh = triangulate_polygon_stroke(&pts, 2.0);
         assert!(!mesh.vertices.is_empty());
     }
 
     #[test]
     fn test_triangulate_arc() {
-        let mesh = triangulate_arc(Point2D::new(50.0, 50.0), 30.0, 0.0, std::f32::consts::FRAC_PI_2, 2.0);
+        let mesh = triangulate_arc(
+            Point2D::new(50.0, 50.0),
+            30.0,
+            0.0,
+            std::f32::consts::FRAC_PI_2,
+            2.0,
+        );
         assert!(!mesh.vertices.is_empty());
     }
 

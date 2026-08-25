@@ -21,11 +21,21 @@ pub fn parse_hex(s: &str) -> [u8; 4] {
     match s.len() {
         6 => {
             let v = u32::from_str_radix(s, 16).unwrap_or(0xFFFFFF);
-            [((v >> 16) & 0xFF) as u8, ((v >> 8) & 0xFF) as u8, (v & 0xFF) as u8, 255]
+            [
+                ((v >> 16) & 0xFF) as u8,
+                ((v >> 8) & 0xFF) as u8,
+                (v & 0xFF) as u8,
+                255,
+            ]
         }
         8 => {
             let v = u32::from_str_radix(s, 16).unwrap_or(0xFFFFFFFF);
-            [((v >> 24) & 0xFF) as u8, ((v >> 16) & 0xFF) as u8, ((v >> 8) & 0xFF) as u8, (v & 0xFF) as u8]
+            [
+                ((v >> 24) & 0xFF) as u8,
+                ((v >> 16) & 0xFF) as u8,
+                ((v >> 8) & 0xFF) as u8,
+                (v & 0xFF) as u8,
+            ]
         }
         _ => [255, 255, 255, 255],
     }
@@ -50,10 +60,14 @@ pub fn parse_board<R: std::io::Read>(reader: R) -> Result<(f32, f32, [u8; 4]), E
                     let val = String::from_utf8_lossy(&attr.value);
                     match key.as_ref() {
                         "boardWidth" | "width" => {
-                            if let Ok(v) = val.parse::<f64>() { w = emu_to_px(v); }
+                            if let Ok(v) = val.parse::<f64>() {
+                                w = emu_to_px(v);
+                            }
                         }
                         "boardHeight" | "height" => {
-                            if let Ok(v) = val.parse::<f64>() { h = emu_to_px(v); }
+                            if let Ok(v) = val.parse::<f64>() {
+                                h = emu_to_px(v);
+                            }
                         }
                         "bgcolor" | "bgColor" | "backgroundColor" => {
                             bg = parse_hex(&val);
@@ -74,9 +88,7 @@ pub fn parse_board<R: std::io::Read>(reader: R) -> Result<(f32, f32, [u8; 4]), E
 // Reference.xml — resource-id → hash-filename map
 // ---------------------------------------------------------------------------
 
-pub fn parse_reference<R: std::io::Read>(
-    reader: R,
-) -> Result<HashMap<String, String>, EnbxError> {
+pub fn parse_reference<R: std::io::Read>(reader: R) -> Result<HashMap<String, String>, EnbxError> {
     let mut r = Reader::from_reader(BufReader::new(reader));
     let mut buf = Vec::new();
     let mut map = HashMap::new();
@@ -95,7 +107,9 @@ pub fn parse_reference<R: std::io::Read>(
                         let v = String::from_utf8_lossy(&attr.value);
                         match k.as_ref() {
                             "Id" | "id" | "r:id" => current_id = Some(v.to_string()),
-                            "Target" | "target" | "file" | "src" => current_target = Some(v.to_string()),
+                            "Target" | "target" | "file" | "src" => {
+                                current_target = Some(v.to_string())
+                            }
                             _ => {}
                         }
                     }
@@ -117,7 +131,9 @@ pub fn parse_reference<R: std::io::Read>(
                         let v = String::from_utf8_lossy(&attr.value);
                         match k.as_ref() {
                             "Id" | "id" | "r:id" => current_id = Some(v.to_string()),
-                            "Target" | "target" | "file" | "src" => current_target = Some(v.to_string()),
+                            "Target" | "target" | "file" | "src" => {
+                                current_target = Some(v.to_string())
+                            }
                             _ => {}
                         }
                     }
@@ -173,8 +189,14 @@ pub fn parse_document<R: std::io::Read>(reader: R) -> Result<DocMeta, EnbxError>
             }
             Event::Text(ref e) => {
                 let text = e.unescape()?.to_string();
-                if in_title { meta.title = Some(text.clone()); in_title = false; }
-                if in_author { meta.author = Some(text); in_author = false; }
+                if in_title {
+                    meta.title = Some(text.clone());
+                    in_title = false;
+                }
+                if in_author {
+                    meta.author = Some(text);
+                    in_author = false;
+                }
             }
             Event::End(ref e) => {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_lowercase();
@@ -196,7 +218,9 @@ pub fn parse_document<R: std::io::Read>(reader: R) -> Result<DocMeta, EnbxError>
 // Slide listing
 // ---------------------------------------------------------------------------
 
-pub fn list_slides(archive: &mut zip::ZipArchive<impl std::io::Read + std::io::Seek>) -> Vec<usize> {
+pub fn list_slides(
+    archive: &mut zip::ZipArchive<impl std::io::Read + std::io::Seek>,
+) -> Vec<usize> {
     let mut indices: Vec<usize> = Vec::new();
     for i in 0..archive.len() {
         if let Ok(f) = archive.by_index(i) {
@@ -205,10 +229,7 @@ pub fn list_slides(archive: &mut zip::ZipArchive<impl std::io::Read + std::io::S
             let lower = name.to_lowercase();
             if lower.contains("slide") && lower.ends_with(".xml") {
                 // Extract digits
-                let digits: String = lower
-                    .chars()
-                    .filter(|c| c.is_ascii_digit())
-                    .collect();
+                let digits: String = lower.chars().filter(|c| c.is_ascii_digit()).collect();
                 if let Ok(n) = digits.parse::<usize>() {
                     indices.push(n);
                 }

@@ -31,15 +31,15 @@ use axum::Json;
 use serde::Deserialize;
 use serde::Serialize;
 
+use drafftink_core::utils::gb_industry_codes::{
+    get_industry_class_name, get_industry_division_name, get_industry_section_name,
+};
+use drafftink_core::utils::gb_language_codes::get_language_name;
 use drafftink_core::utils::gb_standard_codes::{
     get_degree_name, get_education_level_name, get_ethnic_name, get_marital_status_name,
     get_province_name, get_school_type_name, get_tech_position_name, get_urban_rural_name,
     GenderCode, YesNoCode,
 };
-use drafftink_core::utils::gb_industry_codes::{
-    get_industry_class_name, get_industry_division_name, get_industry_section_name,
-};
-use drafftink_core::utils::gb_language_codes::get_language_name;
 
 /// 查询参数：`?code=xxx`。
 #[derive(Deserialize)]
@@ -185,7 +185,10 @@ pub(crate) fn lookup_code(table: &str, code: &str) -> LookupResponse {
 /// GET /api/v1/lookup/{table}?code=xxx
 ///
 /// 只读国标代码查询，无需认证（与 `/api/health` 同属公开路由）。
-pub async fn lookup(Path(table): Path<String>, Query(q): Query<LookupQuery>) -> Json<LookupResponse> {
+pub async fn lookup(
+    Path(table): Path<String>,
+    Query(q): Query<LookupQuery>,
+) -> Json<LookupResponse> {
     Json(lookup_code(&table, &q.code))
 }
 

@@ -1,7 +1,7 @@
 //! Annotation / teaching tools module.
 //!
 //! Provides Pen, Highlighter, Eraser, LaserPointer, ClearScreen tools
-#![allow(dead_code)] 
+#![allow(dead_code)]
 //! that work on top of the canvas.  Supports mouse right-click erase
 //! and touch two-finger erase.
 //!
@@ -247,7 +247,7 @@ impl StrokeData {
                         if let Some(ip) = circle_line_intersection(
                             center,
                             radius,
-                            pts[i],    // outside
+                            pts[i],     // outside
                             pts[i - 1], // inside
                         ) {
                             cur.push(ip);
@@ -372,12 +372,7 @@ fn densify(points: &[Pos2], max_step: f32) -> Vec<Pos2> {
 /// Returns the first point (in `[0, 1]` parameter space) where the segment
 /// crosses the circle boundary.  Used to inject sub-pixel-precise cut
 /// endpoints between inside/outside transitions.
-fn circle_line_intersection(
-    center: Pos2,
-    radius: f32,
-    from: Pos2,
-    dir: Pos2,
-) -> Option<Pos2> {
+fn circle_line_intersection(center: Pos2, radius: f32, from: Pos2, dir: Pos2) -> Option<Pos2> {
     let d = dir - from;
     let len_sq = d.length_sq();
     if len_sq < 1e-10 {
@@ -401,10 +396,18 @@ fn circle_line_intersection(
 
     let t = if from_inside {
         // Inside → outside: pick the larger root as the exit.
-        if t1 >= 0.0 && t1 <= 1.0 { t1 } else { t2 }
+        if t1 >= 0.0 && t1 <= 1.0 {
+            t1
+        } else {
+            t2
+        }
     } else {
         // Outside → inside: pick the smaller root as the entry.
-        if t2 >= 0.0 && t2 <= 1.0 { t2 } else { t1 }
+        if t2 >= 0.0 && t2 <= 1.0 {
+            t2
+        } else {
+            t1
+        }
     };
 
     if t >= 0.0 && t <= 1.0 {
@@ -701,9 +704,7 @@ impl AnnotationState {
                 .unwrap_or(false)
         });
         let two_finger_center = ctx.input(|i| i.multi_touch().map(|mt| mt.start_pos));
-        let zoom_delta = ctx.input(|i| {
-            i.multi_touch().map(|mt| mt.zoom_delta).unwrap_or(1.0)
-        });
+        let zoom_delta = ctx.input(|i| i.multi_touch().map(|mt| mt.zoom_delta).unwrap_or(1.0));
 
         // Pinch resize: when two fingers are touching but the zoom delta
         // indicates a pinch gesture (not just two fingers held still).
@@ -861,7 +862,8 @@ impl AnnotationState {
         if let Some(p) = self.cursor_pos {
             if self.erasing || matches!(self.current_tool, AnnotationTool::Eraser) {
                 let fill = Color32::from_rgba_unmultiplied(128, 128, 128, 60);
-                let stroke = egui::Stroke::new(2.0, Color32::from_rgba_unmultiplied(80, 80, 80, 120));
+                let stroke =
+                    egui::Stroke::new(2.0, Color32::from_rgba_unmultiplied(80, 80, 80, 120));
                 painter.circle_filled(p, self.eraser_size, fill);
                 painter.circle_stroke(p, self.eraser_size, stroke);
             }

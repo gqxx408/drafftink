@@ -201,8 +201,8 @@ pub fn verify_jwt(token: &str, config: &JwtConfig, expected_device_fp: &str) -> 
 
     // 解析 Claims
     let payload_bytes = url_safe_b64_decode(parts[1])?;
-    let claims: JwtClaims = serde_json::from_slice(&payload_bytes)
-        .map_err(|e| anyhow!("JWT payload 解析失败: {e}"))?;
+    let claims: JwtClaims =
+        serde_json::from_slice(&payload_bytes).map_err(|e| anyhow!("JWT payload 解析失败: {e}"))?;
 
     // 验证过期时间
     let now = Utc::now().timestamp();
@@ -212,7 +212,11 @@ pub fn verify_jwt(token: &str, config: &JwtConfig, expected_device_fp: &str) -> 
 
     // 验证设备指纹
     if claims.device_fp != expected_device_fp {
-        bail!("设备指纹不匹配: 期望 {}, 实际 {}", expected_device_fp, claims.device_fp);
+        bail!(
+            "设备指纹不匹配: 期望 {}, 实际 {}",
+            expected_device_fp,
+            claims.device_fp
+        );
     }
 
     Ok(claims)
@@ -234,8 +238,8 @@ pub fn verify_jwt_unchecked(token: &str, config: &JwtConfig) -> Result<JwtClaims
     }
 
     let payload_bytes = url_safe_b64_decode(parts[1])?;
-    let claims: JwtClaims = serde_json::from_slice(&payload_bytes)
-        .map_err(|e| anyhow!("JWT payload 解析失败: {e}"))?;
+    let claims: JwtClaims =
+        serde_json::from_slice(&payload_bytes).map_err(|e| anyhow!("JWT payload 解析失败: {e}"))?;
 
     let now = Utc::now().timestamp();
     if claims.exp < now {
@@ -307,15 +311,12 @@ pub fn get_or_create_device_id(storage_dir: &std::path::Path) -> Result<String> 
     let new_id = Uuid::new_v4().to_string();
 
     // 确保目录存在
-    std::fs::create_dir_all(storage_dir)
-        .map_err(|e| anyhow!("创建存储目录失败: {e}"))?;
+    std::fs::create_dir_all(storage_dir).map_err(|e| anyhow!("创建存储目录失败: {e}"))?;
 
     // 原子写入
     let tmp = device_id_file.with_extension("tmp");
-    std::fs::write(&tmp, &new_id)
-        .map_err(|e| anyhow!("写入设备 ID 失败: {e}"))?;
-    std::fs::rename(&tmp, &device_id_file)
-        .map_err(|e| anyhow!("重命名设备 ID 文件失败: {e}"))?;
+    std::fs::write(&tmp, &new_id).map_err(|e| anyhow!("写入设备 ID 失败: {e}"))?;
+    std::fs::rename(&tmp, &device_id_file).map_err(|e| anyhow!("重命名设备 ID 文件失败: {e}"))?;
 
     Ok(new_id)
 }
@@ -424,15 +425,8 @@ mod tests {
         let config = JwtConfig::default();
         let device_fp = generate_device_fingerprint().unwrap();
 
-        let token = generate_jwt(
-            "user-123",
-            "张老师",
-            "teacher",
-            None,
-            &device_fp,
-            &config,
-        )
-        .unwrap();
+        let token =
+            generate_jwt("user-123", "张老师", "teacher", None, &device_fp, &config).unwrap();
 
         let claims = verify_jwt(&token, &config, &device_fp).unwrap();
         assert_eq!(claims.sub, "user-123");
@@ -519,10 +513,7 @@ mod tests {
             secret: Vec::new(),
             ..Default::default()
         };
-        assert!(
-            cfg.validate_not_default().is_err(),
-            "空密钥必须被拒绝"
-        );
+        assert!(cfg.validate_not_default().is_err(), "空密钥必须被拒绝");
     }
 
     #[test]
@@ -543,10 +534,7 @@ mod tests {
             secret: b"a-strong-random-secret".to_vec(),
             ..Default::default()
         };
-        assert!(
-            cfg.validate_not_default().is_ok(),
-            "真实密钥应通过校验"
-        );
+        assert!(cfg.validate_not_default().is_ok(), "真实密钥应通过校验");
     }
 
     #[test]

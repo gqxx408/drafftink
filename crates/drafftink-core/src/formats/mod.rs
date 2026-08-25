@@ -89,9 +89,7 @@ impl FormatRegistry {
 
         let importer = &self.importers[*idx].1;
         if !importer.can_import(&data) {
-            return Err(format!(
-                "File does not appear to be a valid .{ext} file"
-            ));
+            return Err(format!("File does not appear to be a valid .{ext} file"));
         }
 
         importer.import(&data, ctx)

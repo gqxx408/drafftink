@@ -13,8 +13,11 @@ pub fn render(ui: &mut Ui, app: &WasmApp, now: f64) {
         } else {
             (Color32::from_rgb(0xF4, 0x43, 0x36), "Offline")
         };
-        ui.painter()
-            .circle_filled(ui.min_rect().min + egui::vec2(8.0, ui.min_rect().height() / 2.0), 4.0, dot_color);
+        ui.painter().circle_filled(
+            ui.min_rect().min + egui::vec2(8.0, ui.min_rect().height() / 2.0),
+            4.0,
+            dot_color,
+        );
         ui.add_space(14.0);
         ui.label(label);
 

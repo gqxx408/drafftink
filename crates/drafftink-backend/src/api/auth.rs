@@ -17,8 +17,8 @@ use serde_json::json;
 use uuid::Uuid;
 
 use drafftink_core::auth::{
-    claims_role, ACCESS_TOKEN_TTL_SECS, REFRESH_TOKEN_TTL_SECS, LoginRequest, LoginResponse,
-    RefreshRequest, RefreshResponse, UserInfo,
+    claims_role, LoginRequest, LoginResponse, RefreshRequest, RefreshResponse, UserInfo,
+    ACCESS_TOKEN_TTL_SECS, REFRESH_TOKEN_TTL_SECS,
 };
 use drafftink_core::integration::SharedAppContext;
 
@@ -170,7 +170,11 @@ pub async fn me(auth: AuthUser) -> Result<Json<UserInfo>, AppError> {
         username: auth.0.name.clone(),
         display_name: auth.0.name.clone(),
         role: auth.0.role.clone(),
-        class_id: auth.0.class_id.as_deref().and_then(|s| Uuid::parse_str(s).ok()),
+        class_id: auth
+            .0
+            .class_id
+            .as_deref()
+            .and_then(|s| Uuid::parse_str(s).ok()),
         tenant_id: Uuid::parse_str(&auth.0.tenant_id).unwrap_or_default(),
     };
     Ok(Json(info))
@@ -219,9 +223,7 @@ fn build_token_response<T: Serialize>(body: &T, access: &str, refresh: &str) -> 
 
 /// 构造 HttpOnly + Secure + SameSite=Strict 的 Cookie 字符串
 fn cookie_string(name: &str, value: &str, max_age_secs: u64) -> String {
-    format!(
-        "{name}={value}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age={max_age_secs}"
-    )
+    format!("{name}={value}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age={max_age_secs}")
 }
 
 /// 从 `Cookie` 头中按名称解析 Cookie 值。
@@ -243,23 +245,27 @@ mod tests {
     use super::*;
     use crate::auth::mobile::MobileAuth;
     use crate::auth::password::hash_password;
-    use crate::workflow::WorkflowStore;
     use crate::auth::ratelimit::LoginRateLimiter;
     use crate::auth::refresh::MemoryRefreshTokenStore;
     use crate::config::BackendConfig;
-    use crate::recording::LiveHub;
     use crate::db::{Database, SledDb};
+    use crate::recording::LiveHub;
+    use crate::workflow::WorkflowStore;
     use std::sync::Arc;
 
     fn test_state() -> AppState {
-        let db: Arc<dyn Database> = Arc::new(SledDb::open(&std::env::temp_dir().join(format!(
-            "drafftink_auth_test_{}",
-            Uuid::new_v4()
-        ))).unwrap());
-        let storage: Arc<dyn crate::storage::Storage> =
-            Arc::new(crate::storage::LocalStorage::new(
+        let db: Arc<dyn Database> = Arc::new(
+            SledDb::open(
+                &std::env::temp_dir().join(format!("drafftink_auth_test_{}", Uuid::new_v4())),
+            )
+            .unwrap(),
+        );
+        let storage: Arc<dyn crate::storage::Storage> = Arc::new(
+            crate::storage::LocalStorage::new(
                 &std::env::temp_dir().join(format!("drafftink_auth_store_{}", Uuid::new_v4())),
-            ).unwrap());
+            )
+            .unwrap(),
+        );
         AppState {
             db: db.clone(),
             storage,
@@ -302,7 +308,10 @@ mod tests {
         .await
         .unwrap_err();
         // 错误密码应返回未认证
-        assert!(format!("{resp:?}").contains("Unauthorized") || matches!(resp, AppError::Unauthorized(_)));
+        assert!(
+            format!("{resp:?}").contains("Unauthorized")
+                || matches!(resp, AppError::Unauthorized(_))
+        );
     }
 
     #[tokio::test]
@@ -343,7 +352,9 @@ mod tests {
             .map(|v| v.to_str().unwrap_or("").to_string())
             .collect::<Vec<_>>();
         assert!(
-            set_cookie.iter().any(|c| c.contains("access_token=") && c.contains("HttpOnly") && c.contains("SameSite=Strict")),
+            set_cookie.iter().any(|c| c.contains("access_token=")
+                && c.contains("HttpOnly")
+                && c.contains("SameSite=Strict")),
             "缺少安全 Cookie: {set_cookie:?}"
         );
         // 用户上下文应已初始化

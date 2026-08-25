@@ -11,8 +11,8 @@ use chrono::Utc;
 use tracing::info;
 use uuid::Uuid;
 
-use drafftink_core::{Class, Role, User};
 use drafftink_backend::api;
+use drafftink_backend::auth::mobile::MobileAuth;
 use drafftink_backend::auth::password::hash_password;
 use drafftink_backend::auth::ratelimit::LoginRateLimiter;
 use drafftink_backend::auth::refresh::SledRefreshTokenStore;
@@ -23,8 +23,8 @@ use drafftink_backend::recording::minio::MinioStorage;
 use drafftink_backend::recording::LiveHub;
 use drafftink_backend::state::AppState;
 use drafftink_backend::storage::{LocalStorage, Storage};
-use drafftink_backend::auth::mobile::MobileAuth;
 use drafftink_backend::workflow::WorkflowStore;
+use drafftink_core::{Class, Role, User};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -43,7 +43,9 @@ async fn main() -> anyhow::Result<()> {
     // 启动安全闸门（P0-1）：JWT 密钥缺失或使用已知默认硬编码密钥时，
     // 直接拒绝启动，避免任何人可伪造 Admin 令牌。
     if let Err(e) = config.jwt.validate_not_default() {
-        eprintln!("ERROR: JWT secret not configured. Set DRAFTTINK_JWT_SECRET environment variable.");
+        eprintln!(
+            "ERROR: JWT secret not configured. Set DRAFTTINK_JWT_SECRET environment variable."
+        );
         eprintln!("Refusing to start with default/empty secret (security risk).");
         eprintln!("Details: {e}");
         std::process::exit(1);
@@ -94,8 +96,7 @@ async fn main() -> anyhow::Result<()> {
                     .map_err(|e| anyhow::anyhow!("打开刷新令牌存储失败: {e}"))?,
             );
             // 启动后台过期清理：定期删除已过期的刷新令牌 / 吊销记录，避免 sled 数据库无限增长。
-            let _refresh_sweeper =
-                store.start_expiry_sweeper(std::time::Duration::from_secs(3600));
+            let _refresh_sweeper = store.start_expiry_sweeper(std::time::Duration::from_secs(3600));
             info!("刷新令牌过期清理任务已启动（每小时执行一次）");
             store
         },
@@ -255,16 +256,19 @@ fn seed_default_data(state: &AppState) -> anyhow::Result<()> {
     info!("已创建学生账号: student01（口令来自环境变量或随机生成）");
 
     // 默认通知公告（ZXBG0201），便于移动端公告页直接可见
-    state.workflow.add_announcement(drafftink_backend::workflow::types::Announcement {
-        notice_id: "NT20260001".into(),
-        title: "欢迎使用校园移动办公平台".into(),
-        publish_date: chrono::Utc::now().format("%Y%m%d").to_string(),
-        publisher: "校办".into(),
-        recv_scope: "全体教职工".into(),
-        body: "移动办公平台已上线，支持待办审批、公文流转、通知公告、会议预约与用印申请。".into(),
-        tenant_id: school_id,
-        pinned: true,
-    });
+    state
+        .workflow
+        .add_announcement(drafftink_backend::workflow::types::Announcement {
+            notice_id: "NT20260001".into(),
+            title: "欢迎使用校园移动办公平台".into(),
+            publish_date: chrono::Utc::now().format("%Y%m%d").to_string(),
+            publisher: "校办".into(),
+            recv_scope: "全体教职工".into(),
+            body: "移动办公平台已上线，支持待办审批、公文流转、通知公告、会议预约与用印申请。"
+                .into(),
+            tenant_id: school_id,
+            pinned: true,
+        });
     info!("已发布默认通知公告");
 
     Ok(())
@@ -307,17 +311,15 @@ mod tests {
 
     fn test_state(dev_mode: bool) -> AppState {
         let db: Arc<dyn Database> = Arc::new(
-            SledDb::open(&std::env::temp_dir().join(format!(
-                "drafftink_seed_test_{}",
-                Uuid::new_v4()
-            )))
+            SledDb::open(
+                &std::env::temp_dir().join(format!("drafftink_seed_test_{}", Uuid::new_v4())),
+            )
             .unwrap(),
         );
         let storage: Arc<dyn Storage> = Arc::new(
-            LocalStorage::new(&std::env::temp_dir().join(format!(
-                "drafftink_seed_store_{}",
-                Uuid::new_v4()
-            )))
+            LocalStorage::new(
+                &std::env::temp_dir().join(format!("drafftink_seed_store_{}", Uuid::new_v4())),
+            )
             .unwrap(),
         );
         let mut config = BackendConfig::default();
@@ -343,8 +345,16 @@ mod tests {
             state.db.get_user_by_username("admin").unwrap().is_none(),
             "dev_mode=false 时不应写入任何种子数据"
         );
-        assert!(state.db.get_user_by_username("teacher01").unwrap().is_none());
-        assert!(state.db.get_user_by_username("student01").unwrap().is_none());
+        assert!(state
+            .db
+            .get_user_by_username("teacher01")
+            .unwrap()
+            .is_none());
+        assert!(state
+            .db
+            .get_user_by_username("student01")
+            .unwrap()
+            .is_none());
     }
 
     #[test]
@@ -352,7 +362,15 @@ mod tests {
         let state = test_state(true);
         seed_default_data(&state).unwrap();
         assert!(state.db.get_user_by_username("admin").unwrap().is_some());
-        assert!(state.db.get_user_by_username("teacher01").unwrap().is_some());
-        assert!(state.db.get_user_by_username("student01").unwrap().is_some());
+        assert!(state
+            .db
+            .get_user_by_username("teacher01")
+            .unwrap()
+            .is_some());
+        assert!(state
+            .db
+            .get_user_by_username("student01")
+            .unwrap()
+            .is_some());
     }
 }

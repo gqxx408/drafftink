@@ -191,7 +191,7 @@ impl WasmApp {
         self.answer_data = answer_data.clone();
 
         // Create snapshot + signature + drftx (all via drafftink-core)
-        use drafftink_core::drftx::{ExerciseSnapshot, DrftxFile, sign_snapshot};
+        use drafftink_core::drftx::{sign_snapshot, DrftxFile, ExerciseSnapshot};
 
         let snapshot = ExerciseSnapshot::new(hw_id, stu_id, answer_data);
         let signature = match sign_snapshot(&snapshot, &sk) {
@@ -235,17 +235,21 @@ impl WasmApp {
 
     /// Build a text representation of the homework status for parent QR scanning.
     pub(crate) fn qr_text(&self) -> String {
-        let hw = self.homework_id.map(|u| u.to_string()).unwrap_or_else(|| "N/A".to_string());
-        let stu = self.student_id.map(|u| u.to_string()).unwrap_or_else(|| "N/A".to_string());
+        let hw = self
+            .homework_id
+            .map(|u| u.to_string())
+            .unwrap_or_else(|| "N/A".to_string());
+        let stu = self
+            .student_id
+            .map(|u| u.to_string())
+            .unwrap_or_else(|| "N/A".to_string());
         let status = if self.submit_status.is_empty() {
             "Not submitted"
         } else {
             &self.submit_status
         };
         let online = if self.online { "online" } else { "offline" };
-        format!(
-            "DRAFFTINK\nHW:{hw}\nStudent:{stu}\nStatus:{status}\nNet:{online}"
-        )
+        format!("DRAFFTINK\nHW:{hw}\nStudent:{stu}\nStatus:{status}\nNet:{online}")
     }
 }
 

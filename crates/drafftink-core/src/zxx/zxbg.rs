@@ -20,21 +20,93 @@ use serde::{Deserialize, Serialize};
 // ════════════════════════════════════════════════════════════════════════════
 
 /// 公文编号
-pub const ZXBG010101: FieldDef = FieldDef { id: "ZXBG010101", name: "公文编号", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: None, note: "" };
+pub const ZXBG010101: FieldDef = FieldDef {
+    id: "ZXBG010101",
+    name: "公文编号",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 /// 公文标题
-pub const ZXBG010102: FieldDef = FieldDef { id: "ZXBG010102", name: "公文标题", data_type: DataType::C, length: 200, obligation: Obligation::M, code_ref: None, source: None, note: "" };
+pub const ZXBG010102: FieldDef = FieldDef {
+    id: "ZXBG010102",
+    name: "公文标题",
+    data_type: DataType::C,
+    length: 200,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 /// 公文类型码（取用 JY/T 1001 公文类型）
-pub const ZXBG010103: FieldDef = FieldDef { id: "ZXBG010103", name: "公文类型码", data_type: DataType::C, length: 2, obligation: Obligation::M, code_ref: Some("JYT_1001_DOC_TYPE"), source: None, note: "JY/T 1001" };
+pub const ZXBG010103: FieldDef = FieldDef {
+    id: "ZXBG010103",
+    name: "公文类型码",
+    data_type: DataType::C,
+    length: 2,
+    obligation: Obligation::M,
+    code_ref: Some("JYT_1001_DOC_TYPE"),
+    source: None,
+    note: "JY/T 1001",
+};
 /// 发文日期（YYYYMMDD）
-pub const ZXBG010104: FieldDef = FieldDef { id: "ZXBG010104", name: "发文日期", data_type: DataType::D, length: 8, obligation: Obligation::M, code_ref: None, source: None, note: "YYYYMMDD" };
+pub const ZXBG010104: FieldDef = FieldDef {
+    id: "ZXBG010104",
+    name: "发文日期",
+    data_type: DataType::D,
+    length: 8,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "YYYYMMDD",
+};
 /// 发文部门（取用 JCXX0101 学校名称）
-pub const ZXBG010105: FieldDef = FieldDef { id: "ZXBG010105", name: "发文部门", data_type: DataType::C, length: 60, obligation: Obligation::M, code_ref: None, source: Some("JCXX010102"), note: "取用 JCXX010102 学校名称" };
+pub const ZXBG010105: FieldDef = FieldDef {
+    id: "ZXBG010105",
+    name: "发文部门",
+    data_type: DataType::C,
+    length: 60,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: Some("JCXX010102"),
+    note: "取用 JCXX010102 学校名称",
+};
 /// 紧急程度码（取用 JY/T 1001 紧急程度）
-pub const ZXBG010106: FieldDef = FieldDef { id: "ZXBG010106", name: "紧急程度码", data_type: DataType::C, length: 1, obligation: Obligation::M, code_ref: Some("JYT_1001_URGENCY"), source: None, note: "JY/T 1001" };
+pub const ZXBG010106: FieldDef = FieldDef {
+    id: "ZXBG010106",
+    name: "紧急程度码",
+    data_type: DataType::C,
+    length: 1,
+    obligation: Obligation::M,
+    code_ref: Some("JYT_1001_URGENCY"),
+    source: None,
+    note: "JY/T 1001",
+};
 /// 密级（取用 GB/T 7156 密级）
-pub const ZXBG010107: FieldDef = FieldDef { id: "ZXBG010107", name: "密级", data_type: DataType::C, length: 1, obligation: Obligation::M, code_ref: Some("JYT_1001_SECRET_LEVEL"), source: None, note: "GB/T 7156" };
+pub const ZXBG010107: FieldDef = FieldDef {
+    id: "ZXBG010107",
+    name: "密级",
+    data_type: DataType::C,
+    length: 1,
+    obligation: Obligation::M,
+    code_ref: Some("JYT_1001_SECRET_LEVEL"),
+    source: None,
+    note: "GB/T 7156",
+};
 /// 审批状态（取用 JY/T 1004 审批状态）
-pub const ZXBG010108: FieldDef = FieldDef { id: "ZXBG010108", name: "审批状态", data_type: DataType::C, length: 2, obligation: Obligation::M, code_ref: Some("JYT_1001_APPROVAL_STATUS"), source: None, note: "JY/T 1004" };
+pub const ZXBG010108: FieldDef = FieldDef {
+    id: "ZXBG010108",
+    name: "审批状态",
+    data_type: DataType::C,
+    length: 2,
+    obligation: Obligation::M,
+    code_ref: Some("JYT_1001_APPROVAL_STATUS"),
+    source: None,
+    note: "JY/T 1004",
+};
 
 /// 公文数据结构（ZXBG0101）。
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -85,15 +157,60 @@ impl EmgiRecordable for OfficialDoc {
 // ════════════════════════════════════════════════════════════════════════════
 
 /// 通知编号
-pub const ZXBG020101: FieldDef = FieldDef { id: "ZXBG020101", name: "通知编号", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: None, note: "" };
+pub const ZXBG020101: FieldDef = FieldDef {
+    id: "ZXBG020101",
+    name: "通知编号",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 /// 通知标题
-pub const ZXBG020102: FieldDef = FieldDef { id: "ZXBG020102", name: "通知标题", data_type: DataType::C, length: 200, obligation: Obligation::M, code_ref: None, source: None, note: "" };
+pub const ZXBG020102: FieldDef = FieldDef {
+    id: "ZXBG020102",
+    name: "通知标题",
+    data_type: DataType::C,
+    length: 200,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 /// 发布日期（YYYYMMDD）
-pub const ZXBG020103: FieldDef = FieldDef { id: "ZXBG020103", name: "发布日期", data_type: DataType::D, length: 8, obligation: Obligation::M, code_ref: None, source: None, note: "YYYYMMDD" };
+pub const ZXBG020103: FieldDef = FieldDef {
+    id: "ZXBG020103",
+    name: "发布日期",
+    data_type: DataType::D,
+    length: 8,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "YYYYMMDD",
+};
 /// 发布人（取用 JCJG0101 教职工姓名）
-pub const ZXBG020104: FieldDef = FieldDef { id: "ZXBG020104", name: "发布人", data_type: DataType::C, length: 50, obligation: Obligation::M, code_ref: None, source: Some("JCJG010102"), note: "取用 JCJG010102 姓名" };
+pub const ZXBG020104: FieldDef = FieldDef {
+    id: "ZXBG020104",
+    name: "发布人",
+    data_type: DataType::C,
+    length: 50,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: Some("JCJG010102"),
+    note: "取用 JCJG010102 姓名",
+};
 /// 接收范围
-pub const ZXBG020105: FieldDef = FieldDef { id: "ZXBG020105", name: "接收范围", data_type: DataType::C, length: 200, obligation: Obligation::M, code_ref: None, source: None, note: "如：全体教职工 / 三年级组" };
+pub const ZXBG020105: FieldDef = FieldDef {
+    id: "ZXBG020105",
+    name: "接收范围",
+    data_type: DataType::C,
+    length: 200,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "如：全体教职工 / 三年级组",
+};
 
 /// 通知公告数据结构（ZXBG0201）。
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -135,17 +252,71 @@ impl EmgiRecordable for Announcement {
 // ════════════════════════════════════════════════════════════════════════════
 
 /// 日程编号
-pub const ZXBG030101: FieldDef = FieldDef { id: "ZXBG030101", name: "日程编号", data_type: DataType::C, length: 20, obligation: Obligation::M, code_ref: None, source: None, note: "" };
+pub const ZXBG030101: FieldDef = FieldDef {
+    id: "ZXBG030101",
+    name: "日程编号",
+    data_type: DataType::C,
+    length: 20,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 /// 日程内容
-pub const ZXBG030102: FieldDef = FieldDef { id: "ZXBG030102", name: "日程内容", data_type: DataType::C, length: 500, obligation: Obligation::M, code_ref: None, source: None, note: "" };
+pub const ZXBG030102: FieldDef = FieldDef {
+    id: "ZXBG030102",
+    name: "日程内容",
+    data_type: DataType::C,
+    length: 500,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 /// 开始时间（YYYYMMDDhhmmss）
-pub const ZXBG030103: FieldDef = FieldDef { id: "ZXBG030103", name: "开始时间", data_type: DataType::C, length: 14, obligation: Obligation::M, code_ref: None, source: None, note: "YYYYMMDDhhmmss" };
+pub const ZXBG030103: FieldDef = FieldDef {
+    id: "ZXBG030103",
+    name: "开始时间",
+    data_type: DataType::C,
+    length: 14,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "YYYYMMDDhhmmss",
+};
 /// 结束时间（YYYYMMDDhhmmss）
-pub const ZXBG030104: FieldDef = FieldDef { id: "ZXBG030104", name: "结束时间", data_type: DataType::C, length: 14, obligation: Obligation::M, code_ref: None, source: None, note: "YYYYMMDDhhmmss" };
+pub const ZXBG030104: FieldDef = FieldDef {
+    id: "ZXBG030104",
+    name: "结束时间",
+    data_type: DataType::C,
+    length: 14,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "YYYYMMDDhhmmss",
+};
 /// 参与人
-pub const ZXBG030105: FieldDef = FieldDef { id: "ZXBG030105", name: "参与人", data_type: DataType::C, length: 200, obligation: Obligation::M, code_ref: None, source: None, note: "逗号分隔的姓名/工号" };
+pub const ZXBG030105: FieldDef = FieldDef {
+    id: "ZXBG030105",
+    name: "参与人",
+    data_type: DataType::C,
+    length: 200,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "逗号分隔的姓名/工号",
+};
 /// 地点
-pub const ZXBG030106: FieldDef = FieldDef { id: "ZXBG030106", name: "地点", data_type: DataType::C, length: 60, obligation: Obligation::M, code_ref: None, source: None, note: "" };
+pub const ZXBG030106: FieldDef = FieldDef {
+    id: "ZXBG030106",
+    name: "地点",
+    data_type: DataType::C,
+    length: 60,
+    obligation: Obligation::M,
+    code_ref: None,
+    source: None,
+    note: "",
+};
 
 /// 日程安排数据结构（ZXBG0301）。
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -199,8 +370,8 @@ mod tests {
             doc_type: "80".into(), // 通知
             issue_date: "20260210".into(),
             issue_dept: "教务处".into(),
-            urgency: "2".into(), // 加急
-            secret_level: "0".into(), // 非涉密
+            urgency: "2".into(),          // 加急
+            secret_level: "0".into(),     // 非涉密
             approval_status: "20".into(), // 审批通过
         }
     }
@@ -229,35 +400,68 @@ mod tests {
     #[test]
     fn test_zxbg01_mandatory_100pct() {
         let doc = sample_doc();
-        assert!(doc.validate().is_ok(), "公文数据校验应全过: {:?}", doc.validate());
+        assert!(
+            doc.validate().is_ok(),
+            "公文数据校验应全过: {:?}",
+            doc.validate()
+        );
         let ids: Vec<&str> = doc.fields().iter().map(|(d, _)| d.id).collect();
         assert_eq!(ids.len(), 8, "ZXBG01 必备数据元素应全覆盖");
         // 全部为必备(M)
-        assert!(doc.fields().iter().all(|(d, _)| d.obligation == Obligation::M));
+        assert!(doc
+            .fields()
+            .iter()
+            .all(|(d, _)| d.obligation == Obligation::M));
         // 代码表引用正确
-        let type_field = doc.fields().into_iter().find(|(d, _)| d.id == "ZXBG010103").unwrap();
+        let type_field = doc
+            .fields()
+            .into_iter()
+            .find(|(d, _)| d.id == "ZXBG010103")
+            .unwrap();
         assert_eq!(type_field.0.code_ref, Some("JYT_1001_DOC_TYPE"));
         // 取用来源正确
-        let dept = doc.fields().into_iter().find(|(d, _)| d.id == "ZXBG010105").unwrap();
+        let dept = doc
+            .fields()
+            .into_iter()
+            .find(|(d, _)| d.id == "ZXBG010105")
+            .unwrap();
         assert_eq!(dept.0.source, Some("JCXX010102"));
     }
 
     #[test]
     fn test_zxbg02_mandatory_100pct() {
         let n = sample_notice();
-        assert!(n.validate().is_ok(), "通知公告校验应全过: {:?}", n.validate());
+        assert!(
+            n.validate().is_ok(),
+            "通知公告校验应全过: {:?}",
+            n.validate()
+        );
         assert_eq!(n.fields().len(), 5);
-        assert!(n.fields().iter().all(|(d, _)| d.obligation == Obligation::M));
-        let pubr = n.fields().into_iter().find(|(d, _)| d.id == "ZXBG020104").unwrap();
+        assert!(n
+            .fields()
+            .iter()
+            .all(|(d, _)| d.obligation == Obligation::M));
+        let pubr = n
+            .fields()
+            .into_iter()
+            .find(|(d, _)| d.id == "ZXBG020104")
+            .unwrap();
         assert_eq!(pubr.0.source, Some("JCJG010102"));
     }
 
     #[test]
     fn test_zxbg03_mandatory_100pct() {
         let s = sample_schedule();
-        assert!(s.validate().is_ok(), "日程安排校验应全过: {:?}", s.validate());
+        assert!(
+            s.validate().is_ok(),
+            "日程安排校验应全过: {:?}",
+            s.validate()
+        );
         assert_eq!(s.fields().len(), 6);
-        assert!(s.fields().iter().all(|(d, _)| d.obligation == Obligation::M));
+        assert!(s
+            .fields()
+            .iter()
+            .all(|(d, _)| d.obligation == Obligation::M));
     }
 
     #[test]

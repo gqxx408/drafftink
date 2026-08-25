@@ -89,8 +89,10 @@ fn render_drawing_canvas(ui: &mut Ui, app: &mut WasmApp) {
     });
 
     let available_height = (ui.available_height() - 30.0).max(CANVAS_MIN_HEIGHT);
-    let (canvas_rect, response) =
-        ui.allocate_exact_size(egui::vec2(ui.available_width(), available_height), Sense::drag());
+    let (canvas_rect, response) = ui.allocate_exact_size(
+        egui::vec2(ui.available_width(), available_height),
+        Sense::drag(),
+    );
 
     // Draw canvas background and border
     let painter = ui.painter_at(canvas_rect);

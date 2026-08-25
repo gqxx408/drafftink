@@ -35,15 +35,13 @@ impl LoadedPlugin {
     /// （含 `host_data`）必须在返回的 [`LoadedPlugin`] 生命周期内保持有效
     /// （插件可能在内部捕获 `host_data` 指针）。
     pub unsafe fn load(path: &Path, ctx: &PluginContext) -> Result<Self, String> {
-        let lib = unsafe { libloading::Library::new(path) }
-            .map_err(|e| format!("open: {e}"))?;
+        let lib = unsafe { libloading::Library::new(path) }.map_err(|e| format!("open: {e}"))?;
         let lib = Arc::new(lib);
 
         // Resolve all exports before constructing Self
         let meta_ptr = {
             let sym: libloading::Symbol<unsafe extern "C" fn() -> PluginMeta> =
-                unsafe { lib.get(b"_plugin_meta") }
-                    .map_err(|e| format!("_plugin_meta: {e}"))?;
+                unsafe { lib.get(b"_plugin_meta") }.map_err(|e| format!("_plugin_meta: {e}"))?;
             unsafe { sym() }
         };
         let meta = PluginMetaOwned {
@@ -53,13 +51,15 @@ impl LoadedPlugin {
             version: unsafe { read_cstr(meta_ptr.version, meta_ptr.version_len) },
         };
         if meta.api_version != PLUGIN_API_VERSION {
-            return Err(format!("{} API v{}, host v{}", meta.name, meta.api_version, PLUGIN_API_VERSION));
+            return Err(format!(
+                "{} API v{}, host v{}",
+                meta.name, meta.api_version, PLUGIN_API_VERSION
+            ));
         }
 
         let create: libloading::Symbol<
             unsafe extern "C" fn(*const PluginContext) -> *mut std::ffi::c_void,
-        > = unsafe { lib.get(b"_plugin_create") }
-            .map_err(|e| format!("_plugin_create: {e}"))?;
+        > = unsafe { lib.get(b"_plugin_create") }.map_err(|e| format!("_plugin_create: {e}"))?;
         let handle = unsafe { create(ctx as *const PluginContext) };
         if handle.is_null() {
             return Err("_plugin_create returned null".into());
@@ -79,9 +79,20 @@ impl LoadedPlugin {
             *sym
         };
 
-        log::info!("Loaded plugin: {} v{} — {}", meta.name, meta.version, meta.desc);
+        log::info!(
+            "Loaded plugin: {} v{} — {}",
+            meta.name,
+            meta.version,
+            meta.desc
+        );
 
-        Ok(Self { _lib: lib, meta, handle, destroy, exec })
+        Ok(Self {
+            _lib: lib,
+            meta,
+            handle,
+            destroy,
+            exec,
+        })
     }
 
     /// Execute a named action.  Panics from the plugin are caught.
@@ -126,7 +137,9 @@ impl Drop for LoadedPlugin {
 // ----- Helpers -----------------------------------------------------------
 
 pub fn discover_plugins(dir: &Path) -> Vec<PathBuf> {
-    let Ok(iter) = std::fs::read_dir(dir) else { return vec![] };
+    let Ok(iter) = std::fs::read_dir(dir) else {
+        return vec![];
+    };
     iter.flatten()
         .map(|e| e.path())
         .filter(|p| {
@@ -139,6 +152,8 @@ pub fn discover_plugins(dir: &Path) -> Vec<PathBuf> {
 }
 
 unsafe fn read_cstr(ptr: *const u8, len: u32) -> String {
-    if ptr.is_null() || len == 0 { return String::new(); }
+    if ptr.is_null() || len == 0 {
+        return String::new();
+    }
     String::from_utf8_lossy(std::slice::from_raw_parts(ptr, len as usize)).into()
 }

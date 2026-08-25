@@ -52,23 +52,15 @@ use crate::element::{ElementData, ElementId};
 pub enum BoardCommand {
     /// Add a new element to the slide.
     /// *Forward*: push element. *Reverse*: remove element by id.
-    AddElement {
-        element: ElementData,
-    },
+    AddElement { element: ElementData },
 
     /// Remove an existing element.
     /// *Forward*: remove element by id. *Reverse*: re-insert at original index.
-    DeleteElement {
-        element: ElementData,
-        index: usize,
-    },
+    DeleteElement { element: ElementData, index: usize },
 
     /// Move an element by a world-space delta.
     /// *Forward*: add delta to position. *Reverse*: subtract delta.
-    MoveElement {
-        id: ElementId,
-        delta: [f32; 2],
-    },
+    MoveElement { id: ElementId, delta: [f32; 2] },
 
     /// Resize an element.
     /// *Forward*: set new size. *Reverse*: restore old size.

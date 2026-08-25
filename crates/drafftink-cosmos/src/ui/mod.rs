@@ -2,8 +2,8 @@
 //!
 //! 提供控制面板、3D 标签渲染和 2D 地图视图等 UI 功能。
 
-pub mod labels;
 pub mod controls;
+pub mod labels;
 pub mod map_view;
 
 // 重新导出主要类型和函数，方便外部使用

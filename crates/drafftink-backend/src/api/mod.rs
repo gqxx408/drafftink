@@ -60,9 +60,15 @@ pub fn router(state: AppState) -> Router {
         .route("/api/resource/*path", get(resource::download))
         // 录播资源管理平台（复用 RBAC）
         .route("/api/recording/resource", post(recording::publish_resource))
-        .route("/api/recording/resource/search", get(recording::search_resource))
+        .route(
+            "/api/recording/resource/search",
+            get(recording::search_resource),
+        )
         .route("/api/recording/resource/:id", get(recording::get_resource))
-        .route("/api/recording/resource/:id/comments", get(recording::get_resource_comments))
+        .route(
+            "/api/recording/resource/:id/comments",
+            get(recording::get_resource_comments),
+        )
         // 教师端发布直播帧（含自动导播信号）
         .route("/api/live/:room_id/frame", post(recording::publish_frame))
         // 多租户数据隔离演示接口
@@ -77,7 +83,10 @@ pub fn router(state: AppState) -> Router {
         .route("/api/mobile/todos", get(mobile::todos))
         .route("/api/mobile/workflow/start", post(mobile::workflow_start))
         .route("/api/mobile/workflow/:id", get(mobile::workflow_get))
-        .route("/api/mobile/workflow/approve", post(mobile::workflow_approve))
+        .route(
+            "/api/mobile/workflow/approve",
+            post(mobile::workflow_approve),
+        )
         .route("/api/mobile/announcements", get(mobile::announcements))
         .route("/api/mobile/meeting/book", post(mobile::meeting_book))
         .route("/api/mobile/seal/apply", post(mobile::seal_apply))

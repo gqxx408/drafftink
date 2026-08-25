@@ -54,8 +54,7 @@ impl SolarSystemViewer {
         ));
 
         // Render the solar system (sphere + textures + atmosphere)
-        self.renderer
-            .render(&bg_painter, screen_size, screen_rect);
+        self.renderer.render(&bg_painter, screen_size, screen_rect);
 
         // ── Canvas interaction layer ──
         egui::Area::new(egui::Id::new("solar_canvas"))
@@ -166,7 +165,10 @@ impl SolarSystemViewer {
                             if current_layer != DataLayer::Satellite && has_scene {
                                 ui.label("Blend:");
                                 let mut b = blend;
-                                ui.add(egui::Slider::new(&mut b, 0.0..=1.0).clamping(egui::SliderClamping::Always));
+                                ui.add(
+                                    egui::Slider::new(&mut b, 0.0..=1.0)
+                                        .clamping(egui::SliderClamping::Always),
+                                );
                                 if (b - blend).abs() > 1e-6 {
                                     blend_action = Some(b);
                                 }
@@ -265,7 +267,12 @@ impl SolarSystemViewer {
 
     /// Load a .enbx file and initialize the scene.
     fn load_enbx_file(&mut self, ctx: &egui::Context, path: PathBuf) {
-        self.status_message = format!("Loading: {}...", path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default());
+        self.status_message = format!(
+            "Loading: {}...",
+            path.file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default()
+        );
 
         match solar_system::load_enbx_solar_system(&path) {
             Ok(Some((scene, textures))) => {

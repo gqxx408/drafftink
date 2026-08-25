@@ -105,11 +105,7 @@ fn render_solar_system_top_down(
             Color32::from_rgba_unmultiplied(255, 200, 80, alpha),
         );
     }
-    painter.circle_filled(
-        center,
-        sun_radius,
-        Color32::from_rgb(255, 220, 100),
-    );
+    painter.circle_filled(center, sun_radius, Color32::from_rgb(255, 220, 100));
 
     if show_labels {
         painter.text(
@@ -196,11 +192,13 @@ fn render_planet_surface(
 
     let planet_color = scene.labels[planet_idx]
         .as_ref()
-        .map(|l| Color32::from_rgb(
-            (l.color[0] * 255.0) as u8,
-            (l.color[1] * 255.0) as u8,
-            (l.color[2] * 255.0) as u8,
-        ))
+        .map(|l| {
+            Color32::from_rgb(
+                (l.color[0] * 255.0) as u8,
+                (l.color[1] * 255.0) as u8,
+                (l.color[2] * 255.0) as u8,
+            )
+        })
         .unwrap_or(Color32::from_rgb(100, 150, 200));
 
     // 渐变背景
@@ -227,10 +225,7 @@ fn draw_gradient_background(painter: &Painter, rect: Rect, planet_color: &Color3
         let b = (35.0 + (planet_color.b() as f32 * 0.4) * t) as u8;
 
         painter.rect_filled(
-            Rect::from_min_max(
-                Pos2::new(rect.min.x, y_start),
-                Pos2::new(rect.max.x, y_end),
-            ),
+            Rect::from_min_max(Pos2::new(rect.min.x, y_start), Pos2::new(rect.max.x, y_end)),
             0.0,
             Color32::from_rgb(r, g, b),
         );
@@ -309,22 +304,21 @@ fn draw_planet_info_header(
         Pos2::new(rect.min.x, rect.min.y),
         Pos2::new(rect.max.x, rect.min.y + header_height),
     );
-    painter.rect_filled(
-        header_rect,
-        0.0,
-        Color32::from_black_alpha(180),
-    );
+    painter.rect_filled(header_rect, 0.0, Color32::from_black_alpha(180));
     painter.line_segment(
         [
             Pos2::new(rect.min.x, rect.min.y + header_height),
             Pos2::new(rect.max.x, rect.min.y + header_height),
         ],
-        Stroke::new(1.0, Color32::from_rgba_unmultiplied(
-            planet_color.r(),
-            planet_color.g(),
-            planet_color.b(),
-            150,
-        )),
+        Stroke::new(
+            1.0,
+            Color32::from_rgba_unmultiplied(
+                planet_color.r(),
+                planet_color.g(),
+                planet_color.b(),
+                150,
+            ),
+        ),
     );
 
     // 行星名称
@@ -333,11 +327,7 @@ fn draw_planet_info_header(
         egui::Align2::CENTER_CENTER,
         &info.name,
         egui::FontId::proportional(16.0),
-        Color32::from_rgb(
-            planet_color.r(),
-            planet_color.g(),
-            planet_color.b(),
-        ),
+        Color32::from_rgb(planet_color.r(), planet_color.g(), planet_color.b()),
     );
 
     // 副标题：直径和质量
@@ -346,8 +336,7 @@ fn draw_planet_info_header(
         egui::Align2::CENTER_CENTER,
         &format!(
             "直径 {:.0} km  |  质量 {:.2e} kg",
-            info.diameter_km,
-            info.mass_kg
+            info.diameter_km, info.mass_kg
         ),
         egui::FontId::proportional(10.0),
         Color32::from_rgb(180, 190, 210),
@@ -359,14 +348,7 @@ fn draw_planet_info_header(
 // ---------------------------------------------------------------------------
 
 /// 绘制椭圆（用多边形近似）
-fn draw_ellipse(
-    painter: &Painter,
-    center: Pos2,
-    a: f32,
-    b: f32,
-    rotation: f32,
-    stroke: Stroke,
-) {
+fn draw_ellipse(painter: &Painter, center: Pos2, a: f32, b: f32, rotation: f32, stroke: Stroke) {
     let segments = 64;
     let cos_rot = rotation.cos();
     let sin_rot = rotation.sin();

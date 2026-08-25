@@ -81,8 +81,7 @@ mod tests {
         let tmp = std::env::temp_dir().join("drafftink_test_audit");
         let _ = std::fs::create_dir_all(&tmp);
 
-        let mut logger =
-            crate::plugin::audit::AuditLogger::new(&tmp).expect("create audit logger");
+        let mut logger = crate::plugin::audit::AuditLogger::new(&tmp).expect("create audit logger");
 
         logger.log_event("test_plugin", "test_action", "none", "ok", true);
         logger.log_event("test_plugin", "test_action2", "data", "err", false);

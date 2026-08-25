@@ -65,8 +65,7 @@ pub fn generate_enbx_with_resources(
     let file = std::fs::File::create(output_path)
         .with_context(|| format!("failed to create output file: {}", output_path.display()))?;
     let mut zip = zip::ZipWriter::new(file);
-    let options = FileOptions::default()
-        .compression_method(CompressionMethod::Deflated);
+    let options = FileOptions::default().compression_method(CompressionMethod::Deflated);
 
     // ── Collect resource references ────────────────────────────────────
     let ref_map = collect_resource_refs(slides);
@@ -171,10 +170,7 @@ fn collect_refs_from_elements(
             EnbxElement::ActivityItem(a) => {
                 if let Some(bg) = &a.background_source {
                     if !bg.is_empty() && seen.insert(bg.clone()) {
-                        let filename = bg
-                            .strip_prefix("Resources/")
-                            .unwrap_or(bg)
-                            .to_string();
+                        let filename = bg.strip_prefix("Resources/").unwrap_or(bg).to_string();
                         refs.push((bg.clone(), filename));
                     }
                 }
@@ -272,7 +268,12 @@ fn generate_text_xml(t: &EnbxText, indent: usize) -> String {
     if t.italic {
         write_tag(&mut out, "Italic", "true", indent + 1);
     }
-    write_tag(&mut out, "Content", &xml_escape_text(&t.content), indent + 1);
+    write_tag(
+        &mut out,
+        "Content",
+        &xml_escape_text(&t.content),
+        indent + 1,
+    );
     out.push_str(&format!("{pad}</Text>\n"));
     out
 }
@@ -282,7 +283,12 @@ fn generate_image_xml(i: &EnbxImage, indent: usize) -> String {
     let mut out = String::new();
     out.push_str(&format!("{pad}<Image>\n"));
     write_rect(&mut out, i.x, i.y, i.width, i.height, indent + 1);
-    write_tag(&mut out, "Source", &xml_escape_text(&i.resource_id), indent + 1);
+    write_tag(
+        &mut out,
+        "Source",
+        &xml_escape_text(&i.resource_id),
+        indent + 1,
+    );
     write_tag(&mut out, "Opacity", &fmt_num(i.opacity), indent + 1);
     out.push_str(&format!("{pad}</Image>\n"));
     out
@@ -299,7 +305,12 @@ fn generate_shape_xml(s: &EnbxShape, indent: usize) -> String {
     write_rect(&mut out, s.x, s.y, s.width, s.height, indent + 1);
     write_tag(&mut out, "FillColor", &s.fill_color, indent + 1);
     write_tag(&mut out, "StrokeColor", &s.stroke_color, indent + 1);
-    write_tag(&mut out, "StrokeWidth", &fmt_num(s.stroke_width), indent + 1);
+    write_tag(
+        &mut out,
+        "StrokeWidth",
+        &fmt_num(s.stroke_width),
+        indent + 1,
+    );
     out.push_str(&format!("{pad}</Shape>\n"));
     out
 }
@@ -346,7 +357,12 @@ fn generate_video_xml(v: &EnbxVideo, indent: usize) -> String {
     let mut out = String::new();
     out.push_str(&format!("{pad}<Video>\n"));
     write_rect(&mut out, v.x, v.y, v.width, v.height, indent + 1);
-    write_tag(&mut out, "Source", &xml_escape_text(&v.resource_id), indent + 1);
+    write_tag(
+        &mut out,
+        "Source",
+        &xml_escape_text(&v.resource_id),
+        indent + 1,
+    );
     if v.is_loop {
         write_tag(&mut out, "IsLoop", "true", indent + 1);
     }
@@ -362,7 +378,12 @@ fn generate_audio_xml(a: &EnbxAudio, indent: usize) -> String {
     let mut out = String::new();
     out.push_str(&format!("{pad}<Audio>\n"));
     write_rect(&mut out, a.x, a.y, a.width, a.height, indent + 1);
-    write_tag(&mut out, "Source", &xml_escape_text(&a.resource_id), indent + 1);
+    write_tag(
+        &mut out,
+        "Source",
+        &xml_escape_text(&a.resource_id),
+        indent + 1,
+    );
     if a.is_loop {
         write_tag(&mut out, "IsLoop", "true", indent + 1);
     }
@@ -373,7 +394,12 @@ fn generate_audio_xml(a: &EnbxAudio, indent: usize) -> String {
         write_tag(&mut out, "Volume", &fmt_num(a.volume), indent + 1);
     }
     if a.duration_ms > 0 {
-        write_tag(&mut out, "DurationMs", &a.duration_ms.to_string(), indent + 1);
+        write_tag(
+            &mut out,
+            "DurationMs",
+            &a.duration_ms.to_string(),
+            indent + 1,
+        );
     }
     out.push_str(&format!("{pad}</Audio>\n"));
     out
@@ -396,10 +422,25 @@ fn generate_activity_item_xml(a: &EnbxActivityItem, indent: usize) -> String {
     let mut out = String::new();
     out.push_str(&format!("{pad}<ActivityItem>\n"));
     write_rect(&mut out, a.x, a.y, a.width, a.height, indent + 1);
-    write_tag(&mut out, "ResourceId", &xml_escape_text(&a.resource_id), indent + 1);
-    write_tag(&mut out, "ActivityId", &xml_escape_text(&a.activity_id), indent + 1);
+    write_tag(
+        &mut out,
+        "ResourceId",
+        &xml_escape_text(&a.resource_id),
+        indent + 1,
+    );
+    write_tag(
+        &mut out,
+        "ActivityId",
+        &xml_escape_text(&a.activity_id),
+        indent + 1,
+    );
     if let Some(bg) = &a.background_source {
-        write_tag(&mut out, "BackgroundSource", &xml_escape_text(bg), indent + 1);
+        write_tag(
+            &mut out,
+            "BackgroundSource",
+            &xml_escape_text(bg),
+            indent + 1,
+        );
     }
     if let Some(t) = &a.text_content {
         write_tag(&mut out, "Text", &xml_escape_text(t), indent + 1);
@@ -453,15 +494,32 @@ fn generate_topic_xml(t: &EnbxTopic, indent: usize) -> String {
         "{pad}<Topic type=\"{}\">\n",
         xml_escape_attr(&t.topic_type)
     ));
-    write_rect(&mut out, t.center_x, t.center_y, t.center_w, t.center_h, indent + 1);
-    write_tag(&mut out, "Title", &xml_escape_text(&t.center_text), indent + 1);
+    write_rect(
+        &mut out,
+        t.center_x,
+        t.center_y,
+        t.center_w,
+        t.center_h,
+        indent + 1,
+    );
+    write_tag(
+        &mut out,
+        "Title",
+        &xml_escape_text(&t.center_text),
+        indent + 1,
+    );
     let npad = "  ".repeat(indent + 1);
     out.push_str(&format!("{npad}<Nodes>\n"));
     let ipad = "  ".repeat(indent + 2);
     for child in &t.children {
         out.push_str(&format!("{ipad}<Node>\n"));
         write_tag(&mut out, "Title", &xml_escape_text(&child.text), indent + 3);
-        write_tag(&mut out, "Location", &xml_escape_text(&child.location), indent + 3);
+        write_tag(
+            &mut out,
+            "Location",
+            &xml_escape_text(&child.location),
+            indent + 3,
+        );
         write_tag(
             &mut out,
             "ContentWidth",
@@ -710,7 +768,8 @@ mod tests {
         let mut resources = HashMap::new();
         resources.insert("test_image.png".to_string(), b"fake_png_data".to_vec());
 
-        generate_enbx_with_resources(&[slide], &resources, &HashMap::new(), &path).expect("generate");
+        generate_enbx_with_resources(&[slide], &resources, &HashMap::new(), &path)
+            .expect("generate");
 
         let file = std::fs::File::open(&path).expect("open");
         let mut archive = zip::ZipArchive::new(file).expect("zip");
