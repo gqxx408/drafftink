@@ -464,6 +464,19 @@ pub fn line_draw_result(start: Pos2, current: Pos2, min_len: f32) -> Option<(Pos
     (start.distance(current) > min_len).then_some((start, current))
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 教具统一灰色视觉常量（三角尺 / 直尺共用）
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// 教具主体描边与 cm 主刻度（深灰，2px 边框 / 1.5px 主刻度共用）。
+pub const SETSQUARE_GRAY: Color32 = Color32::from_gray(50);
+/// 教具半透明极淡灰填充（三角尺面 / 直尺尺身）。
+pub const SETSQUARE_FILL: Color32 = Color32::from_rgba_premultiplied(170, 170, 170, 46);
+/// 次刻度（mm 短刻度 / 半 cm 中刻度）的灰色。
+pub const SETSQUARE_TICK_GRAY: Color32 = Color32::from_gray(115);
+/// 刻度数字 / 标注文本的灰色。
+pub const SETSQUARE_TEXT_GRAY: Color32 = Color32::from_gray(78);
+
 /// 直尺每厘米对应的屏幕像素（37.8 px/cm → 1mm ≈ 3.78px）。
 pub const PIXELS_PER_CM: f32 = 37.8;
 
@@ -485,11 +498,10 @@ pub fn snap_dir_grid45(v: Vec2) -> Vec2 {
     Vec2::new(snapped.cos(), -snapped.sin()) * len
 }
 
-/// 直尺第 `mm_index` 个毫米刻度的位置（0 = start 端点）。
-pub fn ruler_tick_pos(t: &RulerTool, mm_index: usize) -> Pos2 {
-    let dir = ruler_dir(t);
-    let step = PIXELS_PER_CM / 10.0;
-    t.start + dir * (mm_index as f32 * step)
+/// 直尺第 `mm_index` 个毫米刻度的位置（0 = start 端点，沿 `dir` 方向）。
+/// `pixels_per_cm` 决定毫米间距（默认 [`PIXELS_PER_CM`]）。
+pub fn ruler_mm_pos(start: Pos2, dir: Vec2, mm_index: usize, pixels_per_cm: f32) -> Pos2 {
+    start + dir * (mm_index as f32 * pixels_per_cm / 10.0)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -548,8 +560,8 @@ pub fn draw_set_square(painter: &Painter, t: &SetSquareTool) {
     let pts = set_square_points(t);
     painter.add(egui::Shape::convex_polygon(
         pts.to_vec(),
-        Color32::from_rgba_unmultiplied(100, 150, 255, 80),
-        Stroke::new(1.0, Color32::from_rgb(20, 40, 120)),
+        SETSQUARE_FILL,
+        Stroke::new(1.0, SETSQUARE_GRAY),
     ));
     // 直角标记（小方块）。
     let dir = rotate_vec(Vec2::new(1.0, 0.0), t.rotation_deg.to_radians());
@@ -560,7 +572,7 @@ pub fn draw_set_square(painter: &Painter, t: &SetSquareTool) {
     painter.add(egui::Shape::convex_polygon(
         vec![o + dir * m, p3, o + perp * m],
         Color32::TRANSPARENT,
-        Stroke::new(1.0, Color32::from_rgb(20, 40, 120)),
+        Stroke::new(1.0, SETSQUARE_GRAY),
     ));
     // 旋转角文本。
     painter.text(
@@ -568,22 +580,22 @@ pub fn draw_set_square(painter: &Painter, t: &SetSquareTool) {
         Align2::CENTER_CENTER,
         format!("{:.0}°", t.rotation_deg),
         FontId::proportional(13.0),
-        Color32::from_rgb(20, 40, 120),
+        SETSQUARE_TEXT_GRAY,
     );
 
-    // 旋转手柄（重心）：深色圆点 + 外圈，旋转拖拽时高亮为亮蓝。
+    // 旋转手柄（重心）：灰色圆点 + 外圈，旋转拖拽时高亮为亮蓝。
     let grip = set_square_centroid(t);
     if t.rotating {
         painter.circle_stroke(grip, 10.0, Stroke::new(2.0, Color32::from_rgb(0, 150, 255)));
         painter.circle_filled(grip, 5.0, Color32::from_rgb(0, 150, 255));
     } else {
-        painter.circle_stroke(grip, 8.0, Stroke::new(1.0, Color32::from_gray(160)));
-        painter.circle_filled(grip, 4.0, Color32::from_rgb(20, 40, 120));
+        painter.circle_stroke(grip, 8.0, Stroke::new(1.0, SETSQUARE_TICK_GRAY));
+        painter.circle_filled(grip, 4.0, SETSQUARE_GRAY);
     }
 
     // 三个顶点手柄：浅灰小圆点（拖拽任一顶点均可绕 origin 旋转）。
     for v in pts.iter() {
-        painter.circle_filled(*v, 3.0, Color32::from_gray(120));
+        painter.circle_filled(*v, 3.0, SETSQUARE_TICK_GRAY);
     }
 
     // 沿线画线：虚线预览线段 + 长度文本。
@@ -674,51 +686,117 @@ pub fn draw_protractor(painter: &Painter, t: &ProtractorTool) {
     }
 }
 
-/// 直尺：主体 + 毫米/厘米刻度 + 端点手柄 + 长度标注。
+/// 直尺三级刻度数量（纯几何）：返回 `(cm 主刻度线数, 半 cm 中刻度线数, mm 次刻度线数)`，
+/// 供 [`draw_ruler_ticks`] 绘制与刻度数量测试复用。
+///
+/// - cm 主刻度遍历 `0..=cm_count`（含两端），故线数 = cm_count + 1；
+/// - 半 cm 中刻度：half 网格 `1..whole` 中奇数（即 cm+5mm 处）；
+/// - mm 次刻度：`1..whole` 中跳过 5 的倍数（整 cm 与 半 cm）。
+pub fn ruler_scale_counts(length: f32, pixels_per_cm: f32) -> (usize, usize, usize) {
+    let mm_step = pixels_per_cm / 10.0;
+    let half_cm_step = pixels_per_cm / 2.0;
+    let mm_count = (length / mm_step) as usize;
+    let half_cm_count = (length / half_cm_step) as usize;
+    let cm_count = (length / pixels_per_cm) as usize;
+
+    let cm_lines = cm_count + 1;
+    let half_cm_lines = (1..half_cm_count).filter(|i| i % 2 != 0).count();
+    let mm_lines = (1..mm_count).filter(|i| i % 5 != 0).count();
+    (cm_lines, half_cm_lines, mm_lines)
+}
+
+/// 直尺尺身厚度（测量线向下延伸，px）。
+const RULER_BODY_DEPTH: f32 = 26.0;
+
+/// 直尺三级刻度（mm 次 / 半 cm 中 / cm 主 + 数字）。
+///
+/// `start`–`end` 为直尺测量线（尺身顶边）；刻度沿 `-perp` 方向（垂直测量线、朝尺身内）延伸，
+/// 数字用 `Align2::CENTER_BOTTOM` 落于主刻度下方。
+pub fn draw_ruler_ticks(
+    painter: &Painter,
+    start: Pos2,
+    end: Pos2,
+    pixels_per_cm: f32,
+) {
+    let dir = (end - start).normalized();
+    let perp = dir.rot90();
+    let length = start.distance(end);
+    if length <= 0.0 {
+        return;
+    }
+
+    let (cm_lines, half_cm_lines, mm_lines) = ruler_scale_counts(length, pixels_per_cm);
+
+    // --- mm 次刻度：第 j 根（0 起）的毫米序数 = j+1 + j/4（跳过每第 5 个刻度）。---
+    for j in 0..mm_lines {
+        let pos = ruler_mm_pos(start, dir, j + 1 + j / 4, pixels_per_cm);
+        painter.line_segment([pos, pos - perp * 4.0], Stroke::new(1.0, SETSQUARE_TICK_GRAY));
+    }
+
+    // --- 半 cm 中刻度：half 网格奇数序数（2k+1 → 毫米序数 ×5）。---
+    for k in 0..half_cm_lines {
+        let pos = ruler_mm_pos(start, dir, (2 * k + 1) * 5, pixels_per_cm);
+        painter.line_segment([pos, pos - perp * 7.0], Stroke::new(1.0, SETSQUARE_TICK_GRAY));
+    }
+
+    // --- cm 主刻度 + 数字（0 起，每 cm 一个，毫米序数 ×10）。---
+    for i in 0..cm_lines {
+        let pos = ruler_mm_pos(start, dir, i * 10, pixels_per_cm);
+        painter.line_segment([pos, pos - perp * 10.0], Stroke::new(1.5, SETSQUARE_GRAY));
+        if i > 0 {
+            painter.text(
+                pos - perp * 14.0,
+                Align2::CENTER_BOTTOM,
+                i.to_string(),
+                FontId::proportional(10.0),
+                SETSQUARE_TEXT_GRAY,
+            );
+        }
+    }
+}
+
+/// 直尺：半透明灰白尺身 + mm/cm 双级刻度 + 端点手柄 + 长度标注。
 pub fn draw_ruler(painter: &Painter, t: &RulerTool) {
     let dir = ruler_dir(t);
     let perp = dir.rot90();
-    let body = Color32::from_gray(60);
 
-    // 主体（3px 深灰直线）。
-    painter.line_segment([t.start, t.end], Stroke::new(3.0, body));
+    // 尺身矩形：测量线（start→end）为顶边，沿 -perp（垂直测量线）向下延伸。
+    let body = [
+        t.start,
+        t.end,
+        t.end - perp * RULER_BODY_DEPTH,
+        t.start - perp * RULER_BODY_DEPTH,
+    ];
+    painter.add(egui::Shape::convex_polygon(
+        body.to_vec(),
+        SETSQUARE_FILL,
+        Stroke::new(2.0, SETSQUARE_GRAY),
+    ));
 
-    // 刻度：每 1mm 短刻度（3px），每 1cm 长刻度（8px）+ 数字标签。
-    let mm_step = PIXELS_PER_CM / 10.0;
-    let total_mm = (t.start.distance(t.end) / mm_step).floor() as usize;
-    for i in 0..=total_mm {
-        let is_cm = i % 10 == 0;
-        let tick_len = if is_cm { 8.0 } else { 3.0 };
-        let base = ruler_tick_pos(t, i);
-        let tip = base + perp * tick_len;
-        painter.line_segment([base, tip], Stroke::new(1.0, body));
-        if is_cm {
-            let label = base + perp * (tick_len + 12.0);
-            painter.text(label, Align2::CENTER_CENTER, format!("{}", i / 10), FontId::proportional(11.0), body);
-        }
-    }
+    // 刻度（尺身之后、手柄之前）。
+    draw_ruler_ticks(painter, t.start, t.end, PIXELS_PER_CM);
 
-    // 端点手柄：半径 5px 小圆点，拖拽中高亮为蓝色。
+    // 端点手柄：默认灰、拖拽中亮蓝高亮。
     let start_active = matches!(t.dragging_end, Some(WhichEnd::Start));
     let end_active = matches!(t.dragging_end, Some(WhichEnd::End));
     for (p, active) in [(t.start, start_active), (t.end, end_active)] {
         if active {
-            painter.circle_stroke(p, 6.0, Stroke::new(2.0, Color32::from_rgb(0, 150, 255)));
-            painter.circle_filled(p, 5.0, Color32::from_rgb(0, 150, 255));
+            painter.circle_stroke(p, 9.0, Stroke::new(2.0, Color32::from_rgb(0, 150, 255)));
+            painter.circle_filled(p, 7.0, Color32::from_rgb(0, 150, 255));
         } else {
-            painter.circle_filled(p, 4.0, body);
+            painter.circle_filled(p, 5.0, SETSQUARE_GRAY);
         }
     }
 
-    // 长度标注：直尺上方居中显示总长（cm）。
+    // 长度标注：尺身下缘居中显示总长（cm）。
     let mid = t.start.lerp(t.end, 0.5);
     let len_cm = t.start.distance(t.end) / PIXELS_PER_CM;
     painter.text(
-        mid + perp * 22.0,
+        mid - perp * (RULER_BODY_DEPTH + 10.0),
         Align2::CENTER_CENTER,
         format!("L = {len_cm:.1} cm"),
         FontId::proportional(14.0),
-        Color32::from_rgb(180, 30, 30),
+        SETSQUARE_TEXT_GRAY,
     );
 }
 
@@ -1142,18 +1220,19 @@ mod tests {
             dragging_body: false,
             last_mouse: Pos2::ZERO,
         };
+        let dir = ruler_dir(&t);
         // 0mm = start。
-        assert_eq!(ruler_tick_pos(&t, 0), t.start);
+        assert_eq!(ruler_mm_pos(t.start, dir, 0, PIXELS_PER_CM), t.start);
         // 10mm（1cm）= start + 37.8px。
-        let one_cm = ruler_tick_pos(&t, 10);
+        let one_cm = ruler_mm_pos(t.start, dir, 10, PIXELS_PER_CM);
         assert!((one_cm.x - PIXELS_PER_CM).abs() < 1e-3);
         assert!(one_cm.y.abs() < 1e-3);
         // 50mm（5cm）= end。
-        let five_cm = ruler_tick_pos(&t, 50);
+        let five_cm = ruler_mm_pos(t.start, dir, 50, PIXELS_PER_CM);
         assert!((five_cm.x - t.end.x).abs() < 1e-3);
         // 相邻毫米刻度间距 = PIXELS_PER_CM / 10 ≈ 3.78px。
-        let a = ruler_tick_pos(&t, 1);
-        let b = ruler_tick_pos(&t, 2);
+        let a = ruler_mm_pos(t.start, dir, 1, PIXELS_PER_CM);
+        let b = ruler_mm_pos(t.start, dir, 2, PIXELS_PER_CM);
         assert!((b.x - a.x - (PIXELS_PER_CM / 10.0)).abs() < 1e-3);
     }
 
@@ -1168,6 +1247,22 @@ mod tests {
         let v = snap_dir_grid45(Vec2::new(1.0, 100.0));
         assert!(v.x.abs() < 1e-3, "竖直吸附失败: {v:?}");
         assert!((v.y - 100.0).abs() < 1.0, "长度误差: {v:?}");
+    }
+
+    /// 200px 长直尺 → 约 5 个主刻度（0,1,2,3,4,5 cm），三级刻度线的数量正确。
+    #[test]
+    fn test_ruler_tick_count_on_200px() {
+        let len = 200.0;
+        let ppcm = PIXELS_PER_CM;
+        let (cm_lines, half_cm_lines, mm_lines) = ruler_scale_counts(len, ppcm);
+        // cm 主刻度：cm_count = 5，遍历 0..=5 → 6 条线（含两端 "0..5 cm"）。
+        assert_eq!(cm_lines, 6);
+        // 半 cm 中刻度：half 网格 1..10 中奇数 {1,3,5,7,9} → 5 条。
+        assert_eq!(half_cm_lines, 5);
+        // mm 次刻度：1..52 中跳过 5 的倍数（10 处）→ 51 - 10 = 41 条。
+        assert_eq!(mm_lines, 41);
+        // 主刻度数 = cm_lines - 1 = 5。
+        assert_eq!(cm_lines - 1, 5);
     }
 
     /// 倒计时器：`MM:SS` 格式化（纯函数）。
