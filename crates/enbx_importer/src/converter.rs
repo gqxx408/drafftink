@@ -238,8 +238,8 @@ fn parse_enbx_native(xml: &str, ref_map: &HashMap<String, String>) -> Vec<Elemen
                     rest = &rest[rest.len()..];
                 }
             }
-            "Image" => {
-                let close = find_close_robust(rest, "Image");
+            "Image" | "Picture" => {
+                let close = find_close_robust(rest, tag_name);
                 let block = &rest[..close];
                 if let Ok(Some(e)) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                     parse_enbx_image(block, ref_map, z)
@@ -603,7 +603,7 @@ fn parse_enbx_shape(xml: &str, z_order: i32) -> Option<Element> {
             "Ellipse" | "Oval" => ShapeType::Ellipse,
             _ => ShapeType::Rectangle, // default fallback
         };
-        log::debug!("Shape preset: {:?} scale_y={}", shape_type, scale_y);
+        log::debug!("Shape preset: {shape_type:?} scale_y={scale_y}");
         Some(Element::Shape(ShapeElement {
             base,
             shape_type,
@@ -618,6 +618,9 @@ fn parse_enbx_shape(xml: &str, z_order: i32) -> Option<Element> {
 // Diagnostic test: parse real Seewo slide XML and report element kinds.
 // Run: cargo test -p enbx_importer diag_shape_parsing -- --nocapture
 // ===========================================================================
+// 该测试模块位于文件中部（其后仍有生产代码），clippy 对此告警属正常结构，
+// 显式放行（不移动模块以免破坏并行协作者的 diff）。
+#[allow(clippy::items_after_test_module)]
 #[cfg(test)]
 mod diagnostic {
     use super::*;

@@ -324,8 +324,7 @@ mod tests {
         let res = extract_resources(&mut archive, &ref_map, &dest);
         assert!(
             matches!(res, Err(EnbxError::Security(_))),
-            "expected Security error, got {:?}",
-            res
+            "expected Security error, got {res:?}",
         );
         let _ = std::fs::remove_dir_all(&dest);
     }
@@ -356,8 +355,7 @@ mod tests {
         let res = extract_resources(&mut archive, &ref_map, &dest);
         assert!(
             matches!(res, Err(EnbxError::ZipBomb)),
-            "expected ZipBomb, got {:?}",
-            res
+            "expected ZipBomb, got {res:?}",
         );
         let _ = std::fs::remove_dir_all(&dest);
     }
