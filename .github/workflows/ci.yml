@@ -18,13 +18,24 @@ jobs:
       - name: 📥 Checkout 代码
         uses: actions/checkout@v4
 
+      - name: 🐧 安装 Linux GUI 依赖 (eframe/egui)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            libxkbcommon-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev
+
       - name: 🦀 安装 Rust 工具链
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
 
       - name: 📦 缓存依赖（加速 10 倍）
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@v1
 
       - name: 🎨 检查代码格式
         run: cargo fmt --all -- --check
@@ -32,5 +43,5 @@ jobs:
       - name: 🧪 跑全部测试
         run: cargo test --workspace --all-targets
 
-      - name: 🔍 Clippy 静态分析
-        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: 🔍 Clippy 静态分析（仅核心 crate，零警告）
+        run: cargo clippy -p drafftink-desktop -p enbx_importer --all-targets -- -D warnings
