@@ -18,7 +18,8 @@ jobs:
     steps:
       - name: 📥 Checkout 代码
         uses: actions/checkout@v4
-
+      - name: 🔧 安装系统库
+        run: sudo apt-get update && sudo apt-get install -y ca-certificates libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libudev-dev pkg-config
       - name: 🐧 安装 Linux GUI 依赖 (eframe/egui)
         run: |
           sudo apt-get update
