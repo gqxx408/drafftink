@@ -239,7 +239,9 @@ mod tests {
         // 旋转 PI 弧度（180°），四元数的角度应该是 PI
         let (axis, angle) = transforms[0].rotation.axis_angle().unwrap();
         assert!((angle - PI).abs() < 1e-5, "angle = {}", angle);
-        assert!((axis.y - 1.0).abs() < 1e-5);
+        // 180° 旋转存在轴方向二义性：绕 +Y 与绕 -Y 旋转结果相同，
+        // axis_angle() 可能返回 ±Y，故只需断言轴落在 Y 轴上。
+        assert!((axis.y.abs() - 1.0).abs() < 1e-5);
     }
 
     #[test]
