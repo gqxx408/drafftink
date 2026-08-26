@@ -1130,9 +1130,8 @@ impl GeometryViewer {
                 if ui.button("📥 导入希沃 XML").clicked() {
                     actions.import_seewo_xml = true;
                 }
-                if self.seewo_slide.is_some() {
-                    let n = self.seewo_slide.as_ref().unwrap().cylinders.len()
-                        + self.seewo_slide.as_ref().unwrap().cones.len();
+                if let Some(slide) = &self.seewo_slide {
+                    let n = slide.cylinders.len() + slide.cones.len();
                     ui.label(
                         egui::RichText::new(format!("已加载 {n} 个 3D 对象"))
                             .size(10.0)

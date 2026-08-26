@@ -603,9 +603,9 @@ impl QuizPanel {
                 .next()
                 .and_then(|c| {
                     if c.is_ascii_uppercase() {
-                        Some((c as u8 - b'A') as u8)
+                        Some(c as u8 - b'A')
                     } else if c.is_ascii_digit() {
-                        Some((c as u8 - b'0') as u8)
+                        Some(c as u8 - b'0')
                     } else {
                         None
                     }
@@ -617,9 +617,9 @@ impl QuizPanel {
                     .chars()
                     .filter_map(|c| {
                         if c.is_ascii_uppercase() {
-                            Some((c as u8 - b'A') as u8)
+                            Some(c as u8 - b'A')
                         } else if c.is_ascii_digit() {
-                            Some((c as u8 - b'0') as u8)
+                            Some(c as u8 - b'0')
                         } else {
                             None
                         }

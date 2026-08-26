@@ -134,7 +134,7 @@ async fn handle_connection(
         session_id: "quiz-1".into(),
     };
     if let Ok(json) = serde_json::to_string(&welcome) {
-        let _ = ws_sender.send(Message::Text(json.into())).await;
+        let _ = ws_sender.send(Message::Text(json)).await;
     }
 
     // 接收消息循环
@@ -145,7 +145,7 @@ async fn handle_connection(
 
                 // 发送回复（如果有）
                 if let Some(reply_json) = response {
-                    let _ = ws_sender.send(Message::Text(reply_json.into())).await;
+                    let _ = ws_sender.send(Message::Text(reply_json)).await;
                 }
             }
             Message::Close(_) => {

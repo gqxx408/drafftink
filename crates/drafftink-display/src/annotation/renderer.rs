@@ -160,7 +160,7 @@ impl AnnotationRenderer {
             preview.circle_stroke(
                 p,
                 radius,
-                Stroke::new(1.5, Color32::from_rgba_premultiplied(100, 100, 100, 180)),
+                Stroke::new(1.5_f32, Color32::from_rgba_premultiplied(100, 100, 100, 180)),
             );
         }
     }

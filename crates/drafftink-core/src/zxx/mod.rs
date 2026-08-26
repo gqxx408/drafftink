@@ -139,7 +139,6 @@ mod tests {
                 marital: Some("0".to_string()),
                 hmt: Some("0".to_string()),
                 health: Some("1".to_string()),
-                ..Default::default()
             },
             student_source: Some("1".to_string()),
             blood: None,

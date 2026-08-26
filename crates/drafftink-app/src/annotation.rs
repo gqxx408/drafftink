@@ -224,12 +224,11 @@ impl StrokeData {
             // --- 3.  Expand `inside` to cover segments that graze the circle ---
             let mut erase = inside.clone();
             for i in 0..pts.len().saturating_sub(1) {
-                if !erase[i] || !erase[i + 1] {
-                    if point_to_segment_distance(center, pts[i], pts[i + 1]) <= radius {
+                if (!erase[i] || !erase[i + 1])
+                    && point_to_segment_distance(center, pts[i], pts[i + 1]) <= radius {
                         erase[i] = true;
                         erase[i + 1] = true;
                     }
-                }
             }
 
             // --- 4.  Walk the points, building new segments.  At each
@@ -396,21 +395,21 @@ fn circle_line_intersection(center: Pos2, radius: f32, from: Pos2, dir: Pos2) ->
 
     let t = if from_inside {
         // Inside → outside: pick the larger root as the exit.
-        if t1 >= 0.0 && t1 <= 1.0 {
+        if (0.0..=1.0).contains(&t1) {
             t1
         } else {
             t2
         }
     } else {
         // Outside → inside: pick the smaller root as the entry.
-        if t2 >= 0.0 && t2 <= 1.0 {
+        if (0.0..=1.0).contains(&t2) {
             t2
         } else {
             t1
         }
     };
 
-    if t >= 0.0 && t <= 1.0 {
+    if (0.0..=1.0).contains(&t) {
         Some(Pos2::new(from.x + d.x * t, from.y + d.y * t))
     } else {
         None
@@ -437,8 +436,8 @@ fn rdp_simplify(points: Vec<Pos2>, epsilon: f32) -> Vec<Pos2> {
     let mut dmax_sq = 0.0_f32;
     let mut index = 0;
 
-    for i in 1..points.len() - 1 {
-        let d_sq = perpendicular_distance_sq(points[i], first, last);
+    for (i, &p) in points.iter().enumerate().skip(1).take(points.len() - 1) {
+        let d_sq = perpendicular_distance_sq(p, first, last);
         if d_sq > dmax_sq {
             dmax_sq = d_sq;
             index = i;
@@ -708,13 +707,12 @@ impl AnnotationState {
 
         // Pinch resize: when two fingers are touching but the zoom delta
         // indicates a pinch gesture (not just two fingers held still).
-        if matches!(self.current_tool, AnnotationTool::Eraser) {
-            if two_finger_touch && (zoom_delta - 1.0).abs() > 0.02 {
+        if matches!(self.current_tool, AnnotationTool::Eraser)
+            && two_finger_touch && (zoom_delta - 1.0).abs() > 0.02 {
                 let delta = (zoom_delta - 1.0) * self.eraser_size * 0.5;
                 self.adjust_eraser_size(delta);
                 return; // don't erase during pinch
             }
-        }
 
         let wants_erase = matches!(self.current_tool, AnnotationTool::Eraser)
             || right_clicked
@@ -724,8 +722,8 @@ impl AnnotationState {
 
         // --- Pen / Highlighter drawing ---
         match self.current_tool {
-            AnnotationTool::Pen | AnnotationTool::Highlighter => {
-                if !self.erasing {
+            AnnotationTool::Pen | AnnotationTool::Highlighter
+                if !self.erasing => {
                     if response.drag_started() {
                         if let Some(p) = hover {
                             self.start_stroke(p);
@@ -740,7 +738,6 @@ impl AnnotationState {
                         self.commit_stroke();
                     }
                 }
-            }
             _ => {}
         }
 
@@ -863,7 +860,7 @@ impl AnnotationState {
             if self.erasing || matches!(self.current_tool, AnnotationTool::Eraser) {
                 let fill = Color32::from_rgba_unmultiplied(128, 128, 128, 60);
                 let stroke =
-                    egui::Stroke::new(2.0, Color32::from_rgba_unmultiplied(80, 80, 80, 120));
+                    egui::Stroke::new(2.0_f32, Color32::from_rgba_unmultiplied(80, 80, 80, 120));
                 painter.circle_filled(p, self.eraser_size, fill);
                 painter.circle_stroke(p, self.eraser_size, stroke);
             }

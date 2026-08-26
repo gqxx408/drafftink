@@ -45,9 +45,7 @@ impl SmartAlpha {
 
         // Content density – elements per 10 000 px²
         let area = canvas_width * canvas_height;
-        self.content_density = ((element_count as f32) / (area / 10000.0))
-            .min(1.0)
-            .max(0.0);
+        self.content_density = ((element_count as f32) / (area / 10000.0)).clamp(0.0, 1.0);
 
         self.recompute_all();
 
@@ -97,7 +95,7 @@ impl SmartAlpha {
         let boost = self.colour_visibility_boost(rgb);
 
         let raw = base + bg_adj + density_adj + boost;
-        raw.max(24.0).min(232.0) as u8
+        raw.clamp(24.0, 232.0) as u8
     }
 
     /// How visible a colour is on a white-ish background.
@@ -163,7 +161,7 @@ mod tests {
         let mut s = SmartAlpha::default();
         s.analyze_page(0, &[255, 255, 255], 10, 1920.0, 1080.0);
         // White background → all recommendations should be above 150
-        for (_, a) in s.all_recommendations() {
+        for a in s.all_recommendations().values() {
             assert!(*a > 140, "white bg alpha should be high, got {}", a);
         }
     }
@@ -173,7 +171,7 @@ mod tests {
         let mut s = SmartAlpha::default();
         s.analyze_page(0, &[40, 40, 50], 5, 1920.0, 1080.0);
         // Dark background → alpha should be lower
-        for (_, a) in s.all_recommendations() {
+        for a in s.all_recommendations().values() {
             assert!(*a <= 130, "dark bg alpha should be moderate, got {}", a);
         }
     }
@@ -201,14 +199,14 @@ mod tests {
         let mut s = SmartAlpha::default();
         // Extremely bright bg, very sparse → push alpha high
         s.analyze_page(0, &[255, 255, 255], 0, 1920.0, 1080.0);
-        for (_, a) in s.all_recommendations() {
+        for a in s.all_recommendations().values() {
             assert!(*a <= 232);
         }
 
         // Extremely dark bg, very dense → push alpha low
         let mut d = SmartAlpha::default();
         d.analyze_page(0, &[0, 0, 0], 9999, 1920.0, 1080.0);
-        for (_, a) in d.all_recommendations() {
+        for a in d.all_recommendations().values() {
             assert!(*a >= 24);
         }
     }

@@ -401,8 +401,7 @@ fn parse_enbx_text(xml: &str, z_order: i32) -> Option<Element> {
     }
     if text.is_empty() {
         let mut r = xml;
-        loop {
-            let Some(p) = r.find("<TextRun>") else { break };
+        while let Some(p) = r.find("<TextRun>") {
             r = &r[p..];
             let close = find_close_robust(r, "TextRun");
             if close == 0 || close > r.len() {

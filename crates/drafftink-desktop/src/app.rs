@@ -622,8 +622,8 @@ fn draw_function_plot(
     label: &str,
 ) {
     let origin = rect.center();
-    let grid = egui::Stroke::new(1.0, egui::Color32::from_rgb(40, 42, 48));
-    let axis = egui::Stroke::new(1.6, egui::Color32::from_rgb(170, 175, 185));
+    let grid = egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(40, 42, 48));
+    let axis = egui::Stroke::new(1.6_f32, egui::Color32::from_rgb(170, 175, 185));
     let tick_font = egui::FontId::proportional(11.0);
     let tick_col = egui::Color32::from_rgb(150, 155, 165);
 
@@ -706,7 +706,7 @@ fn draw_function_plot(
 
     // 函数曲线：采样后映射到屏幕，裁剪在坐标系矩形内。
     let pts = crate::function_parser::sample_points(expr, -10.0, 10.0, 400);
-    let curve = egui::Stroke::new(2.0, egui::Color32::from_rgb(255, 100, 0));
+    let curve = egui::Stroke::new(2.0_f32, egui::Color32::from_rgb(255, 100, 0));
     let mut line = Vec::with_capacity(pts.len());
     for (x, y) in &pts {
         line.push(egui::pos2(origin.x + x * scale, origin.y - y * scale));
@@ -1755,7 +1755,7 @@ impl IntegratedApp {
                             egui::Color32::from_rgba_unmultiplied(0, 150, 255, 40),
                         );
                         let gcol = egui::Color32::from_rgba_unmultiplied(0, 150, 255, 220);
-                        let gwb = 2.0;
+                        let gwb = 2.0_f32;
                         painter.line_segment(
                             [ghost_rect.left_top(), ghost_rect.right_top()],
                             egui::Stroke::new(gwb, gcol),
@@ -2689,7 +2689,7 @@ impl IntegratedApp {
                     painter.rect_stroke(
                         ghost,
                         6.0,
-                        egui::Stroke::new(1.0, egui::Color32::from_rgb(0, 150, 255)),
+                        egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(0, 150, 255)),
                     );
                     if pressed && self.pending_armed {
                         let wc = match &cam {
@@ -2886,7 +2886,7 @@ impl IntegratedApp {
                         // 绘制中虚影：亮蓝边框、50% 透明、无填充、线宽 2.0。
                         let preview = egui::Rect::from_two_pos(start, cur);
                         let stroke = egui::Stroke::new(
-                            2.0,
+                            2.0_f32,
                             egui::Color32::from_rgba_unmultiplied(0, 150, 255, 128),
                         );
                         painter.rect_stroke(preview, 0.0, stroke);
@@ -3133,12 +3133,12 @@ impl IntegratedApp {
             };
             return;
         }
-        if down && self.marquee_start.is_some() {
-            if let Some(p) = pointer {
-                self.marquee_rect = Some(egui::Rect::from_two_pos(self.marquee_start.unwrap(), p));
+        if down {
+            if let (Some(start), Some(p)) = (self.marquee_start, pointer) {
+                self.marquee_rect = Some(egui::Rect::from_two_pos(start, p));
+                self.draw_marquee_rect(ctx);
+                return;
             }
-            self.draw_marquee_rect(ctx);
-            return;
         }
         if released {
             if let Some(r) = self.marquee_rect {
@@ -3175,7 +3175,7 @@ impl IntegratedApp {
             painter.rect_stroke(
                 r,
                 0.0,
-                egui::Stroke::new(1.0, egui::Color32::from_rgb(0, 150, 255)),
+                egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(0, 150, 255)),
             );
         }
     }
@@ -3632,12 +3632,11 @@ impl IntegratedApp {
                         ui.close_menu();
                         self.open_enbx_dialog(ctx);
                     }
-                    if self.current_doc.is_some() {
-                        if ui.button("关闭 ENBX 课件").clicked() {
+                    if self.current_doc.is_some()
+                        && ui.button("关闭 ENBX 课件").clicked() {
                             ui.close_menu();
                             self.close_enbx_view();
                         }
-                    }
                 });
                 if let Some(report) = &self.import_report {
                     ui.separator();
@@ -3728,7 +3727,7 @@ impl IntegratedApp {
         painter.rect_stroke(
             bg_rect,
             4.0,
-            egui::Stroke::new(2.0, egui::Color32::from_gray(150)),
+            egui::Stroke::new(2.0_f32, egui::Color32::from_gray(150)),
         );
 
         for elem in &page.elements {
@@ -3889,7 +3888,7 @@ impl IntegratedApp {
                         .collect();
                     painter.add(egui::Shape::line(
                         pts,
-                        egui::Stroke::new(2.0, base.stroke_color),
+                        egui::Stroke::new(2.0_f32, base.stroke_color),
                     ));
                 }
             }
@@ -4102,7 +4101,7 @@ impl IntegratedApp {
         painter.circle_stroke(
             center,
             radius,
-            egui::Stroke::new(3.0, egui::Color32::from_rgb(0, 150, 255)),
+            egui::Stroke::new(3.0_f32, egui::Color32::from_rgb(0, 150, 255)),
         );
         // 当前放大倍数角标（圆圈下方）。
         painter.text(
@@ -4974,7 +4973,7 @@ impl IntegratedApp {
                             egui::Color32::from_rgba_unmultiplied(0, 150, 255, 40),
                         );
                         let gcol = egui::Color32::from_rgba_unmultiplied(0, 150, 255, 220);
-                        let gwb = 2.0;
+                        let gwb = 2.0_f32;
                         painter.line_segment(
                             [ghost_rect.left_top(), ghost_rect.right_top()],
                             egui::Stroke::new(gwb, gcol),
@@ -5309,7 +5308,7 @@ impl IntegratedApp {
                                 mute_center + egui::vec2(-6.0, -6.0),
                                 mute_center + egui::vec2(6.0, 6.0),
                             ],
-                            egui::Stroke::new(2.0, egui::Color32::from_rgb(255, 80, 80)),
+                            egui::Stroke::new(2.0_f32, egui::Color32::from_rgb(255, 80, 80)),
                         );
                     } else {
                         for (i, len) in [(3.0_f32, 3.0_f32), (5.5, 5.0)] {
@@ -5318,7 +5317,7 @@ impl IntegratedApp {
                                     mute_center + egui::vec2(i, -len * 0.5),
                                     mute_center + egui::vec2(i, len * 0.5),
                                 ],
-                                egui::Stroke::new(1.5, white),
+                                egui::Stroke::new(1.5_f32, white),
                             );
                         }
                     }

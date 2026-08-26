@@ -50,7 +50,7 @@ fn install_cjk_fonts(ctx: &egui::Context) {
     // Register the CJK font under a custom family name
     fonts.font_data.insert(
         "cjk".to_owned(),
-        egui::FontData::from_owned(font_data).into(),
+        egui::FontData::from_owned(font_data),
     );
     // Make it a fallback for the default proportional family
     fonts

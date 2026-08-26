@@ -156,6 +156,7 @@ impl AnnotationToolbar {
         action
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn render(
         &mut self,
         ctx: &Context,
@@ -192,13 +193,13 @@ impl AnnotationToolbar {
                         // 覆盖默认深色主题：白底工具栏需要黑字
                         ui.visuals_mut().widgets.noninteractive.fg_stroke.color = TOOLBAR_TEXT;
                         ui.visuals_mut().widgets.noninteractive.bg_stroke =
-                            Stroke::new(1.0, TOOLBAR_BORDER);
+                            Stroke::new(1.0_f32, TOOLBAR_BORDER);
                         ui.visuals_mut().widgets.inactive.fg_stroke.color = TOOLBAR_TEXT;
                         ui.visuals_mut().widgets.hovered.fg_stroke.color = TOOLBAR_TEXT;
                         ui.visuals_mut().widgets.active.fg_stroke.color = TOOLBAR_TEXT;
                         ui.visuals_mut().widgets.inactive.bg_fill = TOOLBAR_INACTIVE_BG;
                         ui.visuals_mut().widgets.inactive.bg_stroke =
-                            Stroke::new(1.0, TOOLBAR_BORDER);
+                            Stroke::new(1.0_f32, TOOLBAR_BORDER);
                         ui.visuals_mut().widgets.hovered.bg_fill = TOOLBAR_INACTIVE_BG;
                         ui.visuals_mut().widgets.active.bg_fill = ACTIVE_BG;
                         ui.visuals_mut().widgets.active.fg_stroke.color = Color32::WHITE;
@@ -231,11 +232,9 @@ impl AnnotationToolbar {
                                         .min_size(egui::vec2(22.0, 28.0)),
                                 )
                                 .clicked()
-                            {
-                                if page_current > 0 {
+                                && page_current > 0 {
                                     *action = ToolbarAction::PrevPage;
                                 }
-                            }
                             ui.label(
                                 egui::RichText::new(format!(
                                     "{}/{}",
@@ -253,11 +252,9 @@ impl AnnotationToolbar {
                                         .min_size(egui::vec2(22.0, 28.0)),
                                 )
                                 .clicked()
-                            {
-                                if page_current + 1 < page_total {
+                                && page_current + 1 < page_total {
                                     *action = ToolbarAction::NextPage;
                                 }
-                            }
 
                             ui.separator();
 
@@ -271,7 +268,7 @@ impl AnnotationToolbar {
                                         } else {
                                             Color32::TRANSPARENT
                                         })
-                                        .stroke(Stroke::new(1.0, TOOLBAR_BORDER))
+                                        .stroke(Stroke::new(1.0_f32, TOOLBAR_BORDER))
                                         .min_size(egui::vec2(32.0, 32.0)),
                                 )
                                 .on_hover_text("笔 (P)")
@@ -292,7 +289,7 @@ impl AnnotationToolbar {
                                         } else {
                                             Color32::TRANSPARENT
                                         })
-                                        .stroke(Stroke::new(1.0, TOOLBAR_BORDER))
+                                        .stroke(Stroke::new(1.0_f32, TOOLBAR_BORDER))
                                         .min_size(egui::vec2(32.0, 32.0)),
                                 )
                                 .on_hover_text("荧光笔 (H)")
@@ -315,7 +312,7 @@ impl AnnotationToolbar {
                                         } else {
                                             Color32::TRANSPARENT
                                         })
-                                        .stroke(Stroke::new(1.0, TOOLBAR_BORDER))
+                                        .stroke(Stroke::new(1.0_f32, TOOLBAR_BORDER))
                                         .min_size(egui::vec2(32.0, 32.0)),
                                 )
                                 .on_hover_text("橡皮擦 (E)")
@@ -339,7 +336,7 @@ impl AnnotationToolbar {
                                             egui::Button::new("")
                                                 .fill(fill)
                                                 .stroke(Stroke::new(
-                                                    if is_current { 3.0 } else { 1.0 },
+                                                    if is_current { 3.0_f32 } else { 1.0_f32 },
                                                     if is_current {
                                                         Color32::WHITE
                                                     } else {
@@ -370,7 +367,7 @@ impl AnnotationToolbar {
                                             egui::Button::new("")
                                                 .fill(fill)
                                                 .stroke(Stroke::new(
-                                                    if is_current { 3.0 } else { 1.0 },
+                                                    if is_current { 3.0_f32 } else { 1.0_f32 },
                                                     if is_current {
                                                         Color32::WHITE
                                                     } else {

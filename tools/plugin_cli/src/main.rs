@@ -6,7 +6,7 @@
 //!   drafftink-plugin list
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -42,7 +42,7 @@ fn plugins_dir() -> PathBuf {
     dir
 }
 
-fn install(dir: &PathBuf, src: Option<&String>) {
+fn install(dir: &Path, src: Option<&String>) {
     let src = match src {
         Some(s) => s,
         None => {

@@ -322,7 +322,7 @@ impl CountdownTool {
 pub fn draw_countdown(painter: &Painter, tool: &CountdownTool, time: f64) {
     let rect = tool.rect();
     painter.rect_filled(rect, 8.0, Color32::from_black_alpha(180));
-    painter.rect_stroke(rect, 8.0, Stroke::new(2.0, Color32::WHITE));
+    painter.rect_stroke(rect, 8.0, Stroke::new(2.0_f32, Color32::WHITE));
     let text = format_mmss(tool.remaining_seconds);
     let color = tool.flash_color(time);
     painter.text(
@@ -535,22 +535,22 @@ pub fn draw_compass(painter: &Painter, t: &CompassTool) {
 
     // 预览圆（浅灰，未拖动时半径可能为 0）。
     if r > 1.0 {
-        painter.circle_stroke(pivot, r, Stroke::new(1.0, Color32::from_gray(140)));
+        painter.circle_stroke(pivot, r, Stroke::new(1.0_f32, Color32::from_gray(140)));
     }
     // 圆心十字标记。
     let cross = 6.0;
     painter.line_segment(
         [pivot - Vec2::new(cross, 0.0), pivot + Vec2::new(cross, 0.0)],
-        Stroke::new(1.0, Color32::from_rgb(0, 150, 255)),
+        Stroke::new(1.0_f32, Color32::from_rgb(0, 150, 255)),
     );
     painter.line_segment(
         [pivot - Vec2::new(0.0, cross), pivot + Vec2::new(0.0, cross)],
-        Stroke::new(1.0, Color32::from_rgb(0, 150, 255)),
+        Stroke::new(1.0_f32, Color32::from_rgb(0, 150, 255)),
     );
     // 两臂（转轴 → 铅笔脚）。
     painter.line_segment(
         [pivot, pencil],
-        Stroke::new(2.0, Color32::from_rgb(20, 40, 120)),
+        Stroke::new(2.0_f32, Color32::from_rgb(20, 40, 120)),
     );
     painter.circle_filled(pivot, 4.0, Color32::from_rgb(20, 40, 120));
     painter.circle_filled(pencil, 3.0, Color32::from_rgb(180, 30, 30));
@@ -589,7 +589,7 @@ pub fn draw_set_square(painter: &Painter, t: &SetSquareTool) {
     painter.add(egui::Shape::convex_polygon(
         pts.to_vec(),
         SETSQUARE_FILL,
-        Stroke::new(2.0, SETSQUARE_GRAY),
+        Stroke::new(2.0_f32, SETSQUARE_GRAY),
     ));
     // 直角标记（小方块）。
     let dir = rotate_vec(Vec2::new(1.0, 0.0), t.rotation_deg.to_radians());
@@ -600,7 +600,7 @@ pub fn draw_set_square(painter: &Painter, t: &SetSquareTool) {
     painter.add(egui::Shape::convex_polygon(
         vec![o + dir * m, p3, o + perp * m],
         Color32::TRANSPARENT,
-        Stroke::new(1.0, SETSQUARE_GRAY),
+        Stroke::new(1.0_f32, SETSQUARE_GRAY),
     ));
     // 旋转角文本。
     painter.text(
@@ -617,10 +617,10 @@ pub fn draw_set_square(painter: &Painter, t: &SetSquareTool) {
     // 旋转手柄（重心）：深色圆点 + 外圈，旋转拖拽时高亮为亮蓝。
     let grip = set_square_centroid(t);
     if t.rotating {
-        painter.circle_stroke(grip, 10.0, Stroke::new(2.0, Color32::from_rgb(0, 150, 255)));
+        painter.circle_stroke(grip, 10.0, Stroke::new(2.0_f32, Color32::from_rgb(0, 150, 255)));
         painter.circle_filled(grip, 5.0, Color32::from_rgb(0, 150, 255));
     } else {
-        painter.circle_stroke(grip, 8.0, Stroke::new(1.0, SETSQUARE_TICK_GRAY));
+        painter.circle_stroke(grip, 8.0, Stroke::new(1.0_f32, SETSQUARE_TICK_GRAY));
         painter.circle_filled(grip, 4.0, SETSQUARE_GRAY);
     }
 
@@ -634,7 +634,7 @@ pub fn draw_set_square(painter: &Painter, t: &SetSquareTool) {
         let len = t.line_start.distance(t.line_current);
         painter.extend(egui::Shape::dashed_line(
             &[t.line_start, t.line_current],
-            Stroke::new(2.0, Color32::from_rgb(255, 0, 0)),
+            Stroke::new(2.0_f32, Color32::from_rgb(255, 0, 0)),
             8.0,
             4.0,
         ));
@@ -666,7 +666,7 @@ fn draw_set_square_hole(painter: &Painter, origin: Pos2, p30: Pos2, p60: Pos2) {
     let hole_origin = centroid + (origin - centroid) * scale;
     let hole_p30 = centroid + (p30 - centroid) * scale;
     let hole_p60 = centroid + (p60 - centroid) * scale;
-    let hole_stroke = Stroke::new(1.0, SETSQUARE_GRAY);
+    let hole_stroke = Stroke::new(1.0_f32, SETSQUARE_GRAY);
     painter.add(egui::Shape::dashed_line(
         &[hole_origin, hole_p30, hole_p60, hole_origin],
         hole_stroke,
@@ -684,11 +684,11 @@ pub fn draw_protractor(painter: &Painter, t: &ProtractorTool) {
     let base_color = Color32::from_gray(130);
 
     // 半圆盘（上半圆，用 circle_stroke 画整圆再画基线，视觉即半圆量角器）。
-    painter.circle_stroke(c, r, Stroke::new(1.0, base_color));
+    painter.circle_stroke(c, r, Stroke::new(1.0_f32, base_color));
     // 基线（直径，恒为水平，不再随 rotation_deg 旋转）。
     let left = c + Vec2::new(-r, 0.0);
     let right = c + Vec2::new(r, 0.0);
-    painter.line_segment([left, right], Stroke::new(1.0, base_color));
+    painter.line_segment([left, right], Stroke::new(1.0_f32, base_color));
 
     // 刻度：0°–180°，每 10° 中刻度，每 30° 长刻度 + 数字。
     for deg in (0..=180).step_by(10) {
@@ -699,7 +699,7 @@ pub fn draw_protractor(painter: &Painter, t: &ProtractorTool) {
         let tick = if is_major { 12.0 } else { 6.0 };
         let p1 = c + dir * r;
         let p2 = c + dir * (r - tick);
-        painter.line_segment([p1, p2], Stroke::new(1.0, base_color));
+        painter.line_segment([p1, p2], Stroke::new(1.0_f32, base_color));
         if is_major {
             let lp = c + dir * (r + 14.0);
             painter.text(
@@ -715,13 +715,13 @@ pub fn draw_protractor(painter: &Painter, t: &ProtractorTool) {
     // 跟随鼠标的射线。
     let a = protractor_to_unified(t.cursor_angle_deg).to_radians();
     let ray_end = c + Vec2::new(a.cos(), -a.sin()) * r;
-    painter.line_segment([c, ray_end], Stroke::new(1.0, Color32::RED));
+    painter.line_segment([c, ray_end], Stroke::new(1.0_f32, Color32::RED));
 
     // 画角模式：若已点第一条边，画第一条边。
     if let Some(first) = t.first_angle_deg {
         let a = protractor_to_unified(first).to_radians();
         let p = c + Vec2::new(a.cos(), -a.sin()) * r;
-        painter.line_segment([c, p], Stroke::new(2.0, Color32::from_rgb(0, 150, 255)));
+        painter.line_segment([c, p], Stroke::new(2.0_f32, Color32::from_rgb(0, 150, 255)));
     }
 
     // 角度文本。
@@ -735,10 +735,10 @@ pub fn draw_protractor(painter: &Painter, t: &ProtractorTool) {
 
     // 圆心（角度顶点）：深色圆点 + 外圈；拖拽移动时高亮为亮蓝。
     if t.dragging {
-        painter.circle_stroke(c, 10.0, Stroke::new(2.0, Color32::from_rgb(0, 150, 255)));
+        painter.circle_stroke(c, 10.0, Stroke::new(2.0_f32, Color32::from_rgb(0, 150, 255)));
         painter.circle_filled(c, 5.0, Color32::from_rgb(0, 150, 255));
     } else {
-        painter.circle_stroke(c, 8.0, Stroke::new(1.0, Color32::from_gray(160)));
+        painter.circle_stroke(c, 8.0, Stroke::new(1.0_f32, Color32::from_gray(160)));
         painter.circle_filled(c, 4.0, Color32::from_rgb(20, 40, 120));
     }
 }
@@ -768,7 +768,7 @@ fn draw_ruler_ticks(painter: &Painter, start: Pos2, end: Pos2, pixels_per_cm: f3
             let pos = start + dir * (i as f32 * mm_step);
             painter.line_segment(
                 [pos, pos + perp * 4.0],
-                Stroke::new(1.0, SETSQUARE_TICK_GRAY),
+                Stroke::new(1.0_f32, SETSQUARE_TICK_GRAY),
             );
         }
     }
@@ -781,7 +781,7 @@ fn draw_ruler_ticks(painter: &Painter, start: Pos2, end: Pos2, pixels_per_cm: f3
             let pos = start + dir * (i as f32 * half_cm_step);
             painter.line_segment(
                 [pos, pos + perp * 7.0],
-                Stroke::new(1.0, SETSQUARE_TICK_GRAY),
+                Stroke::new(1.0_f32, SETSQUARE_TICK_GRAY),
             );
         }
     }
@@ -790,7 +790,7 @@ fn draw_ruler_ticks(painter: &Painter, start: Pos2, end: Pos2, pixels_per_cm: f3
     let cm_count = ruler_cm_tick_count(length, pixels_per_cm) as i32;
     for i in 0..=cm_count {
         let pos = start + dir * (i as f32 * pixels_per_cm);
-        painter.line_segment([pos, pos + perp * 10.0], Stroke::new(1.5, SETSQUARE_GRAY));
+        painter.line_segment([pos, pos + perp * 10.0], Stroke::new(1.5_f32, SETSQUARE_GRAY));
         if i > 0 {
             let label = format!("{i}");
             let label_pos = pos + perp * 14.0;
@@ -818,10 +818,10 @@ pub fn draw_ruler(painter: &Painter, t: &RulerTool) {
     painter.add(egui::Shape::convex_polygon(
         strip.to_vec(),
         SETSQUARE_FILL,
-        Stroke::new(2.0, SETSQUARE_GRAY),
+        Stroke::new(2.0_f32, SETSQUARE_GRAY),
     ));
     // 零边（下边）主线：cm 长刻度由该线延伸入尺面。
-    painter.line_segment([t.start, t.end], Stroke::new(2.0, SETSQUARE_GRAY));
+    painter.line_segment([t.start, t.end], Stroke::new(2.0_f32, SETSQUARE_GRAY));
 
     // 双级刻度（主线之后、手柄之前）。
     draw_ruler_ticks(painter, t.start, t.end, PIXELS_PER_CM);
@@ -831,10 +831,10 @@ pub fn draw_ruler(painter: &Painter, t: &RulerTool) {
     let end_active = matches!(t.dragging_end, Some(WhichEnd::End));
     for (p, active) in [(t.start, start_active), (t.end, end_active)] {
         if active {
-            painter.circle_stroke(p, 8.0, Stroke::new(2.0, Color32::from_rgb(0, 150, 255)));
+            painter.circle_stroke(p, 8.0, Stroke::new(2.0_f32, Color32::from_rgb(0, 150, 255)));
             painter.circle_filled(p, 7.0, Color32::from_rgb(0, 150, 255));
         } else {
-            painter.circle_stroke(p, 5.0, Stroke::new(1.0, SETSQUARE_GRAY));
+            painter.circle_stroke(p, 5.0, Stroke::new(1.0_f32, SETSQUARE_GRAY));
             painter.circle_filled(p, 3.0, SETSQUARE_GRAY);
         }
     }
@@ -859,7 +859,7 @@ pub fn draw_polygon(painter: &Painter, t: &PolygonTool) {
         painter.add(egui::Shape::convex_polygon(
             pts,
             Color32::from_rgba_unmultiplied(0, 150, 255, 60),
-            Stroke::new(2.0, Color32::from_rgb(0, 150, 255)),
+            Stroke::new(2.0_f32, Color32::from_rgb(0, 150, 255)),
         ));
         painter.text(
             t.center + Vec2::new(0.0, -t.radius - 20.0),
@@ -876,14 +876,14 @@ pub fn draw_polygon(painter: &Painter, t: &PolygonTool) {
             t.center - Vec2::new(cross, 0.0),
             t.center + Vec2::new(cross, 0.0),
         ],
-        Stroke::new(1.0, Color32::from_rgb(0, 150, 255)),
+        Stroke::new(1.0_f32, Color32::from_rgb(0, 150, 255)),
     );
     painter.line_segment(
         [
             t.center - Vec2::new(0.0, cross),
             t.center + Vec2::new(0.0, cross),
         ],
-        Stroke::new(1.0, Color32::from_rgb(0, 150, 255)),
+        Stroke::new(1.0_f32, Color32::from_rgb(0, 150, 255)),
     );
     painter.circle_filled(t.center, 4.0, Color32::from_rgb(0, 150, 255));
 }
@@ -895,7 +895,7 @@ pub fn draw_function_plot(painter: &Painter, t: &FunctionPlotTool) {
     let half_units = 10.0; // 显示 -10..=10 单位范围
     let axis_color = Color32::from_rgb(90, 90, 90);
     let grid_color = Color32::from_rgba_unmultiplied(150, 150, 150, 60);
-    let axis_stroke = Stroke::new(1.5, axis_color);
+    let axis_stroke = Stroke::new(1.5_f32, axis_color);
 
     // 网格（每 1 单位浅线）。
     for i in -(half_units as i32)..=half_units as i32 {
@@ -908,14 +908,14 @@ pub fn draw_function_plot(painter: &Painter, t: &FunctionPlotTool) {
                 Pos2::new(x, c.y - half_units * s),
                 Pos2::new(x, c.y + half_units * s),
             ],
-            Stroke::new(1.0, grid_color),
+            Stroke::new(1.0_f32, grid_color),
         );
         painter.line_segment(
             [
                 Pos2::new(c.x - half_units * s, y),
                 Pos2::new(c.x + half_units * s, y),
             ],
-            Stroke::new(1.0, grid_color),
+            Stroke::new(1.0_f32, grid_color),
         );
     }
 
@@ -977,7 +977,7 @@ pub fn draw_function_plot(painter: &Painter, t: &FunctionPlotTool) {
     // 曲线：200 个采样点连线（跳过非有限值）。
     if let Some(expr) = &t.parsed {
         let pts = crate::function_parser::sample_points(expr, -half_units, half_units, 200);
-        let curve_stroke = Stroke::new(2.0, Color32::from_rgb(0, 150, 255));
+        let curve_stroke = Stroke::new(2.0_f32, Color32::from_rgb(0, 150, 255));
         for w in pts.windows(2) {
             let (x0, y0) = w[0];
             let (x1, y1) = w[1];
@@ -1024,7 +1024,7 @@ pub fn draw_number_line_tool(painter: &Painter, t: &NumberLineTool) {
     let blue = Color32::from_rgb(0, 150, 255);
     let head = 8.0;
     // 虚线主线（蓝色）。egui 0.29 无 `Stroke::into_dashed`，用 `Shape::dashed_line`。
-    let dash_stroke = Stroke::new(2.0, blue);
+    let dash_stroke = Stroke::new(2.0_f32, blue);
     painter.add(egui::Shape::dashed_line(&[a, b], dash_stroke, 8.0, 4.0));
 
     // 两端箭头（预览，实线）。
@@ -1035,8 +1035,8 @@ pub fn draw_number_line_tool(painter: &Painter, t: &NumberLineTool) {
     painter.line_segment([a, a + dir * head - perp * head * 0.6], solid);
 
     // 主刻度（蓝色实线）+ 数值标签；次刻度（半透明灰）。
-    let major_stroke = Stroke::new(2.0, blue);
-    let minor_stroke = Stroke::new(1.0, Color32::from_rgba_unmultiplied(120, 120, 120, 160));
+    let major_stroke = Stroke::new(2.0_f32, blue);
+    let minor_stroke = Stroke::new(1.0_f32, Color32::from_rgba_unmultiplied(120, 120, 120, 160));
     let divisions = 2.0;
     let minor_step = step / divisions;
     let minor_count = ((a.distance(b)) / minor_step).floor() as i32;
@@ -1062,7 +1062,7 @@ pub fn draw_number_line_tool(painter: &Painter, t: &NumberLineTool) {
 
     // 端点：起点深蓝实心；终点蓝色高亮圆环。
     painter.circle_filled(start, 4.0, Color32::from_rgb(20, 40, 120));
-    painter.circle_stroke(cur, 6.0, Stroke::new(2.0, blue));
+    painter.circle_stroke(cur, 6.0, Stroke::new(2.0_f32, blue));
     painter.circle_filled(cur, 3.0, blue);
     // 长度提示。
     let len = start.distance(cur);

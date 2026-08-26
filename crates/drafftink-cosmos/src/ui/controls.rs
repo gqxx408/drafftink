@@ -6,18 +6,15 @@ use crate::scene::SolarSystemScene;
 
 /// 视图模式
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum ViewMode {
     /// 3D 立体视图
+    #[default]
     Mode3D,
     /// 2D 地图视图
     Mode2D,
 }
 
-impl Default for ViewMode {
-    fn default() -> Self {
-        ViewMode::Mode3D
-    }
-}
 
 /// 控制栏状态
 ///
@@ -84,7 +81,7 @@ impl ControlPanel {
             .inner_margin(egui::Margin::symmetric(12.0, 10.0))
             .fill(Color32::from_black_alpha(200))
             .stroke(Stroke::new(
-                1.0,
+                1.0_f32,
                 Color32::from_rgba_unmultiplied(100, 150, 200, 180),
             ));
 

@@ -20,6 +20,7 @@
 pub mod cards;
 pub mod experiment;
 pub mod quiz;
+#[allow(clippy::module_inception)]
 pub mod workshop;
 
 pub use workshop::Workshop;

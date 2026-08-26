@@ -104,7 +104,7 @@ pub fn draw_bar_chart(
                 Pos2::new(rect.min.x + padding, y),
                 Pos2::new(rect.max.x - padding, y),
             ],
-            Stroke::new(1.0, Color32::from_rgba_unmultiplied(255, 255, 255, 30)),
+            Stroke::new(1.0_f32, Color32::from_rgba_unmultiplied(255, 255, 255, 30)),
         );
         // 百分比标签
         let pct = (4 - i) * 25;

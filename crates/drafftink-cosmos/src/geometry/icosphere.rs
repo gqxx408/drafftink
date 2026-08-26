@@ -404,6 +404,6 @@ mod tests {
     fn test_sphere_uv_minimum() {
         let mesh = sphere_uv(3, 2);
         assert_eq!(mesh.vertices.len(), 8); // 2 + 3*2
-        assert!(mesh.indices.len() > 0);
+        assert!(!mesh.indices.is_empty());
     }
 }

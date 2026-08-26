@@ -163,7 +163,7 @@ fn pad_pkcs7(data: &[u8]) -> Vec<u8> {
 
 /// 去除 PKCS#7 填充（非法填充返回错误）。
 fn unpad_pkcs7(data: &[u8]) -> Result<Vec<u8>, String> {
-    if data.len() < 16 || data.len() % 16 != 0 {
+    if data.len() < 16 || !data.len().is_multiple_of(16) {
         return Err("密文长度非法（非 16 字节整数倍）".to_string());
     }
     let pad = *data.last().unwrap() as usize;
@@ -221,7 +221,7 @@ impl Sm4 {
 
     /// 解密（自动去填充）。
     pub fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, String> {
-        if ciphertext.len() % 16 != 0 {
+        if !ciphertext.len().is_multiple_of(16) {
             return Err("密文长度非法".to_string());
         }
         let mut out = Vec::with_capacity(ciphertext.len());
@@ -257,7 +257,7 @@ impl Sm4 {
 
     /// SM4-CBC 解密（去除 PKCS#7 填充）。
     pub fn decrypt_cbc(&self, iv: &[u8; 16], ciphertext: &[u8]) -> Result<Vec<u8>, String> {
-        if ciphertext.len() % 16 != 0 {
+        if !ciphertext.len().is_multiple_of(16) {
             return Err("密文长度非法（非 16 字节整数倍）".to_string());
         }
         let mut out = Vec::with_capacity(ciphertext.len());

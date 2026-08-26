@@ -1122,6 +1122,7 @@ mod tests {
         }
     }
 
+    #[test]
     fn text_round_trip() {
         let base = make_base();
         let original = ElementData::Text(TextElement {

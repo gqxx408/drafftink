@@ -185,6 +185,7 @@ impl DisplayApp {
     }
 
     /// 注入备授一体共享上下文（宿主在构造后调用）。
+    #[allow(dead_code)]
     pub fn set_shared(&mut self, ctx: Arc<Mutex<SharedAppContext>>) {
         self.shared = Some(ctx);
     }
@@ -436,7 +437,7 @@ impl eframe::App for DisplayApp {
 
         // ── Debug: log doc state every 60 frames ──
         self.frame_count += 1;
-        if self.frame_count % 60 == 0 {
+        if self.frame_count.is_multiple_of(60) {
             log::info!(
                 "[render] frame={} pages={} path={:?} page_size={:?} viewport={:?} offset={:?} zoom={}",
                 self.frame_count,
@@ -628,7 +629,7 @@ impl eframe::App for DisplayApp {
                     egui::Frame::none()
                         .fill(Color32::from_rgba_premultiplied(245, 245, 245, 250))
                         .rounding(egui::Rounding::same(8.0))
-                        .stroke(egui::Stroke::new(1.0, Color32::from_rgb(180, 180, 180)))
+                        .stroke(egui::Stroke::new(1.0_f32, Color32::from_rgb(180, 180, 180)))
                         .inner_margin(egui::Margin::same(8.0))
                         .show(ui, |ui| {
                             // 白底黑字：覆盖深色主题

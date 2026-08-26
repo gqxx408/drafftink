@@ -6,7 +6,7 @@ pub mod spatial;
 pub mod stroke;
 pub mod toolbar;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub use smart_alpha::SmartAlpha;
 pub use spatial::Quadtree;
@@ -129,7 +129,7 @@ impl AnnotationSystem {
             self.spatial_dirty = true;
             self.cache.mark_pending();
             // Merge nearby strokes every ~20 additions (amortised O(n))
-            if self.strokes.len() % 20 == 0 {
+            if self.strokes.len().is_multiple_of(20) {
                 stroke::merge_adjacent_strokes(&mut self.strokes);
             }
         }
@@ -169,7 +169,7 @@ impl AnnotationSystem {
         action
     }
 
-    pub fn save_patch(&self, doc_path: &PathBuf) -> Result<(), String> {
+    pub fn save_patch(&self, doc_path: &Path) -> Result<(), String> {
         if self.strokes.is_empty() {
             return Err("No annotations to save".to_string());
         }

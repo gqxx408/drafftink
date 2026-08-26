@@ -322,8 +322,10 @@ mod tests {
             )
             .unwrap(),
         );
-        let mut config = BackendConfig::default();
-        config.dev_mode = dev_mode;
+        let mut config = BackendConfig {
+            dev_mode,
+            ..Default::default()
+        };
         AppState {
             db,
             storage,

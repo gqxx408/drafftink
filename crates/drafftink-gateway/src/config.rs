@@ -138,8 +138,10 @@ mod tests {
 
     #[test]
     fn validate_tls_refuses_plaintext_on_443() {
-        let mut cfg = GatewayConfig::default(); // 默认 0.0.0.0:80
-        cfg.listen_addr = "0.0.0.0:443".to_string();
+        let cfg = GatewayConfig {
+            listen_addr: "0.0.0.0:443".to_string(),
+            ..Default::default()
+        }; // 默认 0.0.0.0:80
         assert!(cfg.validate_tls().is_err(), "0.0.0.0:443 无 TLS 必须被拒绝");
     }
 
@@ -155,18 +157,22 @@ mod tests {
 
     #[test]
     fn validate_tls_allows_when_certs_present() {
-        let mut cfg = GatewayConfig::default(); // 0.0.0.0:80
-        cfg.listen_addr = "0.0.0.0:443".to_string();
-        cfg.tls_cert_path = Some(PathBuf::from("/etc/gateway/cert.pem"));
-        cfg.tls_key_path = Some(PathBuf::from("/etc/gateway/key.pem"));
+        let cfg = GatewayConfig {
+            listen_addr: "0.0.0.0:443".to_string(),
+            tls_cert_path: Some(PathBuf::from("/etc/gateway/cert.pem")),
+            tls_key_path: Some(PathBuf::from("/etc/gateway/key.pem")),
+            ..Default::default()
+        }; // 0.0.0.0:80
         assert!(cfg.validate_tls().is_ok(), "同时提供 cert+key 应允许");
     }
 
     #[test]
     fn validate_tls_refuses_partial_certs() {
-        let mut cfg = GatewayConfig::default();
-        cfg.listen_addr = "0.0.0.0:8080".to_string();
-        cfg.tls_cert_path = Some(PathBuf::from("/etc/gateway/cert.pem"));
+        let cfg = GatewayConfig {
+            listen_addr: "0.0.0.0:8080".to_string(),
+            tls_cert_path: Some(PathBuf::from("/etc/gateway/cert.pem")),
+            ..Default::default()
+        };
         // key 缺失
         assert!(
             cfg.validate_tls().is_err(),

@@ -57,11 +57,17 @@ impl EnbxImporter {
 // ---------------------------------------------------------------------------
 
 #[no_mangle]
+/// # Safety
+///
+/// 由宿主的插件装载器通过 C ABI 调用，仅允许传入宿主编译期约定的有效元数据。
 pub unsafe extern "C" fn _plugin_meta() -> PluginMeta {
     EnbxImporter::meta()
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// 宿主编译期调用此函数初始化插件实例；`ctx` 为空指针时安全返回一个悬空句柄。
 pub unsafe extern "C" fn _plugin_create(ctx: *const PluginContext) -> *mut std::ffi::c_void {
     if !ctx.is_null() {
         seewo_plugin_api::install_host_logger(&*ctx);
@@ -70,6 +76,9 @@ pub unsafe extern "C" fn _plugin_create(ctx: *const PluginContext) -> *mut std::
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// 只能以 `_plugin_create` 返回的合法句柄调用一次；重复或越界指针会造成未定义行为。
 pub unsafe extern "C" fn _plugin_destroy(h: *mut std::ffi::c_void) {
     if !h.is_null() {
         drop(Box::from_raw(h as *mut EnbxImporter));
@@ -77,6 +86,10 @@ pub unsafe extern "C" fn _plugin_destroy(h: *mut std::ffi::c_void) {
 }
 
 #[no_mangle]
+/// # Safety
+///
+/// 所有指针（`h`、`a`、`i`、`o`）必须指向主机分配的合法内存，`ol` 指向有效长度槽；
+/// 缓冲区大小由 `al`/`il`/`*ol` 约定，越界访问由调用方负责保证。
 pub unsafe extern "C" fn _plugin_execute(
     h: *mut std::ffi::c_void,
     a: *const u8,

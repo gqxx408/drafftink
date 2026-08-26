@@ -253,8 +253,8 @@ fn draw_number_line(painter: &Painter, rect: Rect, data: &NumberLineData, stroke
     painter.line_segment([a, a + dir * head - perp * head * 0.6], stroke);
 
     // 主刻度 + 数值标签。
-    let major_stroke = Stroke::new(2.0, stroke.color);
-    let minor_stroke = Stroke::new(1.0, Color32::GRAY);
+    let major_stroke = Stroke::new(2.0_f32, stroke.color);
+    let minor_stroke = Stroke::new(1.0_f32, Color32::GRAY);
     let divisions = data.minor_divisions.max(1) as f32;
     let minor_step = step / divisions;
     let minor_count = ((a.distance(b)) / minor_step).floor() as i32;

@@ -309,7 +309,7 @@ impl Workshop {
             rect,
             10.0,
             Stroke::new(
-                1.5,
+                1.5_f32,
                 if response.hovered() {
                     Color32::from_rgb(58, 134, 255)
                 } else {
@@ -497,9 +497,10 @@ impl Workshop {
 
         // 获取或创建答题状态
         let state = self.quiz_states.entry(card_id).or_insert_with(|| {
-            let mut s = crate::workshop::quiz::QuizState::default();
-            s.current_index = 0;
-            s
+            crate::workshop::quiz::QuizState {
+                current_index: 0,
+                ..Default::default()
+            }
         });
 
         // 确保 current_index 在范围内
@@ -590,7 +591,7 @@ impl Workshop {
                 let state = self
                     .circuit_states
                     .entry(card_id)
-                    .or_insert_with(SimpleCircuitState::default);
+                    .or_default();
 
                 // 电路图区域
                 let (rect, _response) = ui.allocate_exact_size(
@@ -647,7 +648,7 @@ impl Workshop {
         } else {
             Color32::from_rgb(60, 60, 60)
         };
-        let stroke = Stroke::new(2.5, stroke_color);
+        let stroke = Stroke::new(2.5_f32, stroke_color);
 
         let left = rect.left() + 30.0;
         let right = rect.right() - 30.0;
@@ -707,7 +708,7 @@ impl Workshop {
             painter.circle_stroke(
                 bulb_center,
                 bulb_r + 6.0,
-                Stroke::new(3.0, Color32::from_rgba_unmultiplied(255, 200, 0, 100)),
+                Stroke::new(3.0_f32, Color32::from_rgba_unmultiplied(255, 200, 0, 100)),
             );
         } else {
             painter.circle_filled(bulb_center, bulb_r, Color32::WHITE);

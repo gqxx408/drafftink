@@ -119,7 +119,7 @@ impl SolarSystemViewer {
                 egui::Frame::none()
                     .fill(Color32::from_rgba_premultiplied(20, 25, 40, 240))
                     .rounding(egui::Rounding::same(8.0))
-                    .stroke(Stroke::new(1.0, Color32::from_gray(60)))
+                    .stroke(Stroke::new(1.0_f32, Color32::from_gray(60)))
                     .inner_margin(egui::Margin::symmetric(8.0, 4.0))
                     .show(ui, |ui| {
                         ui.horizontal(|ui| {

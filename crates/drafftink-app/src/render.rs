@@ -125,7 +125,7 @@ fn draw_grid(painter: &Painter, camera: &Camera, clip: Rect) {
     // Helper to draw vertical/horizontal lines
     let draw_line = |painter: &Painter, p1: Pos2, p2: Pos2, color: Color32| {
         if clip.contains(p1) || clip.contains(p2) || clip.intersects(Rect::from_two_pos(p1, p2)) {
-            painter.line_segment([p1, p2], Stroke::new(1.0, color));
+            painter.line_segment([p1, p2], Stroke::new(1.0_f32, color));
         }
     };
 
@@ -172,7 +172,7 @@ fn draw_page_boundary(painter: &Painter, camera: &Camera, doc: &CoursewareDoc) {
     let page_rect = Rect::from_min_max(tl, br);
 
     // Page border only — background blends with canvas
-    painter.rect_stroke(page_rect, 0.0, Stroke::new(1.0, Color32::from_gray(200)));
+    painter.rect_stroke(page_rect, 0.0, Stroke::new(1.0_f32, Color32::from_gray(200)));
 }
 
 // ---------------------------------------------------------------------------
@@ -196,12 +196,12 @@ fn draw_element(painter: &Painter, camera: &Camera, elem: &Element) {
             ]);
             let rect = Rect::from_min_max(tl, br);
             painter.rect_filled(rect, 4.0, Color32::from_rgb(0xE0, 0xE0, 0xE0));
-            painter.rect_stroke(rect, 4.0, Stroke::new(1.0, Color32::from_gray(180)));
+            painter.rect_stroke(rect, 4.0, Stroke::new(1.0_f32, Color32::from_gray(180)));
             // Cross pattern to indicate image placeholder
-            painter.line_segment([tl, br], Stroke::new(1.0, Color32::from_gray(180)));
+            painter.line_segment([tl, br], Stroke::new(1.0_f32, Color32::from_gray(180)));
             painter.line_segment(
                 [Pos2::new(br.x, tl.y), Pos2::new(tl.x, br.y)],
-                Stroke::new(1.0, Color32::from_gray(180)),
+                Stroke::new(1.0_f32, Color32::from_gray(180)),
             );
         }
         Element::Path(path) => draw_path(painter, camera, path, opacity),
@@ -286,7 +286,7 @@ fn draw_arrow_head(painter: &Painter, from: Pos2, to: Pos2, color: Color32, widt
     painter.add(Shape::convex_polygon(
         vec![p1, p2, p3],
         color,
-        Stroke::new(1.0, color),
+        Stroke::new(1.0_f32, color),
     ));
 }
 
@@ -360,7 +360,7 @@ fn draw_drag_preview(
     let rect = Rect::from_min_max(tl, br);
 
     let preview_fill = Color32::from_rgba_unmultiplied(58, 134, 255, 40);
-    let preview_stroke = Stroke::new(2.0, Color32::from_rgb(0x3A, 0x86, 0xFF));
+    let preview_stroke = Stroke::new(2.0_f32, Color32::from_rgb(0x3A, 0x86, 0xFF));
 
     match mode {
         crate::interaction::ToolMode::DrawShape(ShapeType::Rectangle) => {
@@ -394,7 +394,7 @@ fn draw_selection(painter: &Painter, camera: &Camera, elem: &Element) {
 
     // Selection rect
     let rect = Rect::from_min_max(tl, br);
-    painter.rect_stroke(rect.expand(2.0), 0.0, Stroke::new(1.5, SELECTION_STROKE));
+    painter.rect_stroke(rect.expand(2.0), 0.0, Stroke::new(1.5_f32, SELECTION_STROKE));
 
     // 8 resize handles (corners + edges)
     let handles = [
@@ -418,7 +418,7 @@ fn draw_selection(painter: &Painter, camera: &Camera, elem: &Element) {
     let rot_center = Pos2::new((tl.x + br.x) * 0.5, tl.y - 20.0);
     painter.line_segment(
         [Pos2::new((tl.x + br.x) * 0.5, tl.y), rot_center],
-        Stroke::new(1.5, SELECTION_STROKE),
+        Stroke::new(1.5_f32, SELECTION_STROKE),
     );
     painter.circle_filled(rot_center, 4.0, HANDLE_FILL);
     painter.circle_stroke(rot_center, 4.0, Stroke::new(HANDLE_STROKE_W, HANDLE_STROKE));
@@ -467,7 +467,7 @@ fn draw_brace(painter: &Painter, rect: Rect, stroke: Stroke, scale_y: f32) {
     let bottom = rect.bottom();
     let mid_y = (top + bottom) * 0.5;
     let h = (bottom - top).max(2.0);
-    let curv = (x_mid - x) * scale_y.max(0.1).min(1.0);
+    let curv = (x_mid - x) * scale_y.clamp(0.1, 1.0);
     let q1 = top + h * 0.25;
     let q3 = top + h * 0.75;
     let cusp = Pos2::new(x_mid, mid_y);

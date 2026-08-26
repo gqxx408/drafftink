@@ -465,7 +465,7 @@ fn draw_lens(painter: &Painter, base: &ElementBase, lens_type: &LensType, stroke
     painter.line_segment([left_bottom, right_bottom], stroke);
 
     // 主光轴（水平虚线穿过中心）
-    let axis_stroke = Stroke::new(1.0, Color32::from_rgba_unmultiplied(100, 100, 100, 180));
+    let axis_stroke = Stroke::new(1.0_f32, Color32::from_rgba_unmultiplied(100, 100, 100, 180));
     let dash_len = 6.0;
     let gap_len = 4.0;
     let mut x = left - rect.width() * 0.3;
@@ -501,7 +501,7 @@ fn draw_mirror(painter: &Painter, base: &ElementBase, stroke: Stroke) {
     // 背面斜线阴影（从左向右下倾斜的短线条）
     let hatch_spacing = 8.0;
     let hatch_length = 10.0;
-    let hatch_stroke = Stroke::new(1.5, STROKE_COLOR);
+    let hatch_stroke = Stroke::new(1.5_f32, STROKE_COLOR);
 
     let mut y = top;
     while y <= bottom {

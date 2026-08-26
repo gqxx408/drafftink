@@ -173,7 +173,7 @@ impl AnimationPlayer {
         self.pending_sinks.retain(|s| !s.empty());
 
         match self.state {
-            PlayerState::Idle | PlayerState::Done => return,
+            PlayerState::Idle | PlayerState::Done => (),
 
             PlayerState::WaitingBefore => {
                 if now.duration_since(self.state_start).as_millis() >= 300 {
@@ -731,7 +731,7 @@ mod tests {
             distance: Some(300.0),
             ..anim
         };
-        let (do_, dp, ds) = compute_effect_deltas(&anim, 0.0, [100.0, 200.0], [50.0, 50.0], 1280.0);
+        let (do_, dp, _ds) = compute_effect_deltas(&anim, 0.0, [100.0, 200.0], [50.0, 50.0], 1280.0);
         assert!((do_ - 1.0).abs() < 0.001); // fade in
         assert!((dp[0] - 0.0).abs() < 0.001);
         assert!((dp[1] - 300.0).abs() < 0.001); // -(-300) = 300
@@ -744,7 +744,7 @@ mod tests {
             magnitude: 1.0,
             ..make_fade_in_anim(Uuid::new_v4(), Uuid::new_v4())
         };
-        let (do_, dp, ds) = compute_effect_deltas(&anim, 0.0, [0.0, 0.0], [100.0, 50.0], 1280.0);
+        let (do_, _dp, ds) = compute_effect_deltas(&anim, 0.0, [0.0, 0.0], [100.0, 50.0], 1280.0);
         assert!((do_ - 1.0).abs() < 0.001);
         assert!((ds[0] - 100.0).abs() < 0.001);
         assert!((ds[1] - 50.0).abs() < 0.001);
@@ -757,7 +757,7 @@ mod tests {
             magnitude: 1.0,
             ..make_fade_in_anim(Uuid::new_v4(), Uuid::new_v4())
         };
-        let (do_, dp, ds) = compute_effect_deltas(&anim, 1.0, [0.0, 0.0], [200.0, 100.0], 1280.0);
+        let (do_, _dp, ds) = compute_effect_deltas(&anim, 1.0, [0.0, 0.0], [200.0, 100.0], 1280.0);
         assert!((do_ - 0.0).abs() < 0.001); // no opacity change
         assert!((ds[0] - 60.0).abs() < 0.001); // 200 * 0.3
     }

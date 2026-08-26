@@ -265,7 +265,7 @@ pub fn is_valid_date8(s: &str) -> bool {
     }
     let max_day = match month {
         2 => {
-            let leap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+            let leap = (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400);
             if leap {
                 29
             } else {

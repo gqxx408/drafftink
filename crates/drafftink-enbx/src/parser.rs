@@ -1103,8 +1103,8 @@ fn parse_shape_element(reader: &mut Reader<&[u8]>, start: &BytesStart<'_>) -> Re
                     "adjust" => shape.adjusts.push(parse_adjust(e)),
                     "headend" => shape.arrow_head = Some(parse_arrow_end(e)),
                     "tailend" => shape.arrow_tail = Some(parse_arrow_end(e)),
-                    "path" => {
-                        if shape.path_data.is_none() {
+                    "path"
+                        if shape.path_data.is_none() => {
                             if let Some(v) = attr_str(e, "data")
                                 .or_else(|| attr_str(e, "d"))
                                 .or_else(|| attr_str(e, "path"))
@@ -1112,7 +1112,6 @@ fn parse_shape_element(reader: &mut Reader<&[u8]>, start: &BytesStart<'_>) -> Re
                                 shape.path_data = Some(v);
                             }
                         }
-                    }
                     _ => {}
                 }
             }

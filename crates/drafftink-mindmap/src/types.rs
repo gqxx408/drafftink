@@ -14,8 +14,10 @@ use crate::rich_text::RichText;
 
 /// 导图类型
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum MapType {
     /// 平衡思维导图（左右双分支）
+    #[default]
     MindMap,
     /// 鱼骨图
     FishBone,
@@ -25,30 +27,22 @@ pub enum MapType {
     Mindly,
 }
 
-impl Default for MapType {
-    fn default() -> Self {
-        Self::MindMap
-    }
-}
 
 // ── 节点位置 ──────────────────────────────────────────────────────
 
 /// 节点在树中的位置（用于左右分支判断）
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum NodePosition {
     /// 根节点
     Root,
     /// 左分支
     Left,
     /// 右分支
+    #[default]
     Right,
 }
 
-impl Default for NodePosition {
-    fn default() -> Self {
-        Self::Right
-    }
-}
 
 // ── 节点样式 ──────────────────────────────────────────────────────
 

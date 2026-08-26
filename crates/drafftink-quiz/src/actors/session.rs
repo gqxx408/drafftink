@@ -375,11 +375,8 @@ pub fn start_session_actor() -> (mpsc::Sender<SessionCommand>, mpsc::Receiver<Ui
 
                 SessionCommand::EndQuestion { question_id, reply } => {
                     let result = session.end_question(&question_id);
-                    match &result {
-                        Ok(stats) => {
-                            let _ = ui_tx.send(UiEvent::StatsUpdated(stats.clone())).await;
-                        }
-                        Err(_) => {}
+                    if let Ok(stats) = &result {
+                        let _ = ui_tx.send(UiEvent::StatsUpdated(stats.clone())).await;
                     }
                     let _ = reply.send(result.map_err(|e| e.to_string()));
                 }

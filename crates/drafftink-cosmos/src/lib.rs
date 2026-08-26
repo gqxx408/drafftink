@@ -207,7 +207,7 @@ impl CosmosViewer {
             .scene
             .rotations
             .iter()
-            .map(|r| r.clone().unwrap_or_else(|| Rotation::default()))
+            .map(|r| r.clone().unwrap_or_else(Rotation::default))
             .collect();
         rotation_system(&mut self.scene.transforms, &rotations, dt);
 
@@ -318,7 +318,7 @@ impl CosmosViewer {
                 ));
             }
             if let Some((_, ref mesh)) = self.cached_orbits {
-                if mesh.indices.len() > 0 {
+                if !mesh.indices.is_empty() {
                     painter.add(mesh.clone());
                 }
             }

@@ -188,6 +188,7 @@ impl QuizCardData {
 // ─── 渲染：题目详情弹窗 ────────────────────────────────────────────────────
 
 /// 题目作答状态。
+#[derive(Default)]
 pub struct QuizState {
     /// 当前显示的题目索引
     pub current_index: usize,
@@ -201,17 +202,6 @@ pub struct QuizState {
     pub show_analysis: bool,
 }
 
-impl Default for QuizState {
-    fn default() -> Self {
-        Self {
-            current_index: 0,
-            user_answers: Vec::new(),
-            submitted: false,
-            is_correct: false,
-            show_analysis: false,
-        }
-    }
-}
 
 /// 在 egui Ui 中绘制一道题目。
 ///

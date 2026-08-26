@@ -438,7 +438,7 @@ mod tests {
             let mut z = zip::ZipWriter::new(std::io::Cursor::new(&mut buf));
             let opts = zip::write::FileOptions::default();
             for page in &[0, 2] {
-                z.start_file(&format!("Slide/Slide_{}.xml", page), opts)
+                z.start_file(format!("Slide/Slide_{}.xml", page), opts)
                     .unwrap();
                 let xml = format!(
                     r#"<?xml version="1.0"?><Slide><Id>s{}</Id><Width>1280</Width><Height>720</Height><Elements><Element><Id>e1</Id><X>0</X><Y>0</Y><Width>100</Width><Height>50</Height><Text><RichText><TextRuns><TextRun><Text>PAGE_{}</Text><FontSize>24</FontSize><Foreground><ColorBrush>#FF000000</ColorBrush></Foreground></TextRun></TextRuns></RichText></Text></Element></Elements></Slide>"#,

@@ -829,6 +829,20 @@ impl GeometryRenderer {
     }
 }
 
+// ── 贝塞尔曲线辅助函数 ──────────────────────────────────────────
+
+/// 二阶贝塞尔曲线
+fn quadratic_bezier(p0: Point2D, p1: Point2D, p2: Point2D, t: f32) -> Point2D {
+    let u = 1.0 - t;
+    p0 * (u * u) + p1 * (2.0 * u * t) + p2 * (t * t)
+}
+
+/// 三阶贝塞尔曲线
+fn cubic_bezier(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: f32) -> Point2D {
+    let u = 1.0 - t;
+    p0 * (u * u * u) + p1 * (3.0 * u * u * t) + p2 * (3.0 * u * t * t) + p3 * (t * t * t)
+}
+
 // ── 测试 ────────────────────────────────────────────────────────
 
 #[cfg(test)]
@@ -874,18 +888,4 @@ mod tests {
         assert!(config.point_size > 0.0);
         assert!(config.line_width > 0.0);
     }
-}
-
-// ── 贝塞尔曲线辅助函数 ──────────────────────────────────────────
-
-/// 二阶贝塞尔曲线
-fn quadratic_bezier(p0: Point2D, p1: Point2D, p2: Point2D, t: f32) -> Point2D {
-    let u = 1.0 - t;
-    p0 * (u * u) + p1 * (2.0 * u * t) + p2 * (t * t)
-}
-
-/// 三阶贝塞尔曲线
-fn cubic_bezier(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: f32) -> Point2D {
-    let u = 1.0 - t;
-    p0 * (u * u * u) + p1 * (3.0 * u * u * t) + p2 * (3.0 * u * t * t) + p3 * (t * t * t)
 }

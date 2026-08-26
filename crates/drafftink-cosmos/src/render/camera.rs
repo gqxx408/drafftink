@@ -72,7 +72,7 @@ impl OrbitCamera {
     /// - 近裁剪面 z = -near，远裁剪面 z = -far（视图空间）
     pub fn projection_matrix(&self) -> Matrix4<f32> {
         let perspective = nalgebra::Perspective3::new(self.aspect, self.fov, self.near, self.far);
-        perspective.as_matrix().clone()
+        *perspective.as_matrix()
     }
 
     /// 计算视图投影矩阵（VP = P * V）
@@ -157,7 +157,7 @@ pub fn project_point(
     let ndc_z = clip.z / w;
 
     // 视锥体剔除：检查 NDC 是否在 [-1, 1] 范围内
-    if ndc_x < -1.0 || ndc_x > 1.0 || ndc_y < -1.0 || ndc_y > 1.0 || ndc_z < -1.0 || ndc_z > 1.0 {
+    if !(-1.0..=1.0).contains(&ndc_x) || !(-1.0..=1.0).contains(&ndc_y) || !(-1.0..=1.0).contains(&ndc_z) {
         return None;
     }
 

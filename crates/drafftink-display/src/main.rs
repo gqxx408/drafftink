@@ -63,7 +63,7 @@ fn install_cjk_fonts(ctx: &egui::Context) {
     let key = "cjk".to_owned();
     fonts
         .font_data
-        .insert(key.clone(), egui::FontData::from_owned(font_data).into());
+        .insert(key.clone(), egui::FontData::from_owned(font_data));
     fonts
         .families
         .entry(egui::FontFamily::Proportional)

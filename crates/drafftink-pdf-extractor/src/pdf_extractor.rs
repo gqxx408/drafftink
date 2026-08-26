@@ -47,7 +47,7 @@ fn tokenize_cmap(text: &str) -> Vec<Tok> {
                     i += 1;
                 }
                 i += 1; // 跳过 '>'
-                if h.len() % 2 == 0 && !h.is_empty() {
+                if h.len().is_multiple_of(2) && !h.is_empty() {
                     if let Ok(bytes) = hex_decode(&h) {
                         toks.push(Tok::Hex(bytes));
                     }

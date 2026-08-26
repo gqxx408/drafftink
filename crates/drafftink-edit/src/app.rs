@@ -175,6 +175,7 @@ impl Default for EditApp {
     }
 }
 
+#[allow(dead_code)]
 impl EditApp {
     /// Load a .drft file. Also accepts .enbx for backward compatibility.
     pub fn open_file(&mut self, path: &std::path::Path) {
@@ -391,7 +392,7 @@ impl EditApp {
         painter.rect_stroke(
             canvas_rect,
             0.0,
-            egui::Stroke::new(1.0, Color32::from_rgb(0xD0, 0xD0, 0xD0)),
+            egui::Stroke::new(1.0_f32, Color32::from_rgb(0xD0, 0xD0, 0xD0)),
         );
 
         self.camera.viewport = [canvas_w, canvas_h];
@@ -530,7 +531,7 @@ impl eframe::App for EditApp {
                     if ui.button("➕ 插入").clicked() {
                         self.shape_insert_requested = Some(self.selected_shape);
                     }
-                    if label_btn(ui, " 表格", TOOLBAR_BG).clicked() {}
+                    label_btn(ui, " 表格", TOOLBAR_BG).clicked();
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if ui
                             .add_sized(
@@ -569,7 +570,7 @@ impl eframe::App for EditApp {
             .frame(
                 egui::Frame::none()
                     .fill(SIDEBAR_BG)
-                    .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0xC0, 0xC0, 0xC0))),
+                    .stroke(egui::Stroke::new(1.0_f32, Color32::from_rgb(0xC0, 0xC0, 0xC0))),
             )
             .show(ctx, |ui| {
                 ui.vertical_centered(|ui| {
@@ -593,9 +594,9 @@ impl eframe::App for EditApp {
                             Color32::WHITE
                         };
                         let border = if active {
-                            (3.0, PAGE_ACTIVE)
+                            (3.0_f32, PAGE_ACTIVE)
                         } else {
-                            (1.0, PAGE_INACTIVE)
+                            (1.0_f32, PAGE_INACTIVE)
                         };
                         ui.painter().rect_filled(rect, 4.0, bg);
                         ui.painter()
@@ -636,7 +637,7 @@ impl eframe::App for EditApp {
             .frame(
                 egui::Frame::none()
                     .fill(SIDEBAR_BG)
-                    .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0xC0, 0xC0, 0xC0)))
+                    .stroke(egui::Stroke::new(1.0_f32, Color32::from_rgb(0xC0, 0xC0, 0xC0)))
                     .inner_margin(egui::Margin::same(10.0)),
             )
             .show(ctx, |ui| {

@@ -232,7 +232,7 @@ impl RectInteraction {
         } else {
             Color32::from_rgba_unmultiplied(150, 150, 150, 180)
         };
-        painter.rect_stroke(self.rect, 0.0, Stroke::new(2.0, border_color));
+        painter.rect_stroke(self.rect, 0.0, Stroke::new(2.0_f32, border_color));
 
         // 四角 grip（8×8 亮蓝方块）。
         let draw_corner = |painter: &Painter, c: Pos2| {
@@ -262,7 +262,7 @@ impl RectInteraction {
 
         // 边高亮（3px 亮蓝覆盖默认 2px 灰线）。
         let draw_edge = |painter: &Painter, a: Pos2, b: Pos2| {
-            painter.line_segment([a, b], Stroke::new(3.0, Color32::from_rgb(0, 150, 255)));
+            painter.line_segment([a, b], Stroke::new(3.0_f32, Color32::from_rgb(0, 150, 255)));
         };
         for z in [HitZone::Top, HitZone::Bottom, HitZone::Left, HitZone::Right] {
             if self.hovered == Some(z) || self.active_drag == Some(z) {

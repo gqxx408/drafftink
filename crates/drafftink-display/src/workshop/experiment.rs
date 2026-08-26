@@ -145,7 +145,7 @@ pub fn draw_circuit_diagram(painter: &egui::Painter, rect: Rect, state: &SimpleC
     } else {
         Color32::from_rgb(60, 60, 60)
     };
-    let stroke = Stroke::new(2.5, stroke_color);
+    let stroke = Stroke::new(2.5_f32, stroke_color);
 
     let left = rect.left() + 20.0;
     let right = rect.right() - 20.0;
@@ -227,7 +227,7 @@ pub fn draw_circuit_diagram(painter: &egui::Painter, rect: Rect, state: &SimpleC
         painter.circle_stroke(
             bulb_center,
             bulb_r + 4.0,
-            Stroke::new(2.0, Color32::from_rgba_unmultiplied(255, 200, 0, 120)),
+            Stroke::new(2.0_f32, Color32::from_rgba_unmultiplied(255, 200, 0, 120)),
         );
     } else {
         painter.circle_filled(bulb_center, bulb_r, Color32::WHITE);

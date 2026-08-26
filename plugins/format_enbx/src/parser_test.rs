@@ -21,7 +21,7 @@ mod tests {
         assert_eq!(text.width, 710.0);
         assert!((text.height - 107.793).abs() < 0.001);
         assert_eq!(text.rotation, 0.0);
-        assert_eq!(text.is_locked, false);
+        assert!(!text.is_locked);
 
         assert_eq!(text.background.a, 0);
         assert_eq!(text.background.r, 255);

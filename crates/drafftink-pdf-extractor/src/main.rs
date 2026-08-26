@@ -32,7 +32,7 @@ fn main() {
                         cjk,
                         trimmed.chars().count(),
                         if trimmed.chars().count() > 60 {
-                            format!("{}…", &trimmed.chars().take(60).collect::<String>())
+                            format!("{}…", trimmed.chars().take(60).collect::<String>())
                         } else {
                             trimmed.to_string()
                         }

@@ -101,22 +101,19 @@ impl eframe::App for App {
             // Render elements
             if let Some(page) = self.doc.pages.get(self.page) {
                 for element in &page.elements {
-                    match element {
-                        Element::Text(t) => {
-                            let x = t.base.position[0];
-                            let y = t.base.position[1];
-                            let c = t.base.fill_color;
+                    if let Element::Text(t) = element {
+                        let x = t.base.position[0];
+                        let y = t.base.position[1];
+                        let c = t.base.fill_color;
 
-                            painter.text(
-                                Pos2::new(x, y),
-                                Align2::LEFT_TOP,
-                                &t.text,
-                                FontId::proportional(t.font_size),
-                                c,
-                            );
-                        }
-                        _ => {} // shapes/images not supported yet
-                    }
+                        painter.text(
+                            Pos2::new(x, y),
+                            Align2::LEFT_TOP,
+                            &t.text,
+                            FontId::proportional(t.font_size),
+                            c,
+                        );
+                    } // shapes/images not supported yet
                 }
             }
         });

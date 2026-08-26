@@ -74,23 +74,21 @@ fn render_solar_system_top_down(
     };
 
     // ---- 绘制轨道 ----
-    for orbit in &scene.orbits {
-        if let Some(orbit) = orbit {
-            let radius = orbit.semi_major_axis * scale;
+    for orbit in scene.orbits.iter().flatten() {
+        let radius = orbit.semi_major_axis * scale;
 
-            // 椭圆轨道（考虑偏心率）
-            let a = radius;
-            let b = radius * (1.0 - orbit.eccentricity * 0.5); // 简化：用 b 近似
+        // 椭圆轨道（考虑偏心率）
+        let a = radius;
+        let b = radius * (1.0 - orbit.eccentricity * 0.5); // 简化：用 b 近似
 
-            draw_ellipse(
-                painter,
-                center,
-                a,
-                b,
-                orbit.ascending_node,
-                Stroke::new(1.0, Color32::from_rgba_unmultiplied(100, 120, 160, 120)),
-            );
-        }
+        draw_ellipse(
+            painter,
+            center,
+            a,
+            b,
+            orbit.ascending_node,
+            Stroke::new(1.0_f32, Color32::from_rgba_unmultiplied(100, 120, 160, 120)),
+        );
     }
 
     // ---- 绘制太阳 ----
@@ -148,7 +146,7 @@ fn render_solar_system_top_down(
         painter.circle_stroke(
             planet_pos,
             planet_size,
-            Stroke::new(1.0, Color32::from_rgba_unmultiplied(255, 255, 255, 80)),
+            Stroke::new(1.0_f32, Color32::from_rgba_unmultiplied(255, 255, 255, 80)),
         );
 
         // 绘制标签
@@ -252,7 +250,7 @@ fn draw_grid_lines(painter: &Painter, rect: Rect) {
 
         painter.line_segment(
             [Pos2::new(px, rect.min.y), Pos2::new(px, rect.max.y)],
-            Stroke::new(if is_prime { 1.5 } else { 1.0 }, color),
+            Stroke::new(if is_prime { 1.5_f32 } else { 1.0_f32 }, color),
         );
     }
 
@@ -277,7 +275,7 @@ fn draw_grid_lines(painter: &Painter, rect: Rect) {
 
         painter.line_segment(
             [Pos2::new(rect.min.x, py), Pos2::new(rect.max.x, py)],
-            Stroke::new(if is_equator { 1.5 } else { 1.0 }, color),
+            Stroke::new(if is_equator { 1.5_f32 } else { 1.0_f32 }, color),
         );
 
         // 纬线标签
@@ -311,7 +309,7 @@ fn draw_planet_info_header(
             Pos2::new(rect.max.x, rect.min.y + header_height),
         ],
         Stroke::new(
-            1.0,
+            1.0_f32,
             Color32::from_rgba_unmultiplied(
                 planet_color.r(),
                 planet_color.g(),
@@ -334,7 +332,7 @@ fn draw_planet_info_header(
     painter.text(
         Pos2::new(rect.center().x, rect.min.y + 30.0),
         egui::Align2::CENTER_CENTER,
-        &format!(
+        format!(
             "直径 {:.0} km  |  质量 {:.2e} kg",
             info.diameter_km, info.mass_kg
         ),

@@ -141,14 +141,13 @@ impl PhysicsEditor {
 
                 // 清空按钮
                 ui.add_space(8.0);
-                if self.elements.len() > 0 {
-                    if ui
+                if !self.elements.is_empty()
+                    && ui
                         .add(egui::Button::new("🗑️  清空画布").min_size(Vec2::new(130.0, 30.0)))
                         .clicked()
                     {
                         self.elements.clear();
                     }
-                }
             });
 
         // ── 中央画布 ──
@@ -188,7 +187,7 @@ impl PhysicsEditor {
         while x <= rect.right() {
             painter.line_segment(
                 [Pos2::new(x, rect.top()), Pos2::new(x, rect.bottom())],
-                Stroke::new(1.0, grid_color),
+                Stroke::new(1.0_f32, grid_color),
             );
             x += grid_size;
         }
@@ -198,7 +197,7 @@ impl PhysicsEditor {
         while y <= rect.bottom() {
             painter.line_segment(
                 [Pos2::new(rect.left(), y), Pos2::new(rect.right(), y)],
-                Stroke::new(1.0, grid_color),
+                Stroke::new(1.0_f32, grid_color),
             );
             y += grid_size;
         }
@@ -272,9 +271,8 @@ impl PhysicsEditor {
         }
 
         // ── 处理拖拽中 ──
-        if response.dragged() && self.dragging_id.is_some() {
-            if let Some(pos) = mouse_pos {
-                let drag_id = self.dragging_id.unwrap();
+        if response.dragged() {
+            if let (Some(drag_id), Some(pos)) = (self.dragging_id, mouse_pos) {
                 for elem in &mut self.elements {
                     if elem.id() == drag_id {
                         elem.base_mut().position = pos - self.drag_offset;
@@ -341,7 +339,7 @@ impl PhysicsEditor {
         painter.rect_stroke(
             label_rect,
             6.0,
-            Stroke::new(1.0, Color32::from_rgb(200, 200, 200)),
+            Stroke::new(1.0_f32, Color32::from_rgb(200, 200, 200)),
         );
 
         // 文字
@@ -396,7 +394,7 @@ fn tool_button(text: &str) -> egui::Button<'_> {
     egui::Button::new(text)
         .min_size(Vec2::new(130.0, 36.0))
         .fill(Color32::from_rgb(245, 245, 245))
-        .stroke(Stroke::new(1.0, Color32::from_rgb(200, 200, 200)))
+        .stroke(Stroke::new(1.0_f32, Color32::from_rgb(200, 200, 200)))
 }
 
 // ─── 为了让 LensType 能被 elements 模块外部使用 ──────────────────────────

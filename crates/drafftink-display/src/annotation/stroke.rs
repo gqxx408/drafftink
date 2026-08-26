@@ -2,17 +2,14 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum ToolType {
+    #[default]
     Pen,
     Highlighter,
     Eraser,
 }
 
-impl Default for ToolType {
-    fn default() -> Self {
-        Self::Pen
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InkStroke {

@@ -65,7 +65,7 @@ pub fn render_labels(
                     (label.color[2] * 255.0) as u8,
                     150,
                 );
-                painter.line_segment([entity_pos_2d, text_bottom], Stroke::new(1.0, line_color));
+                painter.line_segment([entity_pos_2d, text_bottom], Stroke::new(1.0_f32, line_color));
 
                 // 绘制标签文字
                 let text_color = Color32::from_rgb(
@@ -94,7 +94,7 @@ pub fn render_labels(
                     bg_rect,
                     3.0,
                     Stroke::new(
-                        1.0,
+                        1.0_f32,
                         Color32::from_rgba_unmultiplied(
                             (label.color[0] * 255.0) as u8,
                             (label.color[1] * 255.0) as u8,
@@ -157,7 +157,7 @@ pub fn render_single_label(
             (label.color[2] * 255.0) as u8,
             150,
         );
-        painter.line_segment([entity_2d, text_bottom], Stroke::new(1.0, line_color));
+        painter.line_segment([entity_2d, text_bottom], Stroke::new(1.0_f32, line_color));
 
         // 文字颜色
         let text_color = Color32::from_rgb(
@@ -187,7 +187,7 @@ pub fn render_single_label(
             bg_rect,
             3.0,
             Stroke::new(
-                1.0,
+                1.0_f32,
                 Color32::from_rgba_unmultiplied(
                     (label.color[0] * 255.0) as u8,
                     (label.color[1] * 255.0) as u8,

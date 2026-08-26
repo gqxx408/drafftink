@@ -421,7 +421,7 @@ impl SeewoClassApp {
         ui.painter().rect_stroke(
             canvas_rect,
             0.0,
-            egui::Stroke::new(1.0, Color32::from_rgb(0xD0, 0xD0, 0xD0)),
+            egui::Stroke::new(1.0_f32, Color32::from_rgb(0xD0, 0xD0, 0xD0)),
         );
 
         self.camera.viewport = [canvas_w, canvas_h];
@@ -559,7 +559,7 @@ impl SeewoClassApp {
                 egui::Frame::none()
                     .fill(egui::Color32::from_rgb(0x1E, 0x1E, 0x1E))
                     .stroke(egui::Stroke::new(
-                        1.0,
+                        1.0_f32,
                         egui::Color32::from_rgb(0x33, 0x33, 0x33),
                     ))
                     .rounding(egui::Rounding::same(12.0))
@@ -894,7 +894,7 @@ impl eframe::App for SeewoClassApp {
                                 ui.close_menu();
                             }
                         });
-                        if label_btn(ui, " 同步", TOOLBAR_BG).clicked() {}
+                        label_btn(ui, " 同步", TOOLBAR_BG).clicked();
                         if label_btn(ui, " 撤销", TOOLBAR_BG).clicked() {
                             self.undo();
                         }
@@ -908,14 +908,14 @@ impl eframe::App for SeewoClassApp {
                         if label_btn(ui, " 形状", TOOLBAR_BG).clicked() {
                             self.interaction.mode = ToolMode::DrawShape(ShapeType::Rectangle);
                         }
-                        if label_btn(ui, " 多媒体", TOOLBAR_BG).clicked() {}
-                        if label_btn(ui, " 表格", TOOLBAR_BG).clicked() {}
-                        if label_btn(ui, " 课堂活动", TOOLBAR_BG).clicked() {}
-                        if label_btn(ui, " 思维导图", TOOLBAR_BG).clicked() {}
-                        if label_btn(ui, " 学科工具", TOOLBAR_BG).clicked() {}
+                        label_btn(ui, " 多媒体", TOOLBAR_BG).clicked();
+                        label_btn(ui, " 表格", TOOLBAR_BG).clicked();
+                        label_btn(ui, " 课堂活动", TOOLBAR_BG).clicked();
+                        label_btn(ui, " 思维导图", TOOLBAR_BG).clicked();
+                        label_btn(ui, " 学科工具", TOOLBAR_BG).clicked();
                         ui.separator();
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                            if label_btn(ui, " 分享", TOOLBAR_BG).clicked() {}
+                            label_btn(ui, " 分享", TOOLBAR_BG).clicked();
                             if ui
                                 .add_sized(
                                     [88.0, 24.0],
@@ -950,7 +950,7 @@ impl eframe::App for SeewoClassApp {
                         let f = egui::Frame::none()
                             .fill(Color32::WHITE)
                             .stroke(egui::Stroke::new(
-                                if active { 2.0 } else { 1.0 },
+                                if active { 2.0_f32 } else { 1.0_f32 },
                                 stroke_col,
                             ))
                             .inner_margin(egui::Margin::same(2.0));
@@ -979,7 +979,7 @@ impl eframe::App for SeewoClassApp {
                 .frame(
                     egui::Frame::none()
                         .fill(SIDEBAR_BG)
-                        .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0xC0, 0xC0, 0xC0)))
+                        .stroke(egui::Stroke::new(1.0_f32, Color32::from_rgb(0xC0, 0xC0, 0xC0)))
                         .inner_margin(egui::Margin::same(10.0)),
                 )
                 .show(ctx, |ui| {
@@ -999,12 +999,12 @@ impl eframe::App for SeewoClassApp {
                         ui.painter().rect_stroke(
                             thumb,
                             2.0,
-                            egui::Stroke::new(1.0, Color32::from_rgb(0xD0, 0xD0, 0xD0)),
+                            egui::Stroke::new(1.0_f32, Color32::from_rgb(0xD0, 0xD0, 0xD0)),
                         );
                         ui.advance_cursor_after_rect(thumb);
                         ui.add_space(6.0);
                         ui.horizontal(|ui| {
-                            if ui.button("空白").clicked() {}
+                            ui.button("空白").clicked();
                             if ui.button("更改布局").clicked() {}
                         });
                     });
@@ -1025,7 +1025,7 @@ impl eframe::App for SeewoClassApp {
                     ui.add_space(8.0);
 
                     // Theme button
-                    if ui.button("应用主题").clicked() {}
+                    ui.button("应用主题").clicked();
 
                     ui.add_space(12.0);
                     ui.separator();
@@ -1065,7 +1065,7 @@ impl eframe::App for SeewoClassApp {
                 .frame(
                     egui::Frame::none()
                         .fill(Color32::from_rgb(0xFF, 0xFF, 0xFF))
-                        .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0xCC, 0xCC, 0xCC)))
+                        .stroke(egui::Stroke::new(1.0_f32, Color32::from_rgb(0xCC, 0xCC, 0xCC)))
                         .inner_margin(egui::Margin::symmetric(12.0, 6.0)),
                 )
                 .show(ctx, |ui| {
@@ -1102,7 +1102,7 @@ impl eframe::App for SeewoClassApp {
                                         .size(13.0),
                                 )
                                 .fill(Color32::TRANSPARENT)
-                                .stroke(egui::Stroke::new(1.0, Color32::from_rgb(0x07, 0xC1, 0x60)))
+                                .stroke(egui::Stroke::new(1.0_f32, Color32::from_rgb(0x07, 0xC1, 0x60)))
                                 .rounding(egui::Rounding::same(6.0)),
                             )
                             .clicked()
