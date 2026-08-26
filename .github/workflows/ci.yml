@@ -39,6 +39,9 @@ jobs:
     
       - name: 🧪 跑全部测试
         run: cargo test --workspace --all-targets
-
+        env:
+        http_proxy: ""
+        https_proxy: ""
+        ALL_PROXY: ""
       - name: 🔍 Clippy 静态分析（仅核心 crate，零警告）
         run: cargo clippy -p drafftink-desktop -p enbx_importer --all-targets -- -D warnings
