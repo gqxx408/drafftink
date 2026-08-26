@@ -1529,6 +1529,7 @@ dependencies = [
  "eframe",
  "egui",
  "egui_extras",
+ "enbx_importer",
  "image",
  "log",
  "md5",

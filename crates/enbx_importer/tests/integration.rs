@@ -23,7 +23,10 @@ fn import(path: &Path) -> Option<(CoursewareDoc, enbx_importer::ImportReport)> {
 fn biology_courseware_reads_all_35_slides() {
     let path = Path::new(BIOLOGY_COURSEWARE);
     if !path.exists() {
-        eprintln!("skip: 生物课件不存在（{}），跳过真实样本断言", path.display());
+        eprintln!(
+            "skip: 生物课件不存在（{}），跳过真实样本断言",
+            path.display()
+        );
         return;
     }
     let (doc, report) = import(path).expect("生物课件应能成功导入");
@@ -91,10 +94,14 @@ fn synthetic_enbx_basic_parse() {
     // ── 构造 ZIP：Board + Reference + 3 张 Slide + 1 张真实 PNG 资源。 ──
     let png = make_1x1_png();
     let mut zip = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
-    let opts = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
+    let opts =
+        zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
 
     zip.start_file("[Content_Types].xml", opts).unwrap();
-    zip.write_all(b"<?xml version=\"1.0\"?><Types><Default Extension=\"png\" ContentType=\"\"/></Types>").unwrap();
+    zip.write_all(
+        b"<?xml version=\"1.0\"?><Types><Default Extension=\"png\" ContentType=\"\"/></Types>",
+    )
+    .unwrap();
 
     zip.start_file("Board.xml", opts).unwrap();
     zip.write_all(
@@ -145,7 +152,8 @@ fn synthetic_enbx_basic_parse() {
         .as_slice(),
     ];
     for (i, body) in bodies.iter().enumerate() {
-        zip.start_file(format!("Slides/Slide_{i}.xml"), opts).unwrap();
+        zip.start_file(format!("Slides/Slide_{i}.xml"), opts)
+            .unwrap();
         zip.write_all(body).unwrap();
     }
 

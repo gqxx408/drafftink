@@ -144,6 +144,115 @@ pub(crate) fn parse_names(input: &str) -> Vec<String> {
         .collect()
 }
 
+/// 解析 SVG path 子集（`M`/`L`/`C`/`z`，绝对坐标；支持科学计数如 `-1.27E-06`）
+/// 为折线点序列（相对元素 `size` 的像素坐标，ENBX 覆盖层渲染用）。
+///
+/// 归一化判定：所有坐标绝对值 ≤ 1.0 → 视为 0..1 归一化坐标，乘以 `size`。
+/// 遇不支持的命令（`H/V/Q/S/T/A`）停止消费，避免错位（Phase 1 只支持 M/L/C/z）。
+pub(crate) fn svg_path_points(path_str: &str, size: [f32; 2]) -> Vec<[f32; 2]> {
+    let s = path_str.trim();
+    if s.is_empty() {
+        return Vec::new();
+    }
+    // 扫描：命令字母 + 数值流（含负号 / 小数点 / 科学计数 e）。
+    let mut cmds: Vec<char> = Vec::new();
+    let mut nums: Vec<f32> = Vec::new();
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        let c = bytes[i] as char;
+        if c.is_ascii_alphabetic() {
+            cmds.push(c);
+            i += 1;
+        } else if c.is_ascii_digit() || c == '-' || c == '+' || c == '.' {
+            let start = i;
+            let mut j = i;
+            while j < bytes.len() {
+                let ch = bytes[j] as char;
+                if ch.is_ascii_digit()
+                    || ch == '-'
+                    || ch == '+'
+                    || ch == '.'
+                    || ch == 'e'
+                    || ch == 'E'
+                {
+                    j += 1;
+                } else {
+                    break;
+                }
+            }
+            if let Ok(v) = s[start..j].parse::<f32>() {
+                nums.push(v);
+            }
+            i = j;
+        } else {
+            i += 1;
+        }
+    }
+    if nums.is_empty() {
+        return Vec::new();
+    }
+    let abs_max = nums.iter().fold(0.0f32, |m, v| m.max(v.abs()));
+    let normalized = abs_max <= 1.0 + 1e-6;
+    let (sx, sy) = if normalized {
+        (size[0], size[1])
+    } else {
+        (1.0, 1.0)
+    };
+
+    let mut out: Vec<[f32; 2]> = Vec::new();
+    let mut ni = 0usize;
+    let mut cur = [0.0f32, 0.0f32];
+    let mut start = [0.0f32, 0.0f32];
+    for &cmd in &cmds {
+        match cmd {
+            'M' | 'L' => {
+                while ni + 1 < nums.len() {
+                    cur = [nums[ni] * sx, nums[ni + 1] * sy];
+                    ni += 2;
+                    if cmd == 'M' {
+                        start = cur;
+                        out.push(cur);
+                        break; // M 只消费一个点
+                    }
+                    out.push(cur);
+                }
+            }
+            'C' => {
+                // 三次贝塞尔：16 段 de Casteljau 采样。
+                while ni + 5 < nums.len() {
+                    let c1 = [nums[ni] * sx, nums[ni + 1] * sy];
+                    let c2 = [nums[ni + 2] * sx, nums[ni + 3] * sy];
+                    let end = [nums[ni + 4] * sx, nums[ni + 5] * sy];
+                    ni += 6;
+                    for k in 1..=16 {
+                        let t = k as f32 / 16.0;
+                        let u = 1.0 - t;
+                        let x = u * u * u * cur[0]
+                            + 3.0 * u * u * t * c1[0]
+                            + 3.0 * u * t * t * c2[0]
+                            + t * t * t * end[0];
+                        let y = u * u * u * cur[1]
+                            + 3.0 * u * u * t * c1[1]
+                            + 3.0 * u * t * t * c2[1]
+                            + t * t * t * end[1];
+                        out.push([x, y]);
+                    }
+                    cur = end;
+                }
+            }
+            'z' | 'Z' => {
+                if out.len() >= 2 {
+                    out.push(start);
+                }
+            }
+            // 相对命令 / 不支持的曲线命令：停止消费（不读错位参数）。
+            _ => break,
+        }
+    }
+    out
+}
+
 impl NamePickerTool {
     /// 从输入框解析并追加名单（去重）；把已加入的名字去除后清空输入框。
     pub fn add_from_input(&mut self) {
@@ -259,6 +368,20 @@ pub struct IntegratedApp {
     marquee_rect: Option<egui::Rect>,
     /// 框选命中单个文本元素后待弹出的「函数绘图」菜单状态。
     function_menu: Option<FunctionMenuState>,
+
+    // ── ENBX 课件导入浏览（enbx_importer 只读导入，独立覆盖层，不进入编辑文档）──
+    /// 导入的课件文档（`Some` 时进入 ENBX 浏览覆盖层）。
+    current_doc: Option<drafftink_core::model::CoursewareDoc>,
+    /// 浏览中的当前页（0-based，`pages[current_page]`）。
+    current_page: usize,
+    /// 最近一次导入的报告（用于显示「几张幻灯片 / 几个图片 / 几个形状」）。
+    import_report: Option<enbx_importer::ImportReport>,
+    /// 导入失败的错误信息（`Some` 时弹窗显示）。
+    import_error: Option<String>,
+    /// 导入的 .enbx 文件路径（渲染 Image 时从包内读取资源字节）。
+    enbx_path: Option<std::path::PathBuf>,
+    /// ENBX 图片纹理缓存：image_path → 纹理句柄（懒加载，避免每帧重复解码）。
+    enbx_textures: std::collections::HashMap<String, egui::TextureHandle>,
 }
 
 /// 框选命中单个文本后的函数绘图菜单状态。
@@ -729,6 +852,12 @@ impl IntegratedApp {
             marquee_start: None,
             marquee_rect: None,
             function_menu: None,
+            current_doc: None,
+            current_page: 0,
+            import_report: None,
+            import_error: None,
+            enbx_path: None,
+            enbx_textures: std::collections::HashMap::new(),
         }
     }
 
@@ -3490,6 +3619,349 @@ impl IntegratedApp {
         });
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // ENBX 课件导入浏览（enbx_importer 只读导入 + 独立覆盖层渲染）
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// 顶部「文件」菜单栏：打开 / 关闭 ENBX 课件，并显示导入报告摘要。
+    fn enbx_menu_bar(&mut self, ctx: &egui::Context) {
+        egui::TopBottomPanel::top("enbx_menu_bar").show(ctx, |ui| {
+            egui::menu::bar(ui, |ui| {
+                ui.menu_button("文件", |ui| {
+                    if ui.button("打开 ENBX 课件...").clicked() {
+                        ui.close_menu();
+                        self.open_enbx_dialog(ctx);
+                    }
+                    if self.current_doc.is_some() {
+                        if ui.button("关闭 ENBX 课件").clicked() {
+                            ui.close_menu();
+                            self.close_enbx_view();
+                        }
+                    }
+                });
+                if let Some(report) = &self.import_report {
+                    ui.separator();
+                    ui.label(format!(
+                        "已导入：{} 页成功 / {} 页失败 · {} 资源",
+                        report.pages_ok, report.pages_failed, report.resources_extracted
+                    ));
+                }
+            });
+        });
+    }
+
+    /// rfd 文件对话框（过滤 .enbx）→ `enbx_importer::import_enbx` → 存入状态。
+    fn open_enbx_dialog(&mut self, ctx: &egui::Context) {
+        let Some(path) = rfd::FileDialog::new()
+            .add_filter("希沃课件", &["enbx", "enpx"])
+            .pick_file()
+        else {
+            return;
+        };
+        match enbx_importer::import_enbx(&path, None) {
+            Ok((doc, report)) => {
+                log::info!("[enbx] 导入成功: {} 页, report {report:?}", doc.pages.len());
+                self.current_doc = Some(doc);
+                self.current_page = 0;
+                self.import_report = Some(report);
+                self.import_error = None;
+                self.enbx_path = Some(path);
+                self.enbx_textures.clear();
+            }
+            Err(e) => {
+                log::warn!("[enbx] 导入失败: {e:?}");
+                self.import_error = Some(format!("导入失败: {e:?}"));
+            }
+        }
+        ctx.request_repaint();
+    }
+
+    /// 退出 ENBX 浏览并清理状态。
+    fn close_enbx_view(&mut self) {
+        self.current_doc = None;
+        self.import_report = None;
+        self.import_error = None;
+        self.enbx_path = None;
+        self.enbx_textures.clear();
+    }
+
+    /// 渲染 ENBX 浏览覆盖层：导入失败弹窗 + 当前页元素（白色画布）+ 右下角翻页器。
+    fn render_enbx_overlay(&mut self, ctx: &egui::Context) {
+        // 导入失败弹窗。
+        if let Some(err) = self.import_error.clone() {
+            let mut open = true;
+            egui::Window::new("导入失败")
+                .open(&mut open)
+                .show(ctx, |ui| {
+                    ui.colored_label(egui::Color32::from_rgb(220, 60, 60), err);
+                    ui.small("错误详情见控制台日志");
+                });
+            if !open {
+                self.import_error = None;
+            }
+        }
+
+        let Some(doc) = self.current_doc.clone() else {
+            return;
+        };
+        if doc.pages.is_empty() {
+            return;
+        }
+        let page_idx = self.current_page.min(doc.pages.len() - 1);
+        let page = &doc.pages[page_idx];
+
+        let screen = ctx.screen_rect();
+        let pw = doc.page_size[0].max(1.0);
+        let ph = doc.page_size[1].max(1.0);
+        // 等比缩放至屏幕 90%（上限 2.5x），居中显示。
+        let scale = ((screen.width() / pw).min(screen.height() / ph) * 0.9).clamp(0.2, 2.5);
+        let content = egui::vec2(pw * scale, ph * scale);
+        let origin = screen.center() - content * 0.5;
+
+        let painter = ctx.layer_painter(egui::LayerId::new(
+            egui::Order::Foreground,
+            egui::Id::new("enbx_overlay"),
+        ));
+        // 白色画布 + 边框。
+        let bg_rect = egui::Rect::from_min_size(origin, content);
+        painter.rect_filled(bg_rect, 4.0, egui::Color32::WHITE);
+        painter.rect_stroke(
+            bg_rect,
+            4.0,
+            egui::Stroke::new(2.0, egui::Color32::from_gray(150)),
+        );
+
+        for elem in &page.elements {
+            self.draw_enbx_element(&painter, elem, origin, scale, ctx);
+        }
+
+        // 右下角页面指示器（上一页 / 下一页 / 退出）。
+        let total = doc.pages.len();
+        egui::Area::new(egui::Id::new("enbx_pager"))
+            .anchor(egui::Align2::RIGHT_BOTTOM, egui::vec2(-16.0, -16.0))
+            .show(ctx, |ui| {
+                egui::Frame::popup(ui.style()).show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        if ui.button("◀").clicked() && self.current_page > 0 {
+                            self.current_page -= 1;
+                        }
+                        ui.label(format!("第 {} / {} 页", self.current_page + 1, total));
+                        if ui.button("▶").clicked() && self.current_page + 1 < total {
+                            self.current_page += 1;
+                        }
+                        if ui.button("✕ 退出").clicked() {
+                            self.close_enbx_view();
+                        }
+                    });
+                });
+            });
+    }
+
+    /// 绘制单个 ENBX 元素（逻辑坐标 × scale + origin → 屏幕）。
+    fn draw_enbx_element(
+        &mut self,
+        painter: &egui::Painter,
+        elem: &drafftink_core::model::Element,
+        origin: egui::Pos2,
+        scale: f32,
+        ctx: &egui::Context,
+    ) {
+        use drafftink_core::model::{Element, ShapeType};
+        match elem {
+            Element::Image(img) => {
+                let base = &img.base;
+                let rect = egui::Rect::from_min_size(
+                    origin + egui::vec2(base.position[0], base.position[1]) * scale,
+                    egui::vec2(base.size[0], base.size[1]) * scale,
+                );
+                // 纹理懒加载：优先用缓存；否则从 .enbx 包内读字节 → image 解码 → 注册。
+                let tex = if let Some(h) = self.enbx_textures.get(&img.image_path) {
+                    Some(h.clone())
+                } else {
+                    let loaded = self.load_enbx_resource(&img.image_path).and_then(|bytes| {
+                        image::load_from_memory(&bytes).ok().map(|im| {
+                            let rgba = im.to_rgba8();
+                            let (w, h) = rgba.dimensions();
+                            let color = egui::ColorImage::from_rgba_unmultiplied(
+                                [w as usize, h as usize],
+                                rgba.as_raw(),
+                            );
+                            ctx.load_texture("enbx_img", color, egui::TextureOptions::LINEAR)
+                        })
+                    });
+                    if let Some(t) = loaded {
+                        self.enbx_textures.insert(img.image_path.clone(), t.clone());
+                        Some(t)
+                    } else {
+                        None
+                    }
+                };
+                match tex {
+                    Some(t) => {
+                        painter.image(
+                            t.id(),
+                            rect,
+                            egui::Rect::from_min_max(egui::Pos2::ZERO, egui::pos2(1.0, 1.0)),
+                            egui::Color32::WHITE,
+                        );
+                    }
+                    None => {
+                        painter.rect_filled(rect, 0.0, egui::Color32::from_gray(70));
+                        painter.text(
+                            rect.center(),
+                            egui::Align2::CENTER_CENTER,
+                            "🖼",
+                            egui::FontId::proportional(20.0),
+                            egui::Color32::GRAY,
+                        );
+                    }
+                }
+            }
+            Element::Shape(sh) => {
+                let base = &sh.base;
+                let rect = egui::Rect::from_min_size(
+                    origin + egui::vec2(base.position[0], base.position[1]) * scale,
+                    egui::vec2(base.size[0], base.size[1]) * scale,
+                );
+                let fill = base.fill_color;
+                let stroke = egui::Stroke::new(base.stroke_width.max(1.0), base.stroke_color);
+                match sh.shape_type {
+                    ShapeType::Rectangle | ShapeType::Bracket | ShapeType::Brace => {
+                        painter.rect_filled(rect, 0.0, fill);
+                        if base.stroke_width > 0.0 {
+                            painter.rect_stroke(rect, 0.0, stroke);
+                        }
+                    }
+                    ShapeType::Ellipse => {
+                        // egui 0.29 无 ellipse API：32 段凸多边形近似。
+                        let center = rect.center();
+                        let radius = rect.size() * 0.5;
+                        let pts: Vec<egui::Pos2> = (0..32)
+                            .map(|i| {
+                                let a = i as f32 / 32.0 * std::f32::consts::TAU;
+                                center + egui::vec2(radius.x * a.cos(), radius.y * a.sin())
+                            })
+                            .collect();
+                        painter.add(egui::Shape::convex_polygon(
+                            pts.clone(),
+                            fill,
+                            egui::Stroke::NONE,
+                        ));
+                        if base.stroke_width > 0.0 {
+                            painter.add(egui::Shape::closed_line(pts, stroke));
+                        }
+                    }
+                    ShapeType::Line => {
+                        painter.line_segment([rect.left_center(), rect.right_center()], stroke);
+                    }
+                    ShapeType::Arrow => {
+                        painter.line_segment([rect.left_center(), rect.right_center()], stroke);
+                        let end = rect.right_center();
+                        painter.line_segment([end, end + egui::vec2(-10.0, -5.0)], stroke);
+                        painter.line_segment([end, end + egui::vec2(-10.0, 5.0)], stroke);
+                    }
+                    _ => {
+                        painter.rect_filled(rect, 0.0, fill);
+                    }
+                }
+            }
+            Element::SvgShape(svg) => {
+                self.draw_enbx_svg(painter, svg, origin, scale);
+            }
+            Element::Text(t) => {
+                let base = &t.base;
+                let pos = origin + egui::vec2(base.position[0], base.position[1]) * scale;
+                painter.text(
+                    pos,
+                    egui::Align2::LEFT_TOP,
+                    &t.text,
+                    egui::FontId::proportional(t.font_size.max(8.0) * scale),
+                    base.fill_color,
+                );
+            }
+            Element::Path(p) => {
+                let base = &p.base;
+                if p.points.len() >= 2 {
+                    let pts: Vec<egui::Pos2> = p
+                        .points
+                        .iter()
+                        .map(|pt| origin + egui::vec2(pt[0], pt[1]) * scale)
+                        .collect();
+                    painter.add(egui::Shape::line(
+                        pts,
+                        egui::Stroke::new(2.0, base.stroke_color),
+                    ));
+                }
+            }
+        }
+    }
+
+    /// SvgShape 覆盖层绘制：解析 `svg_path`（M/L/C/z 子集，绝对或归一化 0..1）→ 折线。
+    fn draw_enbx_svg(
+        &self,
+        painter: &egui::Painter,
+        svg: &drafftink_core::model::SvgShapeElement,
+        origin: egui::Pos2,
+        scale: f32,
+    ) {
+        let base = &svg.base;
+        let pts = svg_path_points(&svg.svg_path, base.size);
+        if pts.is_empty() {
+            // 空路径 → 占位矩形。
+            let rect = egui::Rect::from_min_size(
+                origin + egui::vec2(base.position[0], base.position[1]) * scale,
+                egui::vec2(base.size[0], base.size[1]) * scale,
+            );
+            painter.rect_filled(rect, 0.0, egui::Color32::from_gray(60));
+            return;
+        }
+        let screen_pts: Vec<egui::Pos2> = pts
+            .iter()
+            .map(|p| origin + egui::vec2(base.position[0] + p[0], base.position[1] + p[1]) * scale)
+            .collect();
+        let stroke = egui::Stroke::new(base.stroke_width.max(1.0), base.stroke_color);
+        if svg.is_closed {
+            painter.add(egui::Shape::closed_line(screen_pts, stroke));
+        } else {
+            painter.add(egui::Shape::line(screen_pts, stroke));
+        }
+    }
+
+    /// 从 .enbx 包内读取图片资源字节（`image_path` 为 `id://xxx` 或 `Resources/xxx`）。
+    fn load_enbx_resource(&self, image_path: &str) -> Option<Vec<u8>> {
+        use std::io::Read;
+        let path = self.enbx_path.as_ref()?;
+        let file = std::fs::File::open(path).ok()?;
+        let mut archive = zip::ZipArchive::new(file).ok()?;
+        let entry = image_path.replace('\\', "/");
+        if let Some(id) = entry.strip_prefix("id://") {
+            // 遍历包内 Resources，匹配文件名主体 == id（Seewo 的 id 通常是文件名主体）。
+            for i in 0..archive.len() {
+                let mut f = archive.by_index(i).ok()?;
+                let name = f.name().to_string();
+                if name.starts_with("Resources/") {
+                    let stem = std::path::Path::new(&name).file_stem();
+                    if stem.is_some() && stem.unwrap() == id {
+                        let mut buf = Vec::new();
+                        f.read_to_end(&mut buf).ok()?;
+                        return Some(buf);
+                    }
+                }
+            }
+            None
+        } else {
+            let target = if entry.starts_with("Resources/") {
+                entry
+            } else {
+                format!("Resources/{entry}")
+            };
+            let mut f = archive.by_name(&target).ok()?;
+            let mut buf = Vec::new();
+            f.read_to_end(&mut buf).ok()?;
+            Some(buf)
+        }
+    }
+
     /// 每帧更新放大镜：Esc 退出；滚轮在 1x–4x 间调倍数；圆心跟随鼠标；随后叠加绘制。
     ///
     /// 放大镜是**纯 UI 覆盖层**：不拦截画布交互（用 `pointer.hover_pos` 而非 `response`）、
@@ -4884,6 +5356,9 @@ impl App for IntegratedApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         ctx.set_theme(egui::ThemePreference::Dark);
 
+        // 顶部「文件」菜单栏：打开 / 关闭 ENBX 课件。
+        self.enbx_menu_bar(ctx);
+
         // 翻页检测：当前页与上一帧记录的页不同 → 清空跨页选中态，
         // 否则旧页残留的选中边框 / 抓手仍叠加在新页画布上（表现为「新页残留旧内容」）。
         let cp = self.current_canvas_page();
@@ -5146,6 +5621,9 @@ impl App for IntegratedApp {
             draw_active_tool(&painter, &self.active_tool, time);
         }
 
+        // ENBX 课件浏览覆盖层（导入后显示当前页元素 + 右下角翻页指示器）。
+        self.render_enbx_overlay(ctx);
+
         // 放大镜叠加层（置于所有元素 / 教具之上，但低于监控面板）；仅激活时生效。
         self.update_magnifier(ctx);
 
@@ -5297,6 +5775,25 @@ mod tests {
     use super::*;
     use drafftink_core::model::ShapeKind;
     use egui::{pos2, vec2, Rect};
+
+    /// SVG path 子集解析：绝对坐标 / 归一化坐标 / C 曲线采样。
+    #[test]
+    fn svg_path_points_absolute_and_normalized() {
+        // 绝对坐标矩形 M0,0 L100,0 100,100 0,100 z。
+        let pts = svg_path_points("M0,0 L100,0 100,100 0,100 z", [200.0, 200.0]);
+        assert_eq!(pts.len(), 5, "M + 3×L + z 闭合 = 5 点");
+        assert_eq!(pts[0], [0.0, 0.0]);
+        assert_eq!(pts[4], [0.0, 0.0], "z 闭合回起点");
+        // 归一化坐标（0..1）× size。
+        let n = svg_path_points("M0,0 L1,0 1,1 0,1 z", [200.0, 100.0]);
+        assert_eq!(n[1], [200.0, 0.0], "归一化 x=1 → 200");
+        assert_eq!(n[2], [200.0, 100.0], "归一化 y=1 → 100");
+        // C 曲线：起点 + 16 段采样 = 17 点。
+        let c = svg_path_points("M0,0 C100,0 100,100 200,100", [200.0, 100.0]);
+        assert_eq!(c.len(), 17);
+        // 空路径 → 空点集。
+        assert!(svg_path_points("", [10.0, 10.0]).is_empty());
+    }
 
     /// 随机点名器：从输入框解析逗号 / 换行分隔的名字并入名单（去重、去空）。
     #[test]

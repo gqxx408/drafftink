@@ -14,6 +14,8 @@ drafftink-core = { path = "../drafftink-core" }
 drafftink-edit = { path = "../drafftink-edit" }
 drafftink-display = { path = "../drafftink-display" }
 drafftink-enbx = { path = "../drafftink-enbx" }
+# ENBX 课件导入（只读解析 → CoursewareDoc）。
+enbx_importer = { path = "../enbx_importer" }
 eframe.workspace = true
 egui.workspace = true
 egui_extras.workspace = true
@@ -21,6 +23,8 @@ serde.workspace = true
 serde_json.workspace = true
 uuid.workspace = true
 anyhow.workspace = true
+# ENBX 导入浏览：从 .enbx 包内读取图片资源字节（zip 已在 workspace 使用）。
+zip = { version = "2.1", default-features = false, features = ["deflate"] }
 log.workspace = true
 rfd.workspace = true
 image.workspace = true
