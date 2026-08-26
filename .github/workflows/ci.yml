@@ -8,7 +8,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-
+  CARGO_NET_RETRY: "10"
+  CARGO_NET_TIMEOUT: "200"
 jobs:
   test:
     name: Test & Lint
