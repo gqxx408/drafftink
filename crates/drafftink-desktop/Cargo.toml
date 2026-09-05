@@ -36,6 +36,11 @@ md5 = "0.7"
 # 二者共同把 ffmpeg 子进程解出的 PCM 送进声卡回调（详见 docs/audio_integration.md）。
 cpal = "0.15"
 ringbuf = "0.3"
+# school-hub 校本资源库同步：把白板快照异步保存到中枢。
+# 跨 workspace 的 path 依赖在 Cargo 中合法；hub-sdk 复用登录后的 user_id 填充 author。
+hub-sdk = { path = "../../../drafftink-hub/school-hub/crates/hub-sdk" }
+tokio.workspace = true
+bincode.workspace = true
 
 [dev-dependencies]
 zip = { version = "2.1", default-features = false, features = ["deflate"] }

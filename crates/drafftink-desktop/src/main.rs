@@ -21,6 +21,7 @@
 mod app;
 mod audio_player;
 mod function_parser;
+mod hub_sync;
 mod interactive_rect;
 mod save;
 mod shape_renderer;

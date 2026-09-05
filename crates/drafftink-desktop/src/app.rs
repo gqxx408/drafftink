@@ -382,6 +382,9 @@ pub struct IntegratedApp {
     enbx_path: Option<std::path::PathBuf>,
     /// ENBX 图片纹理缓存：image_path → 纹理句柄（懒加载，避免每帧重复解码）。
     enbx_textures: std::collections::HashMap<String, egui::TextureHandle>,
+
+    /// school-hub 校本资源库同步：顶栏按钮 / 登录对话框 / 异步保存状态。
+    hub: crate::hub_sync::HubSyncState,
 }
 
 /// 框选命中单个文本后的函数绘图菜单状态。
@@ -858,6 +861,7 @@ impl IntegratedApp {
             import_error: None,
             enbx_path: None,
             enbx_textures: std::collections::HashMap::new(),
+            hub: crate::hub_sync::HubSyncState::new(),
         }
     }
 
@@ -3638,6 +3642,10 @@ impl IntegratedApp {
                             self.close_enbx_view();
                         }
                 });
+                // school-hub 资源库同步入口（登录 / 保存 / 状态指示）。
+                if self.hub.show_in_toolbar(ui) {
+                    self.hub_save_current();
+                }
                 if let Some(report) = &self.import_report {
                     ui.separator();
                     ui.label(format!(
@@ -3682,6 +3690,43 @@ impl IntegratedApp {
         self.import_error = None;
         self.enbx_path = None;
         self.enbx_textures.clear();
+    }
+
+    /// 「☁ 保存到资源库」：序列化当前白板为快照并异步提交给 school-hub。
+    ///
+    /// 未登录时只打开登录对话框；同步失败由 `HubSyncState` 记日志并显示 ❌，
+    /// 不弹错误框打扰老师。
+    fn hub_save_current(&mut self) {
+        let Some(client) = self.hub.client() else {
+            log::info!("[hub] 未登录，已打开登录对话框");
+            self.hub.show_login = true;
+            return;
+        };
+
+        let doc = self.edit.doc.clone();
+        let strokes = self.edit.export_current_annotations();
+        let page_count = doc.pages.len();
+        let cp = self
+            .current_canvas_page()
+            .min(page_count.saturating_sub(1));
+
+        let snapshot = crate::hub_sync::WhiteboardSnapshot::from_doc(&doc, strokes, cp);
+        let payload = match serde_json::to_vec(&snapshot) {
+            Ok(p) => p,
+            Err(e) => {
+                log::error!("[hub] 序列化白板快照失败: {e:?}");
+                return;
+            }
+        };
+
+        let doc_id = format!("drafftink-{}", doc.version);
+        log::info!(
+            "[hub] 保存白板到资源库: {} ({} bytes, {} pages)",
+            doc_id,
+            payload.len(),
+            snapshot.pages.len()
+        );
+        self.hub.save_snapshot(client, &doc_id, payload);
     }
 
     /// 渲染 ENBX 浏览覆盖层：导入失败弹窗 + 当前页元素（白色画布）+ 右下角翻页器。
@@ -5357,6 +5402,9 @@ impl App for IntegratedApp {
 
         // 顶部「文件」菜单栏：打开 / 关闭 ENBX 课件。
         self.enbx_menu_bar(ctx);
+
+        // school-hub 资源库同步：回收异步结果 + 渲染登录对话框。
+        self.hub.update(ctx);
 
         // 翻页检测：当前页与上一帧记录的页不同 → 清空跨页选中态，
         // 否则旧页残留的选中边框 / 抓手仍叠加在新页画布上（表现为「新页残留旧内容」）。
